@@ -350,12 +350,12 @@ class GraphAnim(Scene):
 		sentinel = Node(scene=self,label="A",loc=UP*2.5)
 		code = Text(
 			'''
-			def dfs(root,nbrs):
-				if root.val == 0 or root.val == 1:
+			def dfs(curr):
+				if curr == 0 or curr == 1:
 					return 1
-				left_nbr,right_nbr = nbrs[root]
-				l_count = dfs(left_nbr,nbrs)
-				r_count = dfs(right_nbr,nbrs)
+				left_nbr,right_nbr = nbrs[curr]
+				l = dfs(left_nbr)
+				r = dfs(right_nbr)
 				return l+r
 			''',
 			font="Courier",font_size=17
@@ -363,9 +363,21 @@ class GraphAnim(Scene):
 		self.play(Write(code.shift(UP*2.4)))
 		self.play(FadeIn(all_group.next_to(tree,LEFT*6.1+DOWN*9.5).scale(.8)),FadeIn(Text("fib =",font_size=18).next_to(all_group[0],LEFT)))
 		dfs(sentinel,tree.root,all_group)
+		self.wait()
+		code = Text(
+			'''
+			def dfs(curr):
+				if curr == 0 or curr == 1:
+					return 1
+				l = dfs(curr-1)
+				r = dfs(curr-2)
+				return l + r
+			''',
+			font="Courier",font_size=17
+			).to_edge(LEFT*1.5 ,buff=.29)		
 		#generalizing dfs
 		self.clear()
-		lines = ["3 Problems","Cycles","Multiple neighbors","Components"]		
+		lines = ["","Cycles","Multiple neighbors","Components"]		
 		bullets = VGroup()
 		for i,line in enumerate(lines):
 			text = Text( f"{("- " if i > 0 else "") + line}",font_size=40)
@@ -373,41 +385,134 @@ class GraphAnim(Scene):
 		bullets.arrange(DOWN,aligned_edge=LEFT,buff=.5)
 		bullets.to_edge(LEFT)
 		self.play(Write(bullets))
-		#-Cycles
+		self.wait(2)
+		self.play(bullets[2].animate.set_opacity(.2),bullets[2].animate.set_opacity(.2),bullets[3].animate.set_opacity(.2),bullets[2].animate.set_opacity(.2))
+		self.wait(1)
+		#Nodes
 		self.clear()
-
-		
-
-		# node_1 = Node("F(1)",scene=self,loc=ORIGIN + LEFT*2,fs=25,rs=.5)
-		# node_2 = Node("F(2)",scene=self,loc=ORIGIN + RIGHT *2,fs=25,rs=.5)
-		# s,e = ORIGIN + LEFT*2 + UP * .25,ORIGIN + RIGHT *2 + UP * .25
-		# items = VGroup()
-		# arr1 = Arrow(s,e,buff=.7)
-		# arr2 = Arrow(e + DOWN * .5,s+DOWN * .5,buff=.7)
-		# items.add(arr1)
-		# items.add(arr2)
-		# node_1.draw_node(run_t=.8)
-		# self.play(Transform(node_1,Node("F(1)",scene=self,loc=ORIGIN + LEFT*2,fs=25,rs=.5).move_to(node_1)),run_time=.9)
-		# self.wait()
-		# self.play(
-		# 	ShowCreation(arr1)
-		# )
-		# node_2.draw_node(run_t=.5)
-		# direc = Text('''Directed''',font="Courier",font_size=30).to_edge(LEFT,buff=.8)
-		# self.play(FadeIn(direc))
-		# self.play(Indicate(node_1))
-		# self.wait(.5)
-		# self.play(Indicate(node_2))
-		# self.wait()
-		# self.remove(direc)
-		# undirec = Text('''Undirected''',font="Courier",font_size=30)
-		# self.play(FadeIn(undirec.to_edge(LEFT,buff=.8)))
-		# self.play(ShowCreation(arr2))
-		# self.play(Indicate(node_2))
-		# self.wait(.5)
-		# self.play(Indicate(node_1))		
-		# self.wait(.5)
-
+		node_1 = Node("1",scene=self,fs=25,rs=.5).move_to(ORIGIN + LEFT*1.5)
+		node_2 = Node("2",scene=self,fs=25,rs=.5).move_to(ORIGIN + RIGHT *1.5)
+		node_3 = Node("3",scene=self,fs=25,rs=.5).move_to(ORIGIN + RIGHT*1.5 + DOWN*3 )
+		dx = .2
+		buff = .8
+		s,e=node_2.circle.get_center() + RIGHT * dx,node_3.circle.get_center() + RIGHT * dx
+		b1,b2 = Arrow(s,e,buff=buff),Arrow(e + LEFT*2*dx,s + LEFT * 2*dx, buff=buff)
+		s,e = node_1.circle.get_center(),node_2.circle.get_center()
+		a1 = Arrow(s + UP * dx ,e + UP * dx,buff=buff)
+		a2 = Arrow(e + DOWN * dx,s+DOWN * dx,buff=buff)
+		nodes = VGroup(node_1,node_2,node_3)
+		arrows = VGroup(a1,a2,b1,b2)
+		every = VGroup(nodes,arrows).move_to(ORIGIN)
+		every.scale(.8)
+		self.play(FadeIn(every))
+		self.play(Indicate(a1,scale_factor=1.1),run_time=1.5)
+		self.play(Indicate(a2,scale_factor=1.1),run_time=1.5)
+		visit = Text("Visit = {").to_edge(LEFT + UP,buff=.5)
+		close = Text("}").next_to(visit,RIGHT)
+		self.play(FadeIn(visit))
+		def append(prev,string,curr):
+			newTex = Text(string).next_to(prev,RIGHT)
+			self.play(close.animate.next_to(newTex,RIGHT))
+			self.play(FadeIn(newTex),curr.circle.animate.set_stroke(RED))
+			return newTex
+		for c in [nodes[0]]:
+			visit = append(visit,c.val,c)
+		self.wait(1)
+		self.play(Indicate(nodes[1]))
+		visit = append(visit,nodes[1].val,nodes[1])
+		self.wait(1)
+		self.play(Indicate(a2),run_time=.8)
+		self.play(FadeOut(a2))
+		self.wait(1)
+		self.play(Indicate(nodes[2]))
+		visit = append(visit,nodes[2].val,nodes[2])
+		self.play(FadeOut(b2))
+		self.wait()
+		a =Arrow(nodes[2].circle.get_left(),nodes[0].circle.get_right(),buff=.4)
+		self.wait()
+		self.play(FadeIn(a))
+		self.wait()
+		self.play(FadeOut(a))
+		code = Text(
+			'''
+			def dfs(curr):
+				if curr in visit:
+					return 
+				visit.add(curr)
+				left_nbr,right_nbr = nbrs[curr]
+				dfs(left_nbr)
+				dfs(right_nbr)
+			''',
+			font="Courier",font_size=17
+			).to_edge(LEFT*1.5 ,buff=.29)
+		self.play(Write(code))
+		#Multiple neighbors
+		self.clear()
+		self.play(FadeIn(bullets))
+		self.play(bullets[1].animate.set_opacity(.2),bullets[2].animate.set_opacity(1),bullets[3].animate.set_opacity(.2),run_time=.8)
+		self.play(FadeOut(bullets))
+		network = get_network([1,5],label=" ").move_to(ORIGIN)
+		self.play(FadeIn(network))
+		for node in network[0][1][::-1]:
+			self.play(Indicate(node))
+			self.wait(.001)
+		code = Text(
+			'''
+				for nbr in nbrs[curr]:
+					.
+					.
+					.
+			''',
+			font="Courier",font_size=17
+			).to_edge(LEFT*1.5 ,buff=.29)		
+		self.play(Write(code))
+		self.wait(2)
+		self.clear()
+		#Last
+		self.play(FadeIn(bullets))
+		self.play(bullets[1].animate.set_opacity(.2),bullets[3].animate.set_opacity(1),bullets[2].animate.set_opacity(.2),run_time=.8)
+		self.wait()
+		#Last1
+		self.clear()
+		comps = [get_network([1,2,1,1],dx=2,label=" "),get_network([1,2,4],label=" ",width=1.3,tree=True).rotate(3*PI/2)]
+		components = VGroup(*[comp.scale(.7) for comp in comps]).arrange(RIGHT,buff=2)
+		self.play(FadeIn(components))
+		first_comp = components[0][0]
+		nodes = [first_comp[0][0],first_comp[1][0],first_comp[2][0],first_comp[1][1],first_comp[3][0]]
+		for node in nodes:
+			self.play(node.circle.animate.set_stroke(RED),run_time=.6)
+		self.wait()
+		self.play(FadeOut(components[0]))
+		self.wait()
+		self.play(Indicate(components[1][0][0][0]))
+		code = Text(
+			'''
+				for node in Graph:
+					if node not in visit:
+						dfs(node)	
+			''',
+			font="Courier",font_size=17
+			).to_edge(LEFT*1.5 ,buff=.29)		
+		self.play(Write(code))
+		self.wait()
+		self.clear()
+		#Putting it all together
+		code = Text(
+			'''
+				visit = set()
+				def visit(curr):
+					if curr not in visit:
+						return
+					visit.add(curr)
+					for nbr in nbrs[curr]:
+						dfs(nbr)
+				for node in Graph:
+					if node not in visit:
+						dfs(node)	
+			''',
+			font="Courier",font_size=17
+			).to_edge(LEFT*1.5 ,buff=.29)	
+		self.play(Write(code))
 		# items = VGroup()
 		# for i, (key,value) in enumerate(hm.items()):
 		# 	key_text = Text(f"{key}:").set_color(BLUE)
