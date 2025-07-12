@@ -1,6 +1,6 @@
 .main {
     display: grid;
-    background-color: rgb(10, 10, 37);
+    background-color: rgb(243, 243, 243);
     grid-template-columns: 4fr 5fr;
     grid-template-rows: 5fr 4fr;
     height: 100vh;
@@ -27,6 +27,7 @@
   flex: 1;
   display: flex;
   justify-content: center;
+  flex-direction: column;
   align-items: center;
   background-color: blue;
   position:relative;
@@ -49,94 +50,51 @@
 .code {
     grid-column: 2/3;
     grid-row: 1/2;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    padding: 1rem;
     background-color: rgb(255, 255, 255);
     border-radius: .75rem;
 }
 .references {
+    display:flex;
+    flex-direction: column;
+    position: relative;
     grid-column: 1/2;
     grid-row: 2/3;
     background-color: rgb(255, 255, 255);
-            border-radius: .75rem;
+    border-radius: .75rem;
 
-    
+  
 
 }
 .validation {
+    display:flex;
+    flex-direction: column;
+    position: relative;
     grid-column: 2/3;
     grid-row: 2/3;
     background-color: rgb(255, 255, 255);   
-        border-radius: .75rem;
+    border-radius: .75rem;
 
+}
+.buttonDiv {
+  display: flex;
+  justify-content: center;
+  flex:1;
 }
 
 
 .references {
+  display:flex;
+  flex-direction: column;
+  position: relative;
   grid-column: 1/2;
   grid-row: 2/3;
-  background-color: #f0f0f0;
+  background-color: #ffffff;
   padding: 1rem;
-  display: flex;
-  flex-direction: column;
 
 }
 
-.chat-container {
-  background: white;
-  border-radius: 0.5rem;
-  width: 100%;
-  max-width: 600px;
-  height: 400px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.message {
-  padding: 0.75rem;
-  border-radius: 1rem;
-  max-width: 75%;
-  word-wrap: break-word;
-}
-
-.message.user {
-  align-self: flex-end;
-  background-color: #d1e7ff;
-}
-
-.message.bot {
-  align-self: flex-start;
-  background-color: #e4e4e4;
-}
-
-.chat-input {
-  display: flex;
-  padding: 0.75rem;
-  border-top: 1px solid #ddd;
-}
-
-.chat-input input {
-  flex: 1;
-  padding: 0.5rem 1rem;
-  border: 1px solid #ccc;
-  border-radius: 9999px;
-  margin-right: 0.5rem;
-}
-
-.chat-input button {
-  padding: 0.5rem 1rem;
-  border: none;
-  background-color: #1e90ff;
-  color: white;
-  border-radius: 9999px;
-  cursor: pointer;
-}

@@ -128,30 +128,30 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("profile");
 
   const tabs = [
-    { id: "profile", label: "Profile" },
-    { id: "dashboard", label: "Dashboard" },
-    { id: "settings", label: "Settings" },
-    { id: "contacts", label: "Contacts" },
+    { id: "profile", label: "Tab 1" },
+    { id: "dashboard", label: "Tab 2" },
+    { id: "settings", label: "Tab 3" },
+    { id: "contacts", label: "Tab 4" },
   ];
   const tabContent = {
     profile: (
       <p className="text-sm text-gray-500 dark:text-gray-400">
-        This is some placeholder content for the <strong className="font-medium text-gray-800 dark:text-white">Profile</strong> tab.
+        Tab 1 <strong className="font-medium text-gray-800 dark:text-white"></strong> tab.
       </p>
     ),
     dashboard: (
       <p className="text-sm text-gray-500 dark:text-gray-400">
-        This is some placeholder content for the <strong className="font-medium text-gray-800 dark:text-white">Dashboard</strong> tab.
+        Tab 2 <strong className="font-medium text-gray-800 dark:text-white"></strong> tab.
       </p>
     ),
     settings: (
       <p className="text-sm text-gray-500 dark:text-gray-400">
-        This is some placeholder content for the <strong className="font-medium text-gray-800 dark:text-white">Settings</strong> tab.
+        Tab 3 <strong className="font-medium text-gray-800 dark:text-white"></strong> tab.
       </p>
     ),
     contacts: (
       <p className="text-sm text-gray-500 dark:text-gray-400">
-        This is some placeholder content for the <strong className="font-medium text-gray-800 dark:text-white">Contacts</strong> tab.
+        Tab 4 <strong className="font-medium text-gray-800 dark:text-white"></strong> tab.
       </p>
     ),
   };
@@ -195,7 +195,30 @@ export default function Home() {
               
           </div> 
 
-          {/* <div className="references"> */}
+          <div className="references">
+              <div id="header" className=" border-b border-gray-200 dark:border-gray-700">
+                <ul className="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
+                  {tabs.map((tab) => (
+                    <li key={tab.id} className="me-2" role="presentation">
+                      <button
+                        type="button"
+                        className={`inline-block p-4 border-b-2 rounded-t-lg ${
+                          activeTab === tab.id
+                            ? "text-blue-600 border-blue-600 active dark:text-blue-500 dark:border-blue-500"
+                            : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+                        }`}
+                        role="tab"
+                        aria-selected={activeTab === tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                      >
+                        {tab.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+                            <div className="vid"></div>
+
               {/* <div className="chat-container"> */}
                 {/* <div className="chat-messages">
                   <div className="message user">Hi there!</div>
@@ -208,17 +231,44 @@ export default function Home() {
                   <button>Send</button>
                 </div> */}
               {/* </div> */}
-          {/* </div>   */}
+          </div>  
 
           <div className="code">
-                  <Editor 
+              <div id="header" className=" border-b border-gray-200 dark:border-gray-700">
+                <ul className="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
+                  {tabs.map((tab) => (
+                    <li key={tab.id} className="me-2" role="presentation">
+                      <button
+                        type="button"
+                        className={`inline-block p-4 border-b-2 rounded-t-lg ${
+                          activeTab === tab.id
+                            ? "text-blue-600 border-blue-600 active dark:text-blue-500 dark:border-blue-500"
+                            : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+                        }`}
+                        role="tab"
+                        aria-selected={activeTab === tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                      >
+                        {tab.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+                  <div className="vid">     
+                    <Editor 
                   height="80%" 
                   width="100%" 
                   language="python"
                   theme="vs-dark"
                   onMount={handleEditorDidMount}
                   />
-                  <button style={{zIndex: 10,backgroundColor: "BLUE",cursor:"pointer"}} onClick={showValue}>Run</button>
+                                    <div className="buttonDiv">
+                      <button onClick={showValue} type="button" className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Run</button>
+                  </div>
+                  </div>
+
+             
           </div>
 
           <div className="validation"> 
