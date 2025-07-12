@@ -168,16 +168,47 @@ export default function Home() {
     <div className="Page">
         <div className="main">
           <div className="content">
-              <div className="vid" style= {{display: "flex", justifyContent: "center",height: "100%",width: "100%"}}>
-                  <div className="player-wrapper" >
-                      <ReactPlayer height="100%" width="100%" controls={true} src='videos/proj_vid.mp4' />
-                  </div>
+              <div id="header" className=" border-b border-gray-200 dark:border-gray-700">
+                <ul className="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
+                  {tabs.map((tab) => (
+                    <li key={tab.id} className="me-2" role="presentation">
+                      <button
+                        type="button"
+                        className={`inline-block p-4 border-b-2 rounded-t-lg ${
+                          activeTab === tab.id
+                            ? "text-blue-600 border-blue-600 active dark:text-blue-500 dark:border-blue-500"
+                            : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+                        }`}
+                        role="tab"
+                        aria-selected={activeTab === tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                      >
+                        {tab.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="vid">
+                      <ReactPlayer  className="react" controls={true} src='/vid.mp4' />
               </div>
               
           </div> 
 
-          <div className="references">
-          </div>  
+          {/* <div className="references"> */}
+              {/* <div className="chat-container"> */}
+                {/* <div className="chat-messages">
+                  <div className="message user">Hi there!</div>
+                  <div className="message bot">Hello! How can I help you?</div>
+                  <div className="message user">What’s the weather?</div>
+                  <div className="message bot">It’s sunny today 🌞</div>
+                </div>  */}
+                {/* <div className="chat-input">
+                  <input type="text" placeholder="Type a message..." />
+                  <button>Send</button>
+                </div> */}
+              {/* </div> */}
+          {/* </div>   */}
 
           <div className="code">
                   <Editor 
