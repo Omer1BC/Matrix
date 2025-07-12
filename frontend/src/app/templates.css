@@ -1,41 +1,100 @@
 .main {
     display: grid;
-    background-color: rgb(10, 10, 37);
-    grid-template-columns: 3fr 3fr;
-    grid-template-rows: 1fr 1fr;
+    background-color: rgb(243, 243, 243);
+    grid-template-columns: 4fr 5fr;
+    grid-template-rows: 5fr 4fr;
     height: 100vh;
-    gap: .75rem;
-    padding: 1rem;
+    gap: .45rem;
+    padding: .5rem;
 }
 
 .content {
-    display: flex;
-    justify-content: center;
+    display:flex;
+    flex-direction: column;
+    position: relative;
     grid-column: 1/2;
     grid-row: 1/2;
-    background-color: rgb(192, 192, 192);
+    background-color: rgb(255, 255, 255);
     border-radius: .75rem;
+    height: 100%;
+    overflow: hidden;
+    padding: 1rem;
 }
+#header {
+  height: 20%;
+}
+.vid {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  background-color: blue;
+  position:relative;
+  height: 100%;
+  width: 100%;
+  opacity: 100%;
+}
+
+.react {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+
+
 
 .code {
     grid-column: 2/3;
     grid-row: 1/2;
-    background-color: rgb(192, 192, 192);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    padding: 1rem;
+    background-color: rgb(255, 255, 255);
     border-radius: .75rem;
 }
 .references {
+    display:flex;
+    flex-direction: column;
+    position: relative;
     grid-column: 1/2;
     grid-row: 2/3;
-    background-color: rgb(192, 192, 192);
+    background-color: rgb(255, 255, 255);
+    border-radius: .75rem;
+
+  
+
 }
 .validation {
+    display:flex;
+    flex-direction: column;
+    position: relative;
     grid-column: 2/3;
     grid-row: 2/3;
-    background-color: rgb(192, 192, 192);   
+    background-color: rgb(255, 255, 255);   
+    border-radius: .75rem;
+
 }
-.playerWrapper {
-    display: flex;
-    justify-content: center;
-    height: 30px;
-    width: 20px;
+.buttonDiv {
+  display: flex;
+  justify-content: center;
+  flex:1;
 }
+
+
+.references {
+  display:flex;
+  flex-direction: column;
+  position: relative;
+  grid-column: 1/2;
+  grid-row: 2/3;
+  background-color: #ffffff;
+  padding: 1rem;
+
+}
+
