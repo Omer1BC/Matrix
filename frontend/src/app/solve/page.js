@@ -21,125 +21,51 @@ function classNames(...classes ) {
   return classes.filter(Boolean).join(' ')
 }
 
-
-// export default function Home() {
-//   return (
-//     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-//       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-//         <Image
-//           className="dark:invert"
-//           src="/next.svg"
-//           alt="Next.js logo"
-//           width={180}
-//           height={38}
-//           priority
-//         />
-//         <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-//           <li className="mb-2 tracking-[-.01em]">
-//             Get started by editing{" "}
-//             <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-//               src/app/page.js
-//             </code>
-//             .
-//           </li>
-//           <li className="tracking-[-.01em]">
-//             Save and see your changes instantly.
-//           </li>
-//         </ol>
-
-//         <div className="flex gap-4 items-center flex-col sm:flex-row">
-//           <a
-//             className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-//             href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//           >
-//             <Image
-//               className="dark:invert"
-//               src="/vercel.svg"
-//               alt="Vercel logomark"
-//               width={20}
-//               height={20}
-//             />
-//             Deploy now
-//           </a>
-//           <a
-//             className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-//             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//           >
-//             Read our docs
-//           </a>
-//         </div>
-//       </main>
-//       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-//         <a
-//           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-//           href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           <Image
-//             aria-hidden
-//             src="/file.svg"
-//             alt="File icon"
-//             width={16}
-//             height={16}
-//           />
-//           Learn
-//         </a>
-//         <a
-//           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-//           href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           <Image
-//             aria-hidden
-//             src="/window.svg"
-//             alt="Window icon"
-//             width={16}
-//             height={16}
-//           />
-//           Examples
-//         </a>
-//         <a
-//           className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-//           href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           <Image
-//             aria-hidden
-//             src="/globe.svg"
-//             alt="Globe icon"
-//             width={16}
-//             height={16}
-//           />
-//           Go to nextjs.org →
-//         </a>
-//       </footer>
-//     </div>
-//   );
-// }
-
 export default function Home() {
   const [activeTab, setActiveTab] = useState("profile");
   const [output, setOutput] = useState("");
 
-  const tabs = [
-    { id: "profile", label: "Tab 1" },
-    { id: "dashboard", label: "Tab 2" },
-    { id: "settings", label: "Tab 3" },
-    { id: "contacts", label: "Tab 4" },
-  ];
+  const tabs = {
+    profile: { label: "Tab 1", content: (<><p>Profile</p></>) },
+    dashboard: { label: "Tab 2", content: (<><p>Dashboard</p></>) },
+    settings: { label: "Tab 3", content: (<><p>Settings</p></>) },
+    contacts: { label: "Tab 4", content: (<><p>contacts</p></>) },
+  };
+
+  const content = {
+    vid: { label: "Video", content: (<><ReactPlayer className="react" controls={true} src='/vid.mp4' /></>) },
+
+  };
+  const references = {
+    ai: { label: "AI", content: (<><p>AI</p></>) },
+
+  };
+  const code = {
+    editor: { label: "Editor", content: (<>
+                  <Editor 
+                  height="100%" 
+                  width="100%" 
+                  language="python"
+                  theme="vs-dark"
+                  onMount={handleEditorDidMount}
+                  />
+                    </>) },
+
+  };
+  const validation = {
+    test: { label: "Tests", content: (<>
+    <p>{output}</p>
+    <button onClick={showValue} type="button" className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Run</button>
+
+    </>) },
+  };
+
   const tabContent = {
     profile: (
       <>
       <div>Output:</div>
       <p className="text-sm text-gray-500 dark:text-gray-400">
-       <strong className="font-medium text-gray-800 dark:text-white">{output}</strong> 
+       <strong className="font-medium text-gray-800 dark:text-white"></strong> 
       </p>
       </>
 
@@ -185,56 +111,14 @@ export default function Home() {
     return <>
     <div className="Page">
         <div className="main">
-          <Card className="content" tabs={tabs} content={<ReactPlayer className="react" controls={true} src='/vid.mp4' />} />
-          <Card className="references" tabs={tabs} />
-          <Card className="code" tabs={tabs} content={
-              <>
+          <Card className="content" tabs={content} />
+          <Card className="references" tabs={references}  />
+          <Card className="code" tabs={code} tabContent={tabContent} />
+          <Card className="validation" tabs={validation} />
 
-              <Editor 
-                  height="80%" 
-                  width="100%" 
-                  language="python"
-                  theme="vs-dark"
-                  onMount={handleEditorDidMount}
-                  />
-                                <div className="buttonDiv">
-                  <button onClick={showValue} type="button" className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Run</button>
-              </div>
-              </>
-          }/>
-
-          {/* <Card className="validation" tabs={tabs} 
-          /> */}
-
-
-          <div className="validation"> 
-      <div className="mb-4 border-b border-gray-200 dark:border-gray-700">
-        <ul className="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
-          {tabs.map((tab) => (
-            <li key={tab.id} className="me-2" role="presentation">
-              <button
-                type="button"
-                className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                  activeTab === tab.id
-                    ? "text-blue-600 border-blue-600 active dark:text-blue-500 dark:border-blue-500"
-                    : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
-                }`}
-                role="tab"
-                aria-selected={activeTab === tab.id}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                {tab.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
-        {tabContent[activeTab]}
-      </div>
-
-          </div>          
+        
+        
+        
         </div>
 
     </div>
