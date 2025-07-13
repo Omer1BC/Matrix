@@ -8,7 +8,7 @@ import ReactPlayer from 'react-player'
 import {Editor} from '@monaco-editor/react'
 import {useRef,useState, useEffect} from 'react';
 import Link from 'next/link'
-
+import Card from '../templates/card/card';
 
 const navigation = [
   { name: 'Tab 1', href: '#', current: true },
@@ -185,107 +185,27 @@ export default function Home() {
     return <>
     <div className="Page">
         <div className="main">
-          <div className="content">
-              <div id="header" className=" border-b border-gray-200 dark:border-gray-700">
-                <ul className="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
-                  {tabs.map((tab) => (
-                    <li key={tab.id} className="me-2" role="presentation">
-                      <button
-                        type="button"
-                        className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                          activeTab === tab.id
-                            ? "text-blue-600 border-blue-600 active dark:text-blue-500 dark:border-blue-500"
-                            : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
-                        }`}
-                        role="tab"
-                        aria-selected={activeTab === tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                      >
-                        {tab.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="vid">
-                      <ReactPlayer  className="react" controls={true} src='/vid.mp4' />
-              </div>
-              
-          </div> 
+          <Card className="content" tabs={tabs} content={<ReactPlayer className="react" controls={true} src='/vid.mp4' />} />
+          <Card className="references" tabs={tabs} />
+          <Card className="code" tabs={tabs} content={
+              <>
 
-          <div className="references">
-              <div id="header" className=" border-b border-gray-200 dark:border-gray-700">
-                <ul className="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
-                  {tabs.map((tab) => (
-                    <li key={tab.id} className="me-2" role="presentation">
-                      <button
-                        type="button"
-                        className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                          activeTab === tab.id
-                            ? "text-blue-600 border-blue-600 active dark:text-blue-500 dark:border-blue-500"
-                            : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
-                        }`}
-                        role="tab"
-                        aria-selected={activeTab === tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                      >
-                        {tab.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-                <div className="vid"></div>
-
-              {/* <div className="chat-container"> */}
-                {/* <div className="chat-messages">
-                  <div className="message user">Hi there!</div>
-                  <div className="message bot">Hello! How can I help you?</div>
-                  <div className="message user">What’s the weather?</div>
-                  <div className="message bot">It’s sunny today 🌞</div>
-                </div>  */}
-                {/* <div className="chat-input">
-                  <input type="text" placeholder="Type a message..." />
-                  <button>Send</button>
-                </div> */}
-              {/* </div> */}
-          </div>  
-
-          <div className="code">
-              <div id="header" className=" border-b border-gray-200 dark:border-gray-700">
-                <ul className="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
-                  {tabs.map((tab) => (
-                    <li key={tab.id} className="me-2" role="presentation">
-                      <button
-                        type="button"
-                        className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                          activeTab === tab.id
-                            ? "text-blue-600 border-blue-600 active dark:text-blue-500 dark:border-blue-500"
-                            : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
-                        }`}
-                        role="tab"
-                        aria-selected={activeTab === tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                      >
-                        {tab.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-                  <div className="vid">     
-                    <Editor 
+              <Editor 
                   height="80%" 
                   width="100%" 
                   language="python"
                   theme="vs-dark"
                   onMount={handleEditorDidMount}
                   />
-                                    <div className="buttonDiv">
-                      <button onClick={showValue} type="button" className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Run</button>
-                  </div>
-                  </div>
-          </div>
+                                <div className="buttonDiv">
+                  <button onClick={showValue} type="button" className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Run</button>
+              </div>
+              </>
+          }/>
+
+          {/* <Card className="validation" tabs={tabs} 
+          /> */}
+
 
           <div className="validation"> 
       <div className="mb-4 border-b border-gray-200 dark:border-gray-700">

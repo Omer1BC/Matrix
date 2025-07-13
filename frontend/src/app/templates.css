@@ -9,20 +9,20 @@
 }
 
 .content {
-    display:flex;
+    display:flex !important;
     flex-direction: column;
     position: relative;
-    grid-column: 1/2;
-    grid-row: 1/2;
-    background-color: rgb(255, 255, 255);
+    grid-column: 1/2 !important;
+    grid-row: 1/2 !important;
+    background-color: rgb(255, 255, 255) !important;
     border-radius: .75rem;
     height: 100%;
     overflow: hidden;
     padding: 1rem;
 }
-#header {
+/* #header {
   height: 20%;
-}
+} */
 .vid {
   flex: 1;
   display: flex;
@@ -36,16 +36,13 @@
   opacity: 100%;
 }
 
-.react {
+/* .react {
   position: absolute;
   top: 0;
   left: 0;
   height: 100% !important;
   width: 100% !important;
-}
-
-
-
+}  */
 
 .code {
     grid-column: 2/3;
@@ -66,9 +63,6 @@
     grid-row: 2/3;
     background-color: rgb(255, 255, 255);
     border-radius: .75rem;
-
-  
-
 }
 .validation {
     display:flex;

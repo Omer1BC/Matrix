@@ -136,10 +136,10 @@ export default function Home() {
     return <>
     <ul>
       <li>
-        <Link href="/">Home</Link>
+        <Link href="/">Solve</Link>
       </li>
       <li>
-        <Link href="/about">About Us</Link>
+        <Link href="/solve">Solve</Link>
       </li>
       <li>
         <Link href="/blog/hello-world">Blog Post</Link>
