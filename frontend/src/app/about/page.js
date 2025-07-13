@@ -6,7 +6,7 @@ import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Disclosure, Menu } from '@headlessui/react'
 import ReactPlayer from 'react-player'
 import {Editor} from '@monaco-editor/react'
-import {useRef,useState} from 'react';
+import {useRef,useState, useEffect} from 'react';
 import Link from 'next/link'
 
 
@@ -126,6 +126,7 @@ function classNames(...classes ) {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("profile");
+  const [output, setOutput] = useState("");
 
   const tabs = [
     { id: "profile", label: "Tab 1" },
@@ -135,9 +136,13 @@ export default function Home() {
   ];
   const tabContent = {
     profile: (
+      <>
+      <div>Output:</div>
       <p className="text-sm text-gray-500 dark:text-gray-400">
-        Tab 1 <strong className="font-medium text-gray-800 dark:text-white"></strong> tab.
+       <strong className="font-medium text-gray-800 dark:text-white">{output}</strong> 
       </p>
+      </>
+
     ),
     dashboard: (
       <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -161,8 +166,21 @@ export default function Home() {
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
   }
-    function showValue() {
-    alert(editorRef.current.getValue());
+  async function showValue() {
+    let val = editorRef.current.getValue();
+    try {
+      const res = await fetch("http://localhost:8000/api/run", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code: val }),
+      });
+      const data = await res.json();
+      setOutput(data.output || data.error || "No output returned"); // Set output state
+    } catch (err) {
+      setOutput("Error sending POST request: " + err.message);
+    }
   }
     return <>
     <div className="Page">
@@ -217,7 +235,7 @@ export default function Home() {
                   ))}
                 </ul>
               </div>
-                            <div className="vid"></div>
+                <div className="vid"></div>
 
               {/* <div className="chat-container"> */}
                 {/* <div className="chat-messages">
@@ -267,8 +285,6 @@ export default function Home() {
                       <button onClick={showValue} type="button" className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Run</button>
                   </div>
                   </div>
-
-             
           </div>
 
           <div className="validation"> 
