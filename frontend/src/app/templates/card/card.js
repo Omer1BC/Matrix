@@ -4,51 +4,7 @@ import './card.css';
 
 export default function Card({ tabs,tabContent, className,content,kvp}) {
 
-    /*
-        const tabs = {
-   id1: { content: "Some value", label: "Tab 1" },
-  tab2: { id: "tab2", content: "Another value", label: "Tab 2" },
-  tab3: { id: "tab3", content: "Third value", label: "Tab 3" } 
-  }
-
-    const tabs = [
-    { id: "profile", label: "Tab 1" },
-    { id: "dashboard", label: "Tab 2" },
-    { id: "settings", label: "Tab 3" },
-    { id: "contacts", label: "Tab 4" },
-  ];
-};
-    */
-
     const [activeTab, setActiveTab] = useState(Object.keys(tabs)[0]);
-    
-//     const tabContent = {
-//     profile: (
-//       <>
-//       <div>Output:</div>
-//       <p className="text-sm text-gray-500 dark:text-gray-400">
-//        <strong className="font-medium text-gray-800 dark:text-white"></strong> 
-//       </p>
-//       </>
-
-//     ),
-//     dashboard: (
-//       <p className="text-sm text-gray-500 dark:text-gray-400">
-//         Tab 2 <strong className="font-medium text-gray-800 dark:text-white"></strong> tab.
-//       </p>
-//     ),
-//     settings: (
-//       <p className="text-sm text-gray-500 dark:text-gray-400">
-//         Tab 3 <strong className="font-medium text-gray-800 dark:text-white"></strong> tab.
-//       </p>
-//     ),
-//     contacts: (
-//       <p className="text-sm text-gray-500 dark:text-gray-400">
-//         Tab 4 <strong className="font-medium text-gray-800 dark:text-white"></strong> tab.
-//       </p>
-//     ),
-//   };
-    console.log("tabs",tabs,activeTab)
     return (
         <>
             <div className={className}>
