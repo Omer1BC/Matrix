@@ -23,7 +23,7 @@ def run_python(request):
             code = body.get("code", "")
             res = insert_user_code(
             file_path,
-            code,sample="demo.py"
+            code,
             )
             old_stdout = sys.stdout
             sys.stdout = mystdout = io.StringIO()
