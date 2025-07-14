@@ -9,6 +9,8 @@ import {Editor} from '@monaco-editor/react'
 import {useRef,useState, useEffect} from 'react';
 import Link from 'next/link'
 import Card from '../templates/card/card';
+import ValidationContent from "../cards/validation/content";
+import { fetchProblemDetails } from '../utils/apiUtils';
 
 const navigation = [
   { name: 'Tab 1', href: '#', current: true },
@@ -24,6 +26,8 @@ function classNames(...classes ) {
 export default function Home() {
   const [activeTab, setActiveTab] = useState("profile");
   const [output, setOutput] = useState("");
+  const [details, setDetails] = useState({});
+
 
   const tabs = {
     profile: { label: "Tab 1", content: (<><p>Profile</p></>) },
@@ -52,42 +56,19 @@ export default function Home() {
                     </>) },
 
   };
-  const validation = {
-    test: { label: "Tests", content: (<>
-    <p>{output}</p>
-    <button onClick={showValue} type="button" className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Run</button>
 
-    </>) },
-  };
 
-  const tabContent = {
-    profile: (
-      <>
-      <div>Output:</div>
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-       <strong className="font-medium text-gray-800 dark:text-white"></strong> 
-      </p>
-      </>
-
-    ),
-    dashboard: (
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        Tab 2 <strong className="font-medium text-gray-800 dark:text-white"></strong> tab.
-      </p>
-    ),
-    settings: (
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        Tab 3 <strong className="font-medium text-gray-800 dark:text-white"></strong> tab.
-      </p>
-    ),
-    contacts: (
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        Tab 4 <strong className="font-medium text-gray-800 dark:text-white"></strong> tab.
-      </p>
-    ),
-  };
 
   const editorRef = useRef(null);
+  const validation = {
+    test: { label: "Tests", content: (<>
+    <ValidationContent 
+     editorRef={editorRef}
+    problemID={1} 
+    button={ <button onClick={showValue} type="button" className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Run</button>}
+    output={output} />
+    </>) },
+  };
 
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
@@ -113,11 +94,8 @@ export default function Home() {
         <div className="main">
           <Card className="content" tabs={content} />
           <Card className="references" tabs={references}  />
-          <Card className="code" tabs={code} tabContent={tabContent} />
-          <Card className="validation" tabs={validation} />
-
-        
-        
+          <Card className="code" tabs={code} />
+          <Card className="validation" tabs={validation} />        
         
         </div>
 

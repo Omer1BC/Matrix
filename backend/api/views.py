@@ -6,25 +6,48 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import io
 import sys
+from django.conf import settings
+
+import os
+from utils.utils import *
 
 @csrf_exempt
 def run_python(request):
+    media_path = settings.MEDIA_ROOT  # Absolute path to media folder
+    # Example: get a file path
+    file_path = os.path.join(media_path, "1_2sum.py")
     if request.method == "POST" and request.content_type == "application/json":
         import json
         try:
             body = json.loads(request.body)
             code = body.get("code", "")
-            # Redirect stdout to capture print output
+            res = insert_user_code(
+            file_path,
+            code,sample="demo.py"
+            )
             old_stdout = sys.stdout
             sys.stdout = mystdout = io.StringIO()
             try:
-                exec(code, {})
+                exec(res, {})
                 output = mystdout.getvalue()
             except Exception as e:
                 output = str(e)
             finally:
                 sys.stdout = old_stdout
-            return JsonResponse({"output": output})
+            return JsonResponse(output,safe=False)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
     return JsonResponse({"error": "Invalid request"}, status=400)
+@csrf_exempt
+def problem_details(request):
+    print(request.method,request.content_type)
+    if request.method == "POST" and request.content_type == "application/json":
+        import json
+        try:
+            body = json.loads(request.body)
+            problem_id = body.get("problem_id", "")
+            problem_details = get_problem_details(problem_id) 
+            return JsonResponse(problem_details)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+    return JsonResponse({"error": "Unacceptable type"}, status=400)
