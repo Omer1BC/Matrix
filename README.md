@@ -1,5 +1,5 @@
 # Matrix
 An integrated learning platform for technical interview-style programming questions
-# Milestone: UI & Python Sandbox Integration
+# Milestone: UI & Python Sandbox Integration & Test Verification
 
-<img width="956" height="433" alt="image" src="https://github.com/user-attachments/assets/e9792303-0604-4e77-b8a4-11c994256e8f" />
+<img width="959" height="436" alt="image" src="https://github.com/user-attachments/assets/18881a97-72fd-405b-a048-dc6a8d7d51c5" />
