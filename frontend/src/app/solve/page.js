@@ -24,24 +24,14 @@ function classNames(...classes ) {
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("profile");
   const [output, setOutput] = useState("");
-  const [details, setDetails] = useState({});
-
-
-  const tabs = {
-    profile: { label: "Tab 1", content: (<><p>Profile</p></>) },
-    dashboard: { label: "Tab 2", content: (<><p>Dashboard</p></>) },
-    settings: { label: "Tab 3", content: (<><p>Settings</p></>) },
-    contacts: { label: "Tab 4", content: (<><p>contacts</p></>) },
-  };
 
   const content = {
     vid: { label: "Video", content: (<><ReactPlayer className="react" controls={true} src='/vid.mp4' /></>) },
 
   };
   const references = {
-    ai: { label: "AI", content: (<><p>AI</p></>) },
+    ai: { label: "AI", content: (<><p></p></>) },
 
   };
   const code = {
