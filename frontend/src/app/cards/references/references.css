@@ -1,0 +1,22 @@
+.chat-bubble {
+    display: inline-block; 
+    background-color: #f0f0f0;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: .9rem;
+    border-radius: 1rem;
+    padding: .5rem;
+    margin-left: 0.5rem;
+    margin-top: .5rem;
+
+}
+.button-container {
+    display: flex;
+    /* justify-content: center; */
+    justify-content: center;
+}
+.chat-container {
+    /* justify-content: center; */
+padding: 5px;}
+#test {
+    align-self: flex-end !important;
+}

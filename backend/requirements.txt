@@ -1,2 +1,9 @@
 django
 django-cors-headers
+
+langchain 
+ 
+langchain-openai
+python-dotenv
+pydantic
+ 
