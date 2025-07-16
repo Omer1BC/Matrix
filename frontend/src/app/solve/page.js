@@ -10,6 +10,8 @@ import {useRef,useState, useEffect} from 'react';
 import Link from 'next/link'
 import Card from '../templates/card/card';
 import ValidationContent from "../cards/validation/content";
+import ReferencesContent from "../cards/references/content";
+
 import { fetchProblemDetails } from '../utils/apiUtils';
 
 const navigation = [
@@ -30,10 +32,7 @@ export default function Home() {
     vid: { label: "Video", content: (<><ReactPlayer className="react" controls={true} src='/vid.mp4' /></>) },
 
   };
-  const references = {
-    ai: { label: "AI", content: (<><p></p></>) },
 
-  };
   const code = {
     editor: { label: "Editor", content: (<>
                   <Editor 
@@ -59,7 +58,10 @@ export default function Home() {
     output={output} />
     </>) },
   };
+  const references = {
+    ai: { label: "AI", content: (<><ReferencesContent editorRef={editorRef}/></>) },
 
+  };
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
   }

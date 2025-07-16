@@ -4,8 +4,8 @@
 }
 #body {
   flex: 1;
-  display: flex;
-  background-color: rgb(170, 170, 170);
+  /* display: flex; */
+  background-color: rgb(233, 233, 233);
   position:relative;
   height: 100%;
   width: 100%;
