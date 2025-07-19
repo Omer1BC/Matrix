@@ -10,58 +10,16 @@ import {useRef,useState, useEffect} from 'react';
 import Link from 'next/link'
 import Card from '../templates/card/card';
 import ValidationContent from "../cards/validation/content";
-import ReferencesContent from "../cards/references/content";
+import {ReferencesContent,Tools} from "../cards/references/content";
+import {AnimationContent} from "../cards/content/content";
 
 import { fetchProblemDetails } from '../utils/apiUtils';
 
-const navigation = [
-  { name: 'Tab 1', href: '#', current: true },
-  { name: 'Tab 2', href: '#', current: false },
-  { name: 'Tab 3', href: '#', current: false },
-  { name: 'Tab 4', href: '#', current: false },
-]
-
-function classNames(...classes ) {
-  return classes.filter(Boolean).join(' ')
-}
 
 export default function Home() {
   const [output, setOutput] = useState("");
-
-  const content = {
-    vid: { label: "Video", content: (<><ReactPlayer className="react" controls={true} src='/vid.mp4' /></>) },
-
-  };
-
-  const code = {
-    editor: { label: "Editor", content: (<>
-                  <Editor 
-                  height="100%" 
-                  width="100%" 
-                  language="python"
-                  theme="vs-dark"
-                  onMount={handleEditorDidMount}
-                  />
-                    </>) },
-
-  };
-
-
-
   const editorRef = useRef(null);
-  const validation = {
-    test: { label: "Tests", content: (<>
-    <ValidationContent 
-     editorRef={editorRef}
-    problemID={1} 
-    button={ <button onClick={showValue} type="button" className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Run</button>}
-    output={output} />
-    </>) },
-  };
-  const references = {
-    ai: { label: "AI", content: (<><ReferencesContent editorRef={editorRef}/></>) },
-
-  };
+  const [response,setResponse] = useState("")
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
   }
@@ -81,6 +39,73 @@ export default function Home() {
       setOutput("Error sending POST request: " + err.message);
     }
   }
+  const tool_hints = (pattern) => {
+    if (editorRef.current)
+    {
+        fetchProblemDetails({code: editorRef.current.getValue(),pattern: pattern},
+        "tool_hints").then(data=>{
+            console.log('data',data)
+            setResponse(data.explanation)
+            // editorRef.current.setValue(data.updatedCode)
+
+        })
+    }
+  }
+  const hint = () => {
+        if (editorRef.current)
+        {
+            fetchProblemDetails({code: editorRef.current.getValue(),tests: ""},
+            "hints").then(data=>{
+                console.log('data',data)
+                setResponse(data.expalantions_of_hint)
+                console.log("resp is",response)
+                editorRef.current.setValue(data.annotated_code + "\n\n" + data.thought_provoking_test_case_to_consider_as_comment_block);
+            })
+
+
+        }
+
+    }
+  const urls = ['/vid.mp4','/vid2.mp4']
+  const [idx,setIdx] = useState(0)
+  const handleEnded = () => {
+    setIdx(1)
+  }
+  const content = {
+    vid: { label: "Video", content: (<><ReactPlayer muted={true} playing={true} className="react"  onEnded={handleEnded} controls={false} src={urls[idx]} /></>) },
+    anim: {label: "Animation",content: (<AnimationContent/>)}
+  };
+
+  const code = {
+    editor: { label: "Editor", content: (<>
+                  <Editor 
+                  height="100%" 
+                  width="100%" 
+                  language="python"
+                  theme="vs-dark"
+                  onMount={handleEditorDidMount}
+                  />
+                    </>) },
+    tools: { label: "Tools", content: (<><Tools set_response={tool_hints}/></>) },
+
+
+  };
+
+  const validation = {
+    test: { label: "Tests", content: (<>
+    <ValidationContent 
+     editorRef={editorRef}
+    problemID={1} 
+    button={ <button onClick={showValue} type="button" className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Run</button>}
+    output={output} />
+    </>) },
+  };
+  const references = {
+    ai: { label: "AI", content: (<><ReferencesContent test={hint} response={response}/></>) },
+
+
+  };
+
     return <>
     <div className="Page">
         <div className="main">

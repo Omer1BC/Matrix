@@ -7,7 +7,7 @@ export default function ValidationContent({problemID,editorRef}) {
     const [activeTest,setActiveTest] = useState({});
     const [tests,setTests] = useState({});
     const [activeKey,setActiveKey] = useState(0);
-useEffect(() => {
+    const fetchDetails = ()=> {
     fetchProblemDetails({problem_id:problemID}, "problem_details")
     .then(data => {
         if (editorRef.current) {
@@ -24,16 +24,22 @@ useEffect(() => {
         console.log(json)
     });
 
-},[editorRef]);
+}
+useEffect(() => fetchDetails,[editorRef]);
 
     const test = () => {
-        fetchProblemDetails({code: editorRef.current.getValue()}, "run").then(data => {
-            console.log('button data',data)
-            const fixedStr = data.replace(/'/g, '"');
+        fetchProblemDetails({problem_id: 1,code: editorRef.current.getValue()}, "tests").then(data => {
+            if (data.error !== 1)
+            {
+                console.log('button data',data)
+            const fixedStr = data.result.replace(/'/g, '"');
             const json = JSON.parse(fixedStr);
             console.log('button json',json)
             setTests(json);
-            // setTests(data);
+        }
+        else {
+            console.log("compilation error",data.result)
+        }
         })
     }
     const getActiveColor = (activeKey, key) => {

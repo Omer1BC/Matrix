@@ -11,12 +11,60 @@
 }
 .button-container {
     display: flex;
-    /* justify-content: center; */
     justify-content: center;
 }
 .chat-container {
-    /* justify-content: center; */
-padding: 5px;}
+padding: 5px;
+}
 #test {
     align-self: flex-end !important;
+}
+
+.tool-pill {
+  display: flex;
+  background-color: #ffffff;
+  justify-content: space-between;
+  border-radius: 9999px;
+  padding: 8px 24px;
+  /* padding-right:10px; */
+  /* margin: 8px 8px; */
+  width: 100%;
+font-family: 'Helvetica Neue', sans-serif;
+font-size: 1.1rem;
+
+}
+.info {
+    display: flex;
+    flex-direction: column;
+}
+
+.tool-pill button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  align-self: flex-end;
+}
+.tool-name {
+  margin-right: 12px;
+}
+
+.tool-description {
+  color: #555;
+}
+.tools-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    /* margin-top: 16px; */
+}
+.tools-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
 }

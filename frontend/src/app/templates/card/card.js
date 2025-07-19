@@ -34,10 +34,28 @@ export default function Card({ tabs,tabContent, className,content,kvp}) {
               </div>
               <div id="body">
                       {/* {content} */}
-                      {tabs[activeTab].content}
+{Object.keys(tabs).map((key) => (
+  <TabPanel key={key} active={activeTab === key}>
+    {tabs[key].content}
+  </TabPanel>
+))}
               </div>
               
             </div> 
         </>
     )
+}
+
+function TabPanel({ active, children }) {
+  return (
+    <div
+      style={{
+        display: active ? undefined : 'none',
+        flex: 1,
+        height: '100%',
+      }}
+    >
+      {children}
+    </div>
+  );
 }

@@ -2,50 +2,26 @@ import {useState, useEffect} from 'react';
 import { fetchProblemDetails } from '@/app/utils/apiUtils';
 import './references.css';
 import { Typewriter } from 'react-simple-typewriter';
-export default function RefrencesContent({problemID,editorRef}) {
-    const messages = [
-        { sender: 'user', text: 'Hi, how are you?' },
-    ];
-    const [data,setData] = useState({});
-    const test = () => {
-        // fetchProblemDetails({code: editorRef.current.getValue()}, "run").then(data => {
-        //     console.log('button data',data)
-        //     const fixedStr = data.replace(/'/g, '"');
-        //     const json = JSON.parse(fixedStr);
-        //     console.log('button json',json)
-        //     setTests(json);
-        //     // setTests(data);
-        // })
-        if (editorRef.current)
-        {
-            fetchProblemDetails({code: editorRef.current.getValue(),tests: ""},
-            "hints").then(data=>{
-                console.log('data',data)
-                setData(data);
-                editorRef.current.setValue(data.annotated_code + "\n\n" + data.thought_provoking_test_case_to_consider_as_comment_block);
-            })
-
-
-        }
-    }
+import ToolPill from './ToolPill';
+export function ReferencesContent({test,response}) {
 
 
     return (
         <div className="references-content">
             <div className='chat-container'>
-                {messages.map((message, index) => (
-                    <div className="chat-bubble" key={index} style={{textAlign: 'left'  }}> 
+                {/* {messages.map((message, index) => ( */}
+                    <div className="chat-bubble" style={{textAlign: 'left'  }}> 
                         <span  ><Typewriter
-  words={[data?.expalantions_of_hint]}
-  key = {data?.expalantions_of_hint || ""}
-  typeSpeed={25}
-  deleteSpeed={50}
-  delaySpeed={1000}
-  cursor
-/></span>
+                        words={[response]}
+                        key = {response}
+                        typeSpeed={25}
+                        deleteSpeed={50}
+                        delaySpeed={1000}
+                        cursor
+                        /></span>
                     </div>
-                )
-            )} 
+                {/* )
+            )}  */}
 
             </div>
                 <div className='button-container'>
@@ -59,3 +35,23 @@ export default function RefrencesContent({problemID,editorRef}) {
 
 
 }
+
+export function Tools({set_response}) {
+  const tools = [
+    { name: 'Sorting', description: 'Depth-First Search algorithm' },
+    { name: 'Set', description: 'Collection of unique elements' },
+    { name: 'Hashmap', description: 'Key-value data structure' },
+  ];
+      return (
+    <div className="tools-container">
+      <div className="tools-list">
+        {tools.map((tool, index) => (
+          <ToolPill set_response={set_response} key={index} name={tool.name} description={tool.description} />
+        ))}
+      </div>
+    </div>
+    )
+
+}
+
+export {ReferencesContent,Tools};
