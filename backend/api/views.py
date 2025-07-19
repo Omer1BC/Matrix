@@ -23,7 +23,7 @@ def run_python(request):
             code = body.get("code", "")
             res = insert_user_code(
             file_path,
-            code,
+            code,sample="demo.py",
             )
             old_stdout = sys.stdout
             sys.stdout = mystdout = io.StringIO()
@@ -52,6 +52,22 @@ def problem_details(request):
             return JsonResponse({"error": str(e)}, status=400)
     return JsonResponse({"error": "Malformed Request"}, status=400)
 @csrf_exempt
+def get_tests(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        import json
+        body = json.loads(request.body)
+        problem_id = body.get("problem_id", "")
+        code = body.get("code","")
+        result,error = run(problem_id,code)
+        res = {
+            "result": result,
+            "error": int(error)
+        }
+        return JsonResponse(res)
+    return JsonResponse({"error": "Malformed Request"}, status=400)
+    
+
+@csrf_exempt
 def ai_hints(request):
     if request.method == "POST" and request.content_type == "application/json":
         print("inside posts")
@@ -65,4 +81,18 @@ def ai_hints(request):
         except Exception as e:
             return JsonResponse({"Error Occured": str(e)}, status=400)
     print('malformed request')
+    return JsonResponse({"error": "Malformed Request"}, status=400)
+@csrf_exempt
+def ai_tool_hints(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        print("inside posts")
+        import json
+        try:
+            body = json.loads(request.body)
+            code = body.get("code", "")
+            pattern = body.get("pattern", "")
+            resp = get_tool_hints(code,pattern) 
+            return JsonResponse(resp)
+        except Exception as e:
+            return JsonResponse({"Error Occured": str(e)}, status=400)
     return JsonResponse({"error": "Malformed Request"}, status=400)

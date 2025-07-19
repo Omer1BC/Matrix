@@ -1,13 +1,28 @@
 from typing import *
 
-class Solution:
-    def twoSum(self, nums: List[int], target: int) -> List[int]:
-        return []
+def twoSum(nums:List[int],target:int)->int:
+    hm = {}
+    for i,n in enumerate(nums):
+        if target - n in hm:
+            return [hm[target-n],i]
+        else:
+            hm[n]=i 
+    return []
+
+def twoSum(nums,target):
+    hm = {}
+    for i,n in enumerate(nums):
+        if target -n in hm:
+            return [hm[target -n],i]
+        else:
+            hm[n]= i 
+
+    return []
 def run_test(nums, target, expected):
     exception = ""
     result = ""
     try:
-        result = (Solution().twoSum(nums, target))
+        result = (twoSum(nums, target))
         
     except Exception as e:
         exception = str(e)

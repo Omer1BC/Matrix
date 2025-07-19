@@ -2,7 +2,7 @@
     display: grid;
     background-color: rgb(243, 243, 243);
     grid-template-columns: 4fr 5fr;
-    grid-template-rows: 5fr 4fr;
+    grid-template-rows: 5fr 5fr;
     height: 100vh;
     gap: .45rem;
     padding: .5rem;
