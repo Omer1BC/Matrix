@@ -69,7 +69,6 @@ def get_network(arr,label=None,normal=True,width=1.3,tree=False,dx=4):
 	return VGroup(*[layers,connections])
 class GraphAnim(Scene):
 	def construct(self):
-		self.embed()
 		# #init
 		nodes = [Node(str(i)) for i in range(5)]
 		for i,node in enumerate(nodes):

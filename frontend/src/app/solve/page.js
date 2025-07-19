@@ -11,6 +11,7 @@ import Link from 'next/link'
 import Card from '../templates/card/card';
 import ValidationContent from "../cards/validation/content";
 import {ReferencesContent,Tools} from "../cards/references/content";
+import {AnimationContent} from "../cards/content/content";
 
 import { fetchProblemDetails } from '../utils/apiUtils';
 
@@ -65,9 +66,14 @@ export default function Home() {
         }
 
     }
+  const urls = ['/vid.mp4','/vid2.mp4']
+  const [idx,setIdx] = useState(0)
+  const handleEnded = () => {
+    setIdx(1)
+  }
   const content = {
-    vid: { label: "Video", content: (<><ReactPlayer className="react" controls={true} src='/vid.mp4' /></>) },
-
+    vid: { label: "Video", content: (<><ReactPlayer muted={true} playing={true} className="react"  onEnded={handleEnded} controls={false} src={urls[idx]} /></>) },
+    anim: {label: "Animation",content: (<AnimationContent/>)}
   };
 
   const code = {

@@ -1,0 +1,10 @@
+.react {
+    align-self: flex-end;
+    height: 400px!important;
+    width: 400px !important;
+}
+.container {
+    display: flex;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+}

@@ -96,3 +96,15 @@ def ai_tool_hints(request):
         except Exception as e:
             return JsonResponse({"Error Occured": str(e)}, status=400)
     return JsonResponse({"error": "Malformed Request"}, status=400)
+@csrf_exempt
+def get_animation(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        import json
+        try:
+            body = json.loads(request.body)
+            data = body.get("data")
+
+            return JsonResponse(get_anim(data))
+        except Exception as e:
+            return JsonResponse({"Error Occured": str(e)}, status=400)
+    return JsonResponse({"error": "Malformed Request"}, status=400) 

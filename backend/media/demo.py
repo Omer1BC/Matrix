@@ -9,15 +9,7 @@ def twoSum(nums:List[int],target:int)->int:
             hm[n]=i 
     return []
 
-def twoSum(nums,target):
-    hm = {}
-    for i,n in enumerate(nums):
-        if target -n in hm:
-            return [hm[target -n],i]
-        else:
-            hm[n]= i 
 
-    return []
 def run_test(nums, target, expected):
     exception = ""
     result = ""

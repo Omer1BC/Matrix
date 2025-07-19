@@ -1,4 +1,10 @@
 services: 
+  manim:
+    build: 
+      context: anim
+    volumes:
+      - ./anim/src:/app
+    command: manim -ql 2_Array.py Array
   backend:
     build: 
       context: backend

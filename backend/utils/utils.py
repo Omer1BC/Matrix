@@ -2,7 +2,7 @@ from django.conf import settings
 import os
 import sys
 import io
-
+import subprocess
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from langchain_openai import ChatOpenAI
@@ -11,7 +11,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 # from tools import save_tool
 import json
-
+import re
 
 from langchain.tools import Tool
 from datetime import datetime
@@ -206,3 +206,39 @@ def get_tool_hints(code,pattern):
         return output_dict
     except Exception as e:
         return {"Error":e,"raw":raw_response}
+def get_anim(data={"pattern": "Set","action":"Insert","step": 6}):
+    pattern,action, step = data['pattern'],data['action'],data["step"]
+    path = pattern_to_file(pattern)
+    # print('type',type(step))
+    insert_animation(path,action)
+    subprocess.run(["manim",path,"Array","-n",f"{str(step)},{str(step-1)}","-o", f"step_{step}.mp4"],check=True)
+    return {"data":str(type(step))}
+
+def insert_animation(path,action):
+
+    with open(path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    play_pattern = re.compile(r'^\s*self\.play\(.*\)\s*$')
+    last_play_index = None
+
+    # Find the index of the last self.play(...) line
+    for i, line in enumerate(lines):
+        if play_pattern.match(line):
+            last_play_index = i
+
+    if last_play_index is None:
+        raise ValueError("No self.play(...) line found in the file.")
+
+    # Determine correct indentation (match the last play)
+    indentation = re.match(r'^(\s*)', lines[last_play_index]).group(1)
+    insertion = indentation + action + "\n"
+
+    # Insert the new play call right after the last one
+    lines.insert(last_play_index + 1, insertion)
+
+    # Write the updated lines back to the file
+    with open(path, "w", encoding="utf-8") as f:
+        f.writelines(lines)
+
+def pattern_to_file(pattern):
+    return os.path.join(settings.MEDIA_ROOT,"2_Array.py")
