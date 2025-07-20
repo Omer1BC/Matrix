@@ -1,10 +1,22 @@
 .react {
+    width: 80% !important;
+}
+
+.button {
     align-self: flex-end;
-    height: 400px!important;
-    width: 400px !important;
+  background-color: blue;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.2s ease;
 }
 .container {
     display: flex;
+    flex-direction: column;
+    width: 100%;
     flex-direction: column !important;
-    justify-content: space-between !important;
 }

@@ -211,8 +211,10 @@ def get_anim(data={"pattern": "Set","action":"Insert","step": 6}):
     path = pattern_to_file(pattern)
     # print('type',type(step))
     insert_animation(path,action)
-    subprocess.run(["manim",path,"Array","-n",f"{str(step)},{str(step-1)}","-o", f"step_{step}.mp4"],check=True)
-    return {"data":str(type(step))}
+    name =  f"step_{step}.mp4"
+    subprocess.run(["manim",path,"Array","-ql","-n",f"{str(step)},{str(step)}","-o",name],check=True)
+    
+    return {"name":name}
 
 def insert_animation(path,action):
 
