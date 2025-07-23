@@ -1,0 +1,42 @@
+.validation-content {
+    display: flex;
+    flex-direction: row;
+    background-color: rgb(255, 255, 255);
+    width: 100%;
+    height: 100%;
+    padding: .4rem;
+}
+.test-cases {
+    display: flex;
+    flex-direction: column;
+    width: 20%;
+    gap: .1rem;
+    background-color: rgb(255, 255, 255);
+}
+.output {
+    display: flex;
+    flex-direction: column;
+    /* justify-content: center; */
+    flex:1;
+    padding: 1rem;
+    background-color: rgb(231, 231, 231);
+}
+
+.test-case {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border: 1px solid #e4e4e4;
+    border-radius: .5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+}
+.circle {
+    display: inline-block;
+    width: .7rem;
+    height: .7rem;
+    border-radius: 50%; 
+    background-color: red;
+}

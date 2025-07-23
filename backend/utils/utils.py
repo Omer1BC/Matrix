@@ -244,3 +244,9 @@ def insert_animation(path,action):
 
 def pattern_to_file(pattern):
     return os.path.join(settings.MEDIA_ROOT,"2_Array.py")
+def file_from_pattern(pattern):
+    return os.path.join(settings.MEDIA_ROOT,"patterns","Array.py"),os.path.join("/media/videos/Array/480p15/Array.mp4")
+def pattern_to_video(pattern): 
+    script_path,video_link = file_from_pattern(pattern)
+    subprocess.run(["manim", script_path,"Array","-ql"],check=True)
+    return {"data": video_link }

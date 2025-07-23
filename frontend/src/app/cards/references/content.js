@@ -1,8 +1,8 @@
 import {useState, useEffect} from 'react';
-import { fetchProblemDetails } from '@/app/utils/apiUtils';
+import { ping } from '@/app/utils/apiUtils';
 import './references.css';
 import { Typewriter } from 'react-simple-typewriter';
-import ToolPill from './ToolPill';
+import ToolPill from './toolPill';
 export function ReferencesContent({test,response}) {
 
 

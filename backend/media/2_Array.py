@@ -172,4 +172,5 @@ class Array(Scene):
         self.play(arr.next(),run_time=3)
         self.play(arr.next(),run_time=3)
         self.play(arr.next(),run_time=3)
+        self.play(arr.next(),run_time=3)
 

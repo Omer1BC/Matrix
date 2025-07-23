@@ -1,5 +1,5 @@
 import {useState,useEffect} from 'react'
-import { fetchProblemDetails,get } from '@/app/utils/apiUtils';
+import { ping,get } from '@/app/utils/apiUtils';
 import ReactPlayer from 'react-player'
 import './content.css'
 export function AnimationContent () {
@@ -37,3 +37,4 @@ export function AnimationContent () {
         </>
     )
 }
+

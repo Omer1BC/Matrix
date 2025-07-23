@@ -1,6 +1,6 @@
 import {useState, useEffect} from 'react';
 import './validation.css'
-import { fetchProblemDetails } from '@/app/utils/apiUtils';
+import { ping } from '@/app/utils/apiUtils';
 export default function ValidationContent({problemID,editorRef}) {
     const [number,setNumber] =useState(0);
     const [details,setDetails] = useState([]);
@@ -8,7 +8,7 @@ export default function ValidationContent({problemID,editorRef}) {
     const [tests,setTests] = useState({});
     const [activeKey,setActiveKey] = useState(0);
     const fetchDetails = ()=> {
-    fetchProblemDetails({problem_id:problemID}, "problem_details")
+    ping({problem_id:problemID}, "problem_details")
     .then(data => {
         if (editorRef.current) {
             editorRef.current.setValue(data.method_stub);
@@ -28,7 +28,7 @@ export default function ValidationContent({problemID,editorRef}) {
 useEffect(() => fetchDetails,[editorRef]);
 
     const test = () => {
-        fetchProblemDetails({problem_id: 1,code: editorRef.current.getValue()}, "tests").then(data => {
+        ping({problem_id: 1,code: editorRef.current.getValue()}, "tests").then(data => {
             if (data.error !== 1)
             {
                 console.log('button data',data)
@@ -36,10 +36,10 @@ useEffect(() => fetchDetails,[editorRef]);
             const json = JSON.parse(fixedStr);
             console.log('button json',json)
             setTests(json);
-        }
-        else {
-            console.log("compilation error",data.result)
-        }
+            }
+            else {
+                console.log("compilation error",data.result)
+            }
         })
     }
     const getActiveColor = (activeKey, key) => {

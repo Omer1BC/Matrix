@@ -108,3 +108,15 @@ def get_animation(request):
         except Exception as e:
             return JsonResponse({"Error Occured": str(e)}, status=400)
     return JsonResponse({"error": "Malformed Request"}, status=400) 
+@csrf_exempt
+def get_pattern_media(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        import json
+        try:
+            body = json.loads(request.body)
+            data = body.get("data")
+            name = body.get("name")
+            return JsonResponse(pattern_to_video(name))
+        except Exception as e:
+            return JsonResponse({"Error Occured": str(e)}, status=400)
+    return JsonResponse({"error": "Malformed Request"}, status=400) 
