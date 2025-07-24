@@ -17,4 +17,7 @@ Endpoints can be found at ```/Matrix/backend/api/urls.py``` which reference meth
 ## Running the Frontend
 Navigate to ```/Matrix/frontend``` and run ```npm run dev``` which will start on ```localhost:3000/```. You may need to run ```npm install``` to load all dependencies form the .json files. ```frontend/.next``` and  ```frontend/.node_modules``` are hidden by gitignore so they will not show on the repo.  
 
-```localhost:3000/solve``` is the most developed page which corrosponds ```/frontend/src/app/solve/page.js```. Routing is done by creating a directory and having a ```page.js``` file under it. The home page is found at ```frontend/page.js```which links other pages. 
+```localhost:3000/solve``` is the most developed page which corrosponds ```/frontend/src/app/solve/page.js```. Routing is done by creating a directory and having a ```page.js``` file under it. The home page is found at ```frontend/page.js```which links other pages.
+
+### /solve layout
+```/solve/page.js``` is compose of 4 cards whose template is found at ```/src/app/templates/cards```. The 4 sections are named content for the video section (top left), references (bottom left), code (top right), and validation (bottom right). Each card is passed a list of that specify the name of the tab and the content (other components). 
