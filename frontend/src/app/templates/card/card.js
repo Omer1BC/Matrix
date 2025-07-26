@@ -35,9 +35,11 @@ export default function Card({ tabs,tabContent, className,content,kvp}) {
               <div id="body">
                       {/* {content} */}
 {Object.keys(tabs).map((key) => (
-  <TabPanel key={key} active={activeTab === key}>
-    {tabs[key].content}
-  </TabPanel>
+<TabPanel key={key} active={activeTab === key}>
+  {typeof tabs[key].content === 'function' 
+    ? tabs[key].content() 
+    : tabs[key].content}
+</TabPanel>
 ))}
               </div>
               

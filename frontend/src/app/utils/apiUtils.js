@@ -1,5 +1,5 @@
 
-export async function fetchProblemDetails(data, endpoint) {
+export async function ping(data, endpoint) {
   try {
     const res = await fetch(`http://localhost:8000/api/${endpoint}`, {
       method: 'POST',
