@@ -18,7 +18,7 @@ import { ping } from '../utils/apiUtils';
 
 export default function Home() {
   const urls = ['/vid.mp4','/vid2.mp4']
-  const [url,setUrl] = useState('k')
+  const [url,setUrl] = useState('')
 
 useEffect(() => {
   console.log('url changed to:', url);
@@ -66,22 +66,31 @@ useEffect(() => {
     editorRef.current = editor;
   }
 
+  const update_valid =  (link) => {
+       setContent(prev => ({
+      ...prev,
+    custom  : {label:`Custom Animation`, content:  () => <patternToTabs.arrays.video url={link} />}
+      })); 
+  }
   const tool_hints = (pattern) => {
-    if (editorRef.current)
-    {
-        ping({code: editorRef.current.getValue(),pattern: pattern},
-        "tool_hints").then(data=>{
-            console.log('data',data)
-            setResponse(data.explanation)
-            // editorRef.current.setValue(data.updatedCode)
+    // if (editorRef.current)
+    // {
+    //     ping({code: editorRef.current.getValue(),pattern: pattern},
+    //     "tool_hints").then(data=>{
+    //         console.log('data',data)
+    //         setResponse(data.explanation)
+    //         // editorRef.current.setValue(data.updatedCode)
 
-        })
-    }
+    //     })
+    // }
+    // setUrl('http://localhost:8000/media/videos/Array/480p15/Array.mp4')
     setValidation(prev => ({
       ...prev,
-    custom  : {label: `Custom Test`, content: () => <patternToTabs.arrays.test setUrl={setUrl} name={pattern}/>}
+    custom  : {label: `Custom Test`, content: () => <patternToTabs.arrays.test setLink={update_valid} setUrl={setUrl} name={pattern}/>}
+
 
       }));
+      
      setContent(prev => ({
       ...prev,
     custom  : {label:`Custom Animation`, content:  () => <patternToTabs.arrays.video url={url} />}

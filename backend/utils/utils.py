@@ -243,10 +243,40 @@ def insert_animation(path,action):
         f.writelines(lines)
 
 def pattern_to_file(pattern):
-    return os.path.join(settings.MEDIA_ROOT,"2_Array.py")
+    return os.path.join(settings.MEDIA_ROOT,"3_dfs.py")
 def file_from_pattern(pattern):
     return os.path.join(settings.MEDIA_ROOT,"patterns","Array.py"),os.path.join("/media/videos/Array/480p15/Array.mp4")
-def pattern_to_video(pattern): 
-    script_path,video_link = file_from_pattern(pattern)
-    subprocess.run(["manim", script_path,"Array","-ql"],check=True)
-    return {"data": video_link }
+def pattern_to_video(name,data): 
+    # script_path,video_link = file_from_pattern(pattern)
+    # subprocess.run(["manim", script_path,"Array","-ql"],check=True)
+    # return {"data": video_link }
+    path = pattern_to_file(name)
+    edges_code = f'        edges = {data}\n'
+
+    # subprocess.run(["manim", path,input["name"],"-ql"],check=True)
+    # Read the source file
+    with open(path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    # Find the start of the construct method
+    for i, line in enumerate(lines):
+        if re.match(r"\s*def construct\(self\):", line):
+            insert_index = i + 1
+            break
+    else:
+        raise ValueError("construct method not found")
+
+    # Insert edges assignment
+    if edges_code not in lines:
+        lines.insert(insert_index, edges_code)
+
+    # Write the modified file back
+    path_no_mime = path[:-3]
+    new_path = (path_no_mime + "-1" + path[-3:])
+    new_name = os.path.basename(new_path)
+    with open(new_path, "w", encoding="utf-8") as f:
+        f.writelines(lines)
+
+    # Render with manim
+    subprocess.run(["manim", new_path, "-ql","-o",new_name[:-3],'--disable_caching'], check=True)
+    return {"data":f'media/videos/{new_name[:-3]}/480p15/{new_name[:-3]}.mp4'}

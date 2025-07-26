@@ -116,7 +116,7 @@ def get_pattern_media(request):
             body = json.loads(request.body)
             data = body.get("data")
             name = body.get("name")
-            return JsonResponse(pattern_to_video(name))
+            return JsonResponse(pattern_to_video(name,data))
         except Exception as e:
             return JsonResponse({"Error Occured": str(e)}, status=400)
     return JsonResponse({"error": "Malformed Request"}, status=400) 
