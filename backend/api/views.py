@@ -60,12 +60,25 @@ Return the total number of connected components in that graph.''',
                 "method_stub" : "def twoSum(self, nums: List[int], target: int) -> List[int]:\n        return []",
                 "input_args": ["nums","target","output","expected"],
                  "tools" : {"DFS":{"description": "Algorithm for traversing a graph",
-                                                  "args": {
-                                                      "edges": {"type": "List[List[int]]","default_value": "[[1,2]]"}
-                                                  }},
+                                    "args": {
+                                        "edges": {"type": "List[List[int]]","default_value": "[[1,2]]"}
+                                        },
+                                    "code": '''#DFS
+visit = set()
+def dfs(u):
+    visit.add(u)
+    for nbr in nbrs(u):
+        if nbr not in visit:
+            dfs(nbr)'''
+                                    },
                             "Set" : {"description": "Unordered data structure with O(1) insertion, removal, and find",
-                                     "args": {"nums": {"type":"List[int]","default_value":"[1,2,3,2,5]"}
-                                              }
+                                    "args": {"nums": {"type":"List[int]","default_value":"[1,2,3,2,5]"}
+                                        },
+                                    "code":'''#Set
+elements = set()
+elements.add(2) # O(1)
+if 2 in elements: # O(1)
+elements.remove(2) # O(1)'''
                                     }                     
                             },
             }

@@ -1,6 +1,6 @@
 .main {
     display: grid;
-    background-color: rgb(243, 243, 243);
+    background-color: rgb(233, 233, 233);
     grid-template-columns: 4fr 5fr;
     grid-template-rows: 5fr 5fr;
     height: 100vh;

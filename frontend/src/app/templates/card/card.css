@@ -4,11 +4,9 @@
 }
 #body {
   flex: 1;
-  /* display: flex; */
+  display: flex;
   background-color: rgb(233, 233, 233);
   position:relative;
-  height: 100%;
-  width: 100%;
   opacity: 100% !important;
 }
 .react {
