@@ -2,7 +2,7 @@ import {useState, useEffect} from 'react';
 import { ping } from '@/app/utils/apiUtils';
 import './references.css';
 import { Typewriter } from 'react-simple-typewriter';
-import ToolPill from './toolPill';
+import ToolPill from './ToolPill';
 export function ReferencesContent({test,response}) {
 
 
@@ -36,16 +36,16 @@ export function ReferencesContent({test,response}) {
 }
 
 export function Tools({tools, details, addToolCode,  askAboutTool}) {
-  console.log("tools",details)
-      return (
+  console.log("passed tools",tools[0]?.code)
+  return (
     <div className="tools-container">
       <div className="tools-list">
         {tools.map((tool, index) => (
-          <ToolPill addToolCode={addToolCode} details={details} askAboutTool={askAboutTool} key={index} name={tool.name} description={tool.description} />
+          <ToolPill code={tool?.code} addToolCode={addToolCode} details={details} askAboutTool={askAboutTool} key={index} name={tool.name} description={tool.description} />
         ))}
       </div>
     </div>
-    )
+  )
 
 }
 
