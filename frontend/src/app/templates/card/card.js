@@ -2,7 +2,7 @@
 import {useRef,useState, useEffect} from 'react';
 import './card.css';
 
-export default function Card({ tabs,tabContent, className,content,kvp}) {
+export default function Card({ tabs, className}) {
 
     const [activeTab, setActiveTab] = useState(Object.keys(tabs)[0]);
     return (
