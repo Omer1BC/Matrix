@@ -8,18 +8,33 @@ export const patternToTabs = {
 
 }
 
-function ArrayTest({setLink, setUrl, name}) {
+function ArrayTest({args, addToolAnimation, name}) {
     const [input,setInput] = useState("")
+    const [inputs,setInputs] = useState(Object.entries(args).map(([k,v]) => (v.default_value) ))
+
+    useEffect(() => {
+        setInputs(Object.entries(args).map(([k,v]) => (v.default_value) ))
+    },[args])
+
+    useEffect(() => {
+        addToolAnimation(input)
+        setVideoLink()
+    },[])
+
+
     async function setVideoLink () {
-        const resp = await ping({"data": input,name: name},"get_pattern_media")
+        const data = (Object.keys(args).map( (key,i) => key + " = " + inputs[i]))
+
+        const resp = await ping({"data": data,name: name},"get_pattern_media")
         const bustCache = Date.now(); // or Math.random()
         const target = `http://localhost:8000/${resp.data}?v=${bustCache}`;
-        // const target = `http://localhost:8000/${resp.data}`
-        // console.log("setting",target)
-        // setUrl(target)
-        console.log('input',input)
-        setLink(target)
+        addToolAnimation(target)
+    }
 
+    const handleChange = (i) => (e) => {
+        const newVals = [...inputs]
+        newVals[i] = e.target.value 
+        setInputs(newVals)
     }
 
 return (
@@ -32,10 +47,17 @@ return (
 
         </div>
             <div className="output">
-                <div>{"Array"}</div>
-                <div className="bg-gray-100 rounded-md px-4 py-2 font-mono text-sm text-black shadow-sm">
-                    <input defaultValue={input} onChange={ (e) => {setInput(e.target.value)}}type="string"/>
-                </div>
+                {Object.entries(args).map( ([k,v],i) => (
+                    <>
+                        <div key={k}>
+                            <div>{k}</div>
+                            <div className="bg-gray-100 rounded-md px-4 py-2 font-mono text-sm text-black shadow-sm">
+                                <input value={inputs[i]} onChange={ handleChange(i)}type="string"/>
+                            </div>  
+                        </div>
+                     
+                    </>
+                ))}
             </div>
 
 

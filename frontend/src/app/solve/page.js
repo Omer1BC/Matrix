@@ -1,151 +1,152 @@
 "use client";
 
-import Image from "next/image";
 import "../templates.css"
-import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
-import { Disclosure, Menu } from '@headlessui/react'
-import ReactPlayer from 'react-player'
 import {Editor} from '@monaco-editor/react'
 import {useRef,useState, useEffect} from 'react';
-import Link from 'next/link'
 import Card from '../templates/card/card';
 import ValidationContent from "../cards/validation/content";
 import {ReferencesContent,Tools} from "../cards/references/content";
-import {AnimationContent} from "../cards/content/content";
 import {patternToTabs} from '../patterns/mappings'
 import { ping } from '../utils/apiUtils';
+import { QuestionContent } from "../cards/content/content";
 
-
-export default function Home() {
-  const urls = ['/vid.mp4','/vid2.mp4']
+export default function Home({id}) {
+  /*States */
   const [url,setUrl] = useState('')
-
-useEffect(() => {
-  console.log('url changed to:', url);
-}, [url]);
-
-  const [idx,setIdx] = useState(0)
   const editorRef = useRef(null);
   const [output, setOutput] = useState("");
-    const handleEnded = () => {
-    setIdx(1)
-  }
-  async function showValue() {
-    let val = editorRef.current.getValue();
-    try {
-      const res = await fetch("http://localhost:8000/api/run", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code: val }),
-      });
-      const data = await res.json();
-      setOutput(data.output || data.error || "No output returned"); // Set output state
-    } catch (err) {
-      setOutput("Error sending POST request: " + err.message);
-    }
-  }
-  const [validtn,setValidation] = useState({
-    test: { label: "Tests", content: (<>
-    <ValidationContent 
-     editorRef={editorRef}
-    problemID={1} 
-    button={ <button onClick={showValue} type="button" className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Run</button>}
-    output={output} />
-    </>) },
-    
-  })
-  const [content,setContent] = useState(  {
-    vid: { label: "Video", content: (<><ReactPlayer muted={true} playing={true} className="react"  onEnded={handleEnded} controls={false} src={urls[idx]} /></>) },
-    anim: {label: "Animation",content: (<AnimationContent/>)}
-  }
-  )
   const [response,setResponse] = useState("")
+  const [details,setDetails] = useState({});
+
+  /*Init Problem Info */
+  useEffect(() => {
+    ping({problem_id:1}, "problem_details")
+    .then(data => {
+        if (editorRef.current) {
+            editorRef.current.setValue(data.method_stub);
+        }
+        const info = Object.entries(data?.tools ? data?.tools : {}).map(([name,info]) => ({name: name, description: info?.description}))
+        setDetails(data);
+    });
+  },[])
+
+  useEffect(()=> {
+    addToolsTab(Object.entries(details?.tools ? details?.tools : {}).map(([name,info]) => ({name: name, description: info?.description})))
+    addQuestionTab(details?.title,details?.difficulty,details?.description)
+  },[details])
+
+
+
+  /*Methods*/
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
   }
 
-  const update_valid =  (link) => {
-       setContent(prev => ({
+  const addQuestionTab =(title,difficulty,description) => {
+    setContentTabs(prev => ({
       ...prev,
-    custom  : {label:`Custom Animation`, content:  () => <patternToTabs.arrays.video url={link} />}
-      })); 
+          question: {
+      label: "Question", 
+      content: (<><QuestionContent title={title} difficulty={difficulty} description={description}/></>)
+      }
+    }))
   }
-  const tool_hints = (pattern) => {
-    // if (editorRef.current)
-    // {
-    //     ping({code: editorRef.current.getValue(),pattern: pattern},
-    //     "tool_hints").then(data=>{
-    //         console.log('data',data)
-    //         setResponse(data.explanation)
-    //         // editorRef.current.setValue(data.updatedCode)
-
-    //     })
-    // }
-    // setUrl('http://localhost:8000/media/videos/Array/480p15/Array.mp4')
-    setValidation(prev => ({
+  //Tool methods
+  const addToolsTab = (toolsInfo) => {
+    setCodeTabs( prev => ({
       ...prev,
-    custom  : {label: `Custom Test`, content: () => <patternToTabs.arrays.test setLink={update_valid} setUrl={setUrl} name={pattern}/>}
+      tools: { 
+        label: "Tools", 
+        content: (<><Tools tools={toolsInfo} addToolCode={addToolCode}  askAboutTool={askAboutTool}/></>) 
+        }    
 
-
-      }));
-      
-     setContent(prev => ({
-      ...prev,
-    custom  : {label:`Custom Animation`, content:  () => <patternToTabs.arrays.video url={url} />}
-      })); 
+    })
+    )
   }
-  const hint = () => {
-        if (editorRef.current)
-        {
-            ping({code: editorRef.current.getValue(),tests: ""},
-            "hints").then(data=>{
-                console.log('data',data)
-                setResponse(data.expalantions_of_hint)
-                console.log("resp is",response)
-                editorRef.current.setValue(data.annotated_code + "\n\n" + data.thought_provoking_test_case_to_consider_as_comment_block);
-            })
 
-
-        }
-
+  const addToolAnimation =  (link) => {
+      setContentTabs(prev => ({
+      ...prev,
+        custom  : {label:`Custom Animation`, content:  () => <patternToTabs.arrays.video url={link.length > 0 ? link : null} />}
+      })
+    ); 
+  }
+  const addToolCode = (code) => {
+    if (editorRef.current) {
+      editorRef.current.setValue(code + editorRef.current.getValue())
     }
+  }
+  const askAboutTool = (pattern,deets) => {
+    /* if (editorRef.current)
+    {
+        ping({code: editorRef.current.getValue(),pattern: pattern},
+        "tool_hints").then(data=>{
+            setResponse(data.explanation)
+            editorRef.current.setValue(data.updatedCode)
 
+        })
+    } */
+    
+    // console.log("asking",'|','|',pattern,details?.tools[pattern].args)
+    setValidationTabs(prev => ({
+      ...prev,
+      custom  : {label: `Custom Test`, content: () => <patternToTabs.arrays.test args={details?.tools[pattern].args} addToolAnimation={addToolAnimation} name={pattern}/>}
+      })
+    );
 
-
-  const code = {
-    editor: { label: "Editor", content: (<>
-                  <Editor 
-                  height="100%" 
-                  width="100%" 
-                  language="python"
-                  theme="vs-dark"
-                  onMount={handleEditorDidMount}
-                  />
-                    </>) },
-    tools: { label: "Tools", content: (<><Tools set_response={tool_hints}/></>) },
-
-
-  };
-
-
+    
+    // addToolAnimation(url)
+    // setContentTabs(prev => ({
+    //   ...prev,
+    //   custom  : {label:`Custom Animation`, content:  () => <patternToTabs.arrays.video url={url} />}
+    //   })
+    // ); 
+  }
+  //AI Hint
+  const hint = () => {
+    if (editorRef.current)
+    {
+      ping({code: editorRef.current.getValue(),tests: ""},"hints")
+      .then(data=>{
+          setResponse(data.expalantions_of_hint)
+          editorRef.current.setValue(data.annotated_code + "\n\n" + data.thought_provoking_test_case_to_consider_as_comment_block);
+        }
+      )
+    }
+  }
+  /* Tabs */
+  const [validationTabs,setValidationTabs] = useState({
+    test: { label: "Tests", 
+            content: (<><ValidationContent editorRef={editorRef} problemID={1} output={output} /></>) 
+          },
+    })
+  const [codeTabs,setCodeTabs] = useState({
+    editor: {
+      label: "Editor", 
+      content: (<><Editor height="100%" width="100%" language="python"theme="vs-dark"onMount={handleEditorDidMount} /></>)
+      }
+  })
+  const [contentTabs,setContentTabs] = useState({
+    question : {label: "Question",content: (<QuestionContent/>)}
+  })
   const references = {
-    ai: { label: "AI", content: (<><ReferencesContent test={hint} response={response}/></>) },
+    ai: { 
+      label: "AI", 
+      content: (<><ReferencesContent test={hint} response={response}/></>) 
+    },
   };
 
-    return <>
+
+
+  return <>
     <div className="Page">
         <div className="main">
-          <Card className="content" tabs={content} />
+          <Card className="content" tabs={contentTabs} />
           <Card className="references" tabs={references}  />
-          <Card className="code" tabs={code} />
-          <Card className="validation" tabs={validtn} />        
-        
+          <Card className="code" tabs={codeTabs} />
+          <Card className="validation" tabs={validationTabs} />           
         </div>
-
     </div>
-
-    </>
+  </>
 }
 

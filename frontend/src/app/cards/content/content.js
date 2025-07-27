@@ -2,6 +2,16 @@ import {useState,useEffect} from 'react'
 import { ping,get } from '@/app/utils/apiUtils';
 import ReactPlayer from 'react-player'
 import './content.css'
+export function QuestionContent ({title,difficulty,description}) {
+    return <>
+        <div className='questionContainer'>
+            <h1 className='title'> {title}</h1>
+            <h2>{difficulty}</h2>
+            <h3>{description}</h3>
+        </div>
+
+    </>
+}
 export function AnimationContent () {
     const [step,setStep] = useState(1)
     const prefix = 'http://localhost:8000/media/videos/2_Array/480p15/'

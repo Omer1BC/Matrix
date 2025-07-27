@@ -10,6 +10,7 @@ from django.conf import settings
 
 import os
 from utils.utils import *
+from utils.problem_info import *
 
 @csrf_exempt
 def run_python(request):
@@ -45,9 +46,33 @@ def problem_details(request):
         import json
         try:
             body = json.loads(request.body)
+            #Modularize
+            print(body)
             problem_id = body.get("problem_id", "")
-            problem_details = get_problem_details(problem_id) 
-            return JsonResponse(problem_details)
+            res = {
+                "title": "Number of Connected Components in an Undirected Graph",
+                "difficulty" : "Medium",
+                "description" : '''There is an undirected graph with n nodes. There is also an edges array, where edges[i] = [a, b] means that there is an edge between node a and node b in the graph.
+
+The nodes are numbered from 0 to n - 1.
+
+Return the total number of connected components in that graph.''',
+                "method_stub" : "def twoSum(self, nums: List[int], target: int) -> List[int]:\n        return []",
+                "input_args": ["nums","target","output","expected"],
+                 "tools" : {"DFS":{"description": "Algorithm for traversing a graph",
+                                                  "args": {
+                                                      "edges": {"type": "List[List[int]]","default_value": "[[1,2]]"}
+                                                  }},
+                            "Set" : {"description": "Unordered data structure with O(1) insertion, removal, and find",
+                                     "args": {"nums": {"type":"List[int]","default_value":"[1,2,3,2,5]"}
+                                              }
+                                    }                     
+                            },
+            }
+            result,error = run(problem_id,res['method_stub']) 
+            res['tests'] = result if not error else {}
+            # problem_details = get_problem_details(problem_id) 
+            return JsonResponse(res)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
     return JsonResponse({"error": "Malformed Request"}, status=400)
@@ -65,8 +90,6 @@ def get_tests(request):
         }
         return JsonResponse(res)
     return JsonResponse({"error": "Malformed Request"}, status=400)
-    
-
 @csrf_exempt
 def ai_hints(request):
     if request.method == "POST" and request.content_type == "application/json":
