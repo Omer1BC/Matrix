@@ -66,7 +66,7 @@ def get_problem_details(problem_id):
         "title": "Example Problem",
         "description": "Description of the problem goes here.",
         "test_cases": 3,
-        "method_stub": "class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        return []",
+        "method_stub": "def twoSum(self, nums: List[int], target: int) -> List[int]:\n        return []",
         "input_args": ["nums","target","output","expected"] 
     }
     result,error = run(res['method_stub'])
@@ -251,8 +251,7 @@ def pattern_to_video(name,data):
     # subprocess.run(["manim", script_path,"Array","-ql"],check=True)
     # return {"data": video_link }
     path = pattern_to_file(name)
-    edges_code = f'        edges = {data}\n'
-
+    # edges_code = f'     {data}\n'
     # subprocess.run(["manim", path,input["name"],"-ql"],check=True)
     # Read the source file
     with open(path, "r", encoding="utf-8") as f:
@@ -267,8 +266,11 @@ def pattern_to_video(name,data):
         raise ValueError("construct method not found")
 
     # Insert edges assignment
-    if edges_code not in lines:
-        lines.insert(insert_index, edges_code)
+    for input in data:
+        print('input')
+        lines.insert(insert_index,f'        {input}\n')
+    # if edges_code not in lines:
+    #     lines.insert(insert_index, edges_code)
 
     # Write the modified file back
     path_no_mime = path[:-3]
