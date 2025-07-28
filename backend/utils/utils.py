@@ -12,6 +12,7 @@ from langchain.agents import create_tool_calling_agent, AgentExecutor
 # from tools import save_tool
 import json
 import re
+from typing import Dict
 
 from langchain.tools import Tool
 from datetime import datetime
@@ -112,6 +113,13 @@ TOOL_HINTS_PROMPT = """You are a technical intervewier for a software engineer.
     {code}. This is one suggestion that occurs to to give. You MUST NOT explain the answer directly regarding how this approach {pattern} is relevant to the problem, but give the person enough information to figure it out. 
     You MUST always respond in the following template and no other text.\n
     {format_instructions}"""
+CODE_HINTS_PROMPT_2 = """You are a technical intervewier for a software engineer.
+    The interviewee has been updating their code following your guidance as shown here
+    {code}. You compare the candidate's code against the solution {solution} and 
+    notice that their code fails on the following tests cases: {cases}. 
+    You don't want to give them the answer, but want them to improve their problem solving abilitiy in technical interviews. 
+    ONLY hints to each relevant line number of their code specifying what they are missing, but do NOT put the actual solution in the commented code. You MUST always respond in the following template and no other text.\n
+    {format_instructions}"""
 
 def get_ai_hints(code,tests,problem_id=1):
     _,solution_section,_ = get_file_sections(id_to_file_name(problem_id))
@@ -162,6 +170,52 @@ def get_ai_hints(code,tests,problem_id=1):
         return {"Error":e,"raw":raw_response}
 
 
+def get_annotated_ai_hints(code,tests,problem_id=1):
+    _,solution_section,_ = get_file_sections(id_to_file_name(problem_id))
+    # with open(os.path.join(settings.MEDIA_ROOT, "demo2.py"), "w") as f:
+    #     f.write(''.join(solution_section))
+    soln = ''.join(solution_section)
+    class ResearchResponse(BaseModel):
+        line_number_to_comment: Dict[int,str]
+        expalantions_of_hint: str
+        thought_provoking_test_case_to_consider_as_comment_block: str
+        
+    load_dotenv()
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0,)
+    parser = PydanticOutputParser(pydantic_object=ResearchResponse)
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                CODE_HINTS_PROMPT_2,
+            ),
+            ("placeholder", "{chat_history}"),
+            ("human", "{query}"),
+            ("placeholder", "{agent_scratchpad}"),
+        ]
+    ).partial(format_instructions=parser.get_format_instructions(),code=code,solution=soln,cases="""
+    stderr: ❌ Test failed for input nums = [3, 2, 4], target = 6
+    stderr: Expected output: [1, 2]
+    stderr: Actual output: [2, 1]
+    """)
+
+    tools = [ save_tool]
+    agent = create_tool_calling_agent(
+        llm=llm,
+        prompt=prompt,
+        tools=tools
+    )
+
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+    query = "My code is not working. Can you give me some suggestions to think about while not explicitly giving me the answer?"
+    raw_response = agent_executor.invoke({"query":query})
+
+    try:
+        output_str = raw_response.get("output")
+        output_dict = json.loads(output_str)  # Convert JSON string to Python dict
+        return output_dict
+    except Exception as e:
+        return {"Error":e,"raw":raw_response}
 
 def get_tool_hints(code,pattern):
     

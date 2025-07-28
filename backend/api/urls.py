@@ -10,6 +10,7 @@ urlpatterns = [
     path('tool_hints', ai_tool_hints, name='tool_hints'),
     path('tests',get_tests),
     path('get_animation',get_animation),
-    path("get_pattern_media",get_pattern_media)
+    path("get_pattern_media",get_pattern_media),
+    path("annotate",annotate)
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
