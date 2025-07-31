@@ -69,47 +69,48 @@ def get_network(arr,label=None,normal=True,width=1.3,tree=False,dx=4):
 	return VGroup(*[layers,connections])
 class GraphAnim(Scene):
 	def construct(self):
-		# #init
-		nodes = [Node(str(i)) for i in range(5)]
-		for i,node in enumerate(nodes):
-			node.move_to(LEFT*4 + RIGHT * i * 2)
-		arrows = [Arrow(nodes[i].get_right(), nodes[i+1].get_left(),buff=.1) for i in range(len(nodes)-1)]
-		self.play(ShowCreation(nodes[0],run_time=.15))
-		for node,arrow in zip(nodes[1:],arrows):
-			self.play(ShowCreation(arrow,run_time=.5))	
-			self.wait(.01)
-			self.play(ShowCreation(node,run_time=.15))
-		self.play(*[FadeOut(mobj) for mobj in nodes + arrows],run_time=.6)
-		#Remove Circle
-		self.clear()
-		layers = [["A"],["B","C"],["D","E","F","G"],["H","I","J","K","L","M","N","O"]]
-		tree = Tree(layers,self)
-		tree.show(self)
-		# #dfs
-		dfs(None,tree.root)
-		#array
-		values = [1,2,3,4,6,7,8,9,9,10,11,12,13]
-		boxes = []
-		for i in range(len(values)):
-			val = values[i]
-			box = Square(side_length=1).shift(RIGHT * i)
-			num = Text(str(val),font_size=30).move_to(box.get_center())
-			boxes.append(VGroup(box,num))
-		array = VGroup(*boxes).move_to(ORIGIN)
-		self.play(*[ShowCreation(box[0]) for box in boxes],*[FadeIn(box[1]) for box in boxes])
-		arrow = Arrow(UP,DOWN,buff=.1).next_to(boxes[0][0],UP)
-		self.play(GrowArrow(arrow))
-		for i in range(1,len(boxes)):
-			self.play(arrow.animate.next_to(boxes[i][0],UP),run_time=.4)
-			self.wait(.1)
-		#hm
-		hm = {
-			"A":1,
-			"B":2,
-			"C":3
-		}
-		obj = HM(hm,self,pos=UP,fs=30)
-		obj.show()
+		# self.embed()
+		# # #init
+		# nodes = [Node(str(i)) for i in range(5)]
+		# for i,node in enumerate(nodes):
+		# 	node.move_to(LEFT*4 + RIGHT * i * 2)
+		# arrows = [Arrow(nodes[i].get_right(), nodes[i+1].get_left(),buff=.1) for i in range(len(nodes)-1)]
+		# self.play(ShowCreation(nodes[0],run_time=.15))
+		# for node,arrow in zip(nodes[1:],arrows):
+		# 	self.play(ShowCreation(arrow,run_time=.5))	
+		# 	self.wait(.01)
+		# 	self.play(ShowCreation(node,run_time=.15))
+		# self.play(*[FadeOut(mobj) for mobj in nodes + arrows],run_time=.6)
+		# #Remove Circle
+		# self.clear()
+		# layers = [["A"],["B","C"],["D","E","F","G"],["H","I","J","K","L","M","N","O"]]
+		# tree = Tree(layers,self)
+		# tree.show(self)
+		# # #dfs
+		# dfs(None,tree.root)
+		# #array
+		# values = [1,2,3,4,6,7,8,9,9,10,11,12,13]
+		# boxes = []
+		# for i in range(len(values)):
+		# 	val = values[i]
+		# 	box = Square(side_length=1).shift(RIGHT * i)
+		# 	num = Text(str(val),font_size=30).move_to(box.get_center())
+		# 	boxes.append(VGroup(box,num))
+		# array = VGroup(*boxes).move_to(ORIGIN)
+		# self.play(*[ShowCreation(box[0]) for box in boxes],*[FadeIn(box[1]) for box in boxes])
+		# arrow = Arrow(UP,DOWN,buff=.1).next_to(boxes[0][0],UP)
+		# self.play(GrowArrow(arrow))
+		# for i in range(1,len(boxes)):
+		# 	self.play(arrow.animate.next_to(boxes[i][0],UP),run_time=.4)
+		# 	self.wait(.1)
+		# #hm
+		# hm = {
+		# 	"A":1,
+		# 	"B":2,
+		# 	"C":3
+		# }
+		# obj = HM(hm,self,pos=UP,fs=30)
+		# obj.show()
 		#Nodes
 		nd = Node("A",scene=self,loc=ORIGIN + LEFT*2,fs=30,rs=.5)
 		nd.draw_node()

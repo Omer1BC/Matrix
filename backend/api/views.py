@@ -156,3 +156,18 @@ def get_pattern_media(request):
         except Exception as e:
             return JsonResponse({"Error Occured": str(e)}, status=400)
     return JsonResponse({"error": "Malformed Request"}, status=400) 
+@csrf_exempt
+def annotate(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        print("inside posts")
+        import json
+        try:
+            body = json.loads(request.body)
+            code = body.get("code", "")
+            tests = body.get("tests", "")
+            resp = get_annotated_ai_hints(code,tests) 
+            return JsonResponse(resp)
+        except Exception as e:
+            return JsonResponse({"Error Occured": str(e)}, status=400)
+    print('malformed request')
+    return JsonResponse({"error": "Malformed Request"}, status=400)
