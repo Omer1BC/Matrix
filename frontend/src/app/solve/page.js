@@ -58,10 +58,8 @@ export default function Home({id}) {
 
   /*States */
   const editorRef = useRef(null);
-  const hoverWidgetRef = useRef(null)
   const widgetRef = useRef(null)
   const monacoRef = useRef(null)
-  const [decorationIds,setDecorationIds] = useState([])
   const widgetRefs = useRef([])
   const decorationRefs = useRef([])
 
@@ -93,7 +91,6 @@ export default function Home({id}) {
         if (editorRef.current) {
             editorRef.current.setValue(data.method_stub);
         }
-        const info = Object.entries(data?.tools ? data?.tools : {}).map(([name,info]) => ({name: name, description: info?.description}))
         setDetails(data);
     });
   },[])
@@ -110,7 +107,6 @@ export default function Home({id}) {
     const monaco = monacoRef.current
     const prev = decorationRefs.current
     if (editor && monaco) {
-      const resp = {'2': 'Consider how you are iterating through the list. Are you checking all pairs correctly?', '3': 'Think about the efficiency of your approach. Is there a way to reduce the number of iterations needed?', '4': 'Make sure you are not returning indices in the wrong order. How can you ensure the order is correct?'}
       const model = editor.getModel()
       const n = model.getLineCount();
       let code = '';
@@ -144,8 +140,6 @@ export default function Home({id}) {
         })
 
         })
-    
-
     }
     else {
       alert("Please wait for the editor to load and try again!")
@@ -159,37 +153,24 @@ export default function Home({id}) {
     editorRef.current = editor;
     monacoRef.current = monaco;
 
-    // const newDecorations = editor.deltaDecorations([], [
-    //   {
-    //     range: new monaco.Range(1, 1, 1, 1),  
-    //     options: {
-    //       isWholeLine: true,
-    //       className: 'highlight'
-    //     }
-    //   }
-    // ]);
-
-    // setDecorationIds(newDecorations);
-
-    // hoverWidgetRef.current = new HoverWidget(editor, monaco, 'Hovered highlight!');
-    // editor.addContentWidget(hoverWidgetRef.current);
 
     editor.onMouseMove((e) => {
       const position = e.target.position;
       if (!position || decorationRefs.current.length == 0 || widgetRefs.current.length == 0) {
          return; 
       } 
-
       const n = position.lineNumber;
-      console.log("hover over",n)
-      widgetRefs.current.forEach((obj) => {
-        if (n != obj.n) {
-          obj.hide()
-        }
-        else {
-          obj.showAt(position)
-        }
-      }) 
+
+
+    const model = editor.getModel()
+    decorationRefs.current.forEach((id,i) => {
+    const range  =  model.getDecorationRange(id);
+    const widget = widgetRefs.current[i]
+    if (range && range.startLineNumber==n ) 
+      widget.showAt(position)
+    else 
+      widget.hide()
+    })
 
     });
   }

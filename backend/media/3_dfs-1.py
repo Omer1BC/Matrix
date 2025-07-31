@@ -4,7 +4,7 @@ import networkx as nx
 # class AutoLayoutGraph(Scene):
 class DFSGraph(Scene):
     def construct(self):
-        edges = [[1,2]]
+        edges = [[1,2],[2,5],[3,5]]
         self.clear()
         title = Text("DFS", font_size=40).to_edge(UP)
         divider = Line(title.get_left(), title.get_right())
