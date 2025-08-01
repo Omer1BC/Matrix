@@ -142,6 +142,9 @@ export default function Home() {
         <Link href="/solve">Solve</Link>
       </li>
       <li>
+        <Link href="/learn">Learn</Link>
+      </li>
+      <li>
         <Link href="/blog/hello-world">Blog Post</Link>
       </li>
     </ul>
