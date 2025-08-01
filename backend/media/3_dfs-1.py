@@ -12,6 +12,8 @@ class DFSGraph(Scene):
         self.play(Write(title), Write(divider))
         self.play(Write(Text("Time: O(E)\n\nSpace: O(E) ",font_size=33).to_edge(RIGHT,buff=.5)))
         G = nx.Graph()
+
+        
         G.add_edges_from(edges)
         pos = nx.spring_layout(G, scale=3)
         node_radius = 0.3
