@@ -11,7 +11,7 @@ from django.conf import settings
 import os
 from utils.utils import *
 from utils.problem_info import *
-
+# backend functions whose urls are mapped in /api/urls.py
 @csrf_exempt
 def run_python(request):
     media_path = settings.MEDIA_ROOT  # Absolute path to media folder
