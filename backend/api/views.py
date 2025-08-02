@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 # Create your views here.
 from django.http import JsonResponse
 
@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 import io
 import sys
 from django.conf import settings
+from .models import ProblemCategory, Problem
 
 import os
 from utils.utils import *
@@ -171,3 +172,53 @@ def annotate(request):
             return JsonResponse({"Error Occured": str(e)}, status=400)
     print('malformed request')
     return JsonResponse({"error": "Malformed Request"}, status=400)
+
+@csrf_exempt
+def get_all_categories(request):
+    """get all categories and their problems"""
+    if request.method == "GET":
+        categories = ProblemCategory.objects.prefetch_related('problems').all()
+        print(categories)
+        result = {}
+        for category in categories:
+            result[category.key] = {
+                "title": category.title,
+                "icon": category.icon,
+                "items": [
+                    {
+                        "id": problem.problem_id,
+                        "title": problem.title,
+                        "description": problem.description,
+                        "difficulty": problem.difficulty
+                    }
+                    for problem in category.problems.filter(is_active=True).order_by('order')# type: ignore
+                ]
+            }
+        
+        return JsonResponse(result)
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+@csrf_exempt
+def get_category_problems(request, category_key):
+    """Get problems for a specific category"""
+    try:
+        category = get_object_or_404(ProblemCategory, key=category_key)
+        problems = category.problems.filter(is_active=True).order_by('order') # type: ignore
+        
+        result = {
+            "title": category.title,
+            "icon": category.icon,
+            "items": [
+                {
+                    "id": problem.problem_id,
+                    "title": problem.title,
+                    "description": problem.description,
+                    "difficulty": problem.difficulty
+                }
+                for problem in problems
+            ]
+        }
+        
+        return JsonResponse(result)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)

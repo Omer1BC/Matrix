@@ -11,6 +11,10 @@ urlpatterns = [
     path('tests',get_tests),
     path('get_animation',get_animation),
     path("get_pattern_media",get_pattern_media),
-    path("annotate",annotate)
+    path("annotate",annotate),
+    
+    #learn page urls
+    path('categories/', get_all_categories, name='get_all_categories'),
+    path('categories/<str:category_key>/', get_category_problems, name='get_category_problems'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -10,7 +10,6 @@ import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link'
 import Card from '../templates/card/card';
 import ValidationContent from "../cards/validation/content";
-import problemCategories from "./accordian.js"
 
 import { fetchProblemDetails } from '../utils/apiUtils';
 
@@ -18,7 +17,35 @@ import { fetchProblemDetails } from '../utils/apiUtils';
 const ProblemDrawer = ({ isOpen, onClose, onProblemSelect }) => {
   const [activeSection, setActiveSection] = useState(null);
   const [selectedProblem, setSelectedProblem] = useState(null);
+  const [problemCategories, setProblemCategories] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const drawerRef = useRef(null);
+
+  // Fetch problem categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:8000/api/categories/');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setProblemCategories(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+        setError('Failed to load problem categories');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen]);
 
   // Focus management
   useEffect(() => {
@@ -55,8 +82,6 @@ const ProblemDrawer = ({ isOpen, onClose, onProblemSelect }) => {
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
   }, [isOpen, onClose]);
-
-  
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
@@ -100,7 +125,25 @@ const ProblemDrawer = ({ isOpen, onClose, onProblemSelect }) => {
 
       {/* Navigation Menu */}
       <div className="p-4">
-        {activeSection ? (
+        {loading ? (
+          // Loading state
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+            <span className="ml-3 text-gray-400">Loading problems...</span>
+          </div>
+        ) : error ? (
+          // Error state
+          <div className="text-center py-8">
+            <div className="text-red-400 mb-2">⚠️ Error</div>
+            <p className="text-gray-400 text-sm">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        ) : activeSection ? (
           // Detailed view of selected section
           <div>
             <button
@@ -113,32 +156,36 @@ const ProblemDrawer = ({ isOpen, onClose, onProblemSelect }) => {
               Back to categories
             </button>
             
-            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <span className="text-2xl">{problemCategories[activeSection].icon}</span>
-              {problemCategories[activeSection].title}
-            </h3>
-            
-            <div className="space-y-3">
-              {problemCategories[activeSection].items.map((item) => (
-                <button
-                  key={item.id}
-                  className="w-full text-left p-4 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors group"
-                  onClick={() => handleProblemSelect(item)}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-medium text-white group-hover:text-blue-400 transition-colors">
-                      {item.title}
-                    </div>
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getDifficultyColor(item.difficulty)}`}>
-                      {item.difficulty}
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    {item.description}
-                  </div>
-                </button>
-              ))}
-            </div>
+            {problemCategories[activeSection] && (
+              <>
+                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <span className="text-2xl">{problemCategories[activeSection].icon}</span>
+                  {problemCategories[activeSection].title}
+                </h3>
+                
+                <div className="space-y-3">
+                  {problemCategories[activeSection].items.map((item) => (
+                    <button
+                      key={item.id}
+                      className="w-full text-left p-4 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors group"
+                      onClick={() => handleProblemSelect(item)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium text-white group-hover:text-blue-400 transition-colors">
+                          {item.title}
+                        </div>
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getDifficultyColor(item.difficulty)}`}>
+                          {item.difficulty}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        {item.description}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         ) : (
           // Main menu sections
@@ -190,6 +237,7 @@ export default function ProblemsPage() {
     description: "Write a program that prints 'Hello, World!' to the console.",
     difficulty: "Easy"
   });
+  const [problemDetails, setProblemDetails] = useState(null);
 
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
@@ -200,7 +248,7 @@ export default function ProblemsPage() {
   async function runCode() {
     let val = editorRef.current.getValue();
     try {
-      const res = await fetch("http://localhost:8000/api/run", {
+      const res = await fetch("http://localhost:8000/api/run-python/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -214,13 +262,44 @@ export default function ProblemsPage() {
     }
   }
 
-  const handleProblemSelect = (problem) => {
+  const handleProblemSelect = async (problem) => {
     setCurrentProblem(problem);
-    // Update editor with starter code based on problem
-    if (editorRef.current) {
-      const starterCode = getStarterCode(problem.id);
-      editorRef.current.setValue(starterCode);
+    
+    // Fetch detailed problem information from the API
+    try {
+      const response = await fetch("http://localhost:8000/api/problem-details/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ problem_id: problem.id }),
+      });
+      
+      if (response.ok) {
+        const details = await response.json();
+        setProblemDetails(details);
+        
+        // Update editor with the method stub from the API
+        if (editorRef.current && details.method_stub) {
+          editorRef.current.setValue(details.method_stub);
+        }
+      } else {
+        console.error('Failed to fetch problem details');
+        // Fallback to starter code
+        if (editorRef.current) {
+          const starterCode = getStarterCode(problem.id);
+          editorRef.current.setValue(starterCode);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching problem details:', error);
+      // Fallback to starter code
+      if (editorRef.current) {
+        const starterCode = getStarterCode(problem.id);
+        editorRef.current.setValue(starterCode);
+      }
     }
+    
     setOutput(""); // Clear previous output
   };
 
@@ -289,17 +368,26 @@ export default function ProblemsPage() {
                 <div className="bg-white rounded-lg shadow-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-bold text-gray-800">
-                      Exercise {currentProblem.id}: {currentProblem.title}
+                      Exercise {currentProblem.id}: {problemDetails?.title || currentProblem.title}
                     </h2>
                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                      currentProblem.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
-                      currentProblem.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                      (problemDetails?.difficulty || currentProblem.difficulty) === 'Easy' ? 'bg-green-100 text-green-800' :
+                      (problemDetails?.difficulty || currentProblem.difficulty) === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
                     }`}>
-                      {currentProblem.difficulty}
+                      {problemDetails?.difficulty || currentProblem.difficulty}
                     </span>
                   </div>
-                  <p className="text-gray-600 mb-4">{currentProblem.description}</p>
+                  <p className="text-gray-600 mb-4">
+                    {problemDetails?.description || currentProblem.description}
+                  </p>
+                  
+                  {/* Show additional problem details if available */}
+                  {problemDetails?.category && (
+                    <div className="text-sm text-gray-500">
+                      Category: {problemDetails.category}
+                    </div>
+                  )}
                 </div>
 
                 {/* Code Editor */}
