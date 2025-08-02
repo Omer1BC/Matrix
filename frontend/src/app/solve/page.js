@@ -13,11 +13,13 @@ import { ping } from '../utils/apiUtils';
 import { QuestionContent } from "../cards/content/content";
 
 export default function Home({id}) {
+  //defines an annotation div
   class HoverWidget {
     constructor(editor, monaco, message,n=1) {
       this._editor = editor;
       this._monaco = monaco;
       this._message = message;
+      //A simple pink <span>message</span> element
       this._domNode = document.createElement('span');
       this._domNode.className = 'my-hover-widget';
       this._domNode.textContent = message;
@@ -33,7 +35,7 @@ export default function Home({id}) {
     getDomNode() {
       return this._domNode;
     }
-
+    //Bias the position to show above the cursor
     getPosition() {
       if (!this._position) return null;
       return {
@@ -68,22 +70,7 @@ export default function Home({id}) {
   const [response,setResponse] = useState("")
   const [details,setDetails] = useState({});
 
-  const createNewWidget = (message) => {
-    const editor = editorRef.current
-    const monaco = monacoRef.current
-    const prev = widgetRef.current
-    if (editor && monaco) {
-      if (prev)
-          editor.removeContentWidget(prev)
-
-      const newWidget = new HoverWidget(editor,monaco,message)
-      editor.addContentWidget(newWidget)
-      widgetRef.current = newWidget 
-    }
-
-  }
   
-
   /*Init Problem Info */
   useEffect(() => {
     ping({problem_id:1}, "problem_details")
@@ -101,8 +88,7 @@ export default function Home({id}) {
   },[details])
 
   /*Methods*/
-  const annotate = () => {
-    
+  const annotate = () => {  
     const editor = editorRef.current 
     const monaco = monacoRef.current
     const prev = decorationRefs.current
@@ -110,15 +96,18 @@ export default function Home({id}) {
       const model = editor.getModel()
       const n = model.getLineCount();
       let code = '';
+      //Send the current code line-numbered 
       for (let i = 1; i <=n;i++) {
         code += `${i} | ${model.getLineContent(i)}\n`
       }
+      //Ping the endpoint with the code /backend/api/views.py: annotate()
       ping({code: code, tests : {}},"annotate")
       .then((data) => {
 
         const resp = data.line_number_to_comment
         setResponse(data.expalantions_of_hint)
         
+        //Generate a new set of highlights for each annotation
         const decorations = Object.keys(resp).map(( line ) => 
           ({
             range: new monaco.Range(Number(line),1,Number(line),1),
@@ -129,6 +118,7 @@ export default function Home({id}) {
           })
         )
         decorationRefs.current  = editor.deltaDecorations(prev,decorations)
+        //Generate corrosponding pink anotation comments
         const widgets = Object.entries(resp).map(( [line,message] ) => 
           (
             new HoverWidget(editor,monaco,message,Number(line))
@@ -147,30 +137,27 @@ export default function Home({id}) {
 
 
   }
-
-
+  //When editor is loaded
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
     monacoRef.current = monaco;
-
-
     editor.onMouseMove((e) => {
+      //Registers hover events over the code editor
       const position = e.target.position;
       if (!position || decorationRefs.current.length == 0 || widgetRefs.current.length == 0) {
          return; 
       } 
       const n = position.lineNumber;
-
-
-    const model = editor.getModel()
-    decorationRefs.current.forEach((id,i) => {
-    const range  =  model.getDecorationRange(id);
-    const widget = widgetRefs.current[i]
-    if (range && range.startLineNumber==n ) 
-      widget.showAt(position)
-    else 
-      widget.hide()
-    })
+      const model = editor.getModel()
+      decorationRefs.current.forEach((id,i) => {
+      const range  =  model.getDecorationRange(id);
+      const widget = widgetRefs.current[i]
+      //Check that a hover event occured over this higlight's line number
+      if (range && range.startLineNumber==n ) 
+        widget.showAt(position)  //Show the current annotation
+      else 
+        widget.hide()
+      })
 
     });
   }
@@ -203,11 +190,13 @@ export default function Home({id}) {
       })
     ); 
   }
+  //When user presses the + button on a tool pill
   const addToolCode = (code) => {
     if (editorRef.current) {
       editorRef.current.setValue( "'''\n"+ code + "\n''''\n" + editorRef.current.getValue())
     }
   }
+  //When user presses the ? button on a tool pill
   const askAboutTool = (pattern,deets) => {
      if (editorRef.current)
     {
@@ -238,6 +227,8 @@ export default function Home({id}) {
     }
   }
   /* Tabs */
+  //Each card accepts a json defining the tabs {id: {label: "", content: </>}} 
+  //label is the display name up content is the component that gets rendered
   const [validationTabs,setValidationTabs] = useState({
     test: { label: "Tests", 
             content: (<><ValidationContent editorRef={editorRef} problemID={1} output={output} /></>) 
