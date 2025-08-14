@@ -14,7 +14,8 @@ urlpatterns = [
     path("annotate",annotate),
     
     #learn page urls
-    path('categories/', get_all_categories, name='get_all_categories'),
-    path('categories/<str:category_key>/', get_category_problems, name='get_category_problems'),
-
+    path('categories', get_all_categories, name='get_all_categories'),
+    path('problem-details', problem_details, name='problem_details'),
+    path('run-test', run_test_case, name='run_test_case'),
+    path('run-learn-tests', run_learn_tests, name='run_learn_tests'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
