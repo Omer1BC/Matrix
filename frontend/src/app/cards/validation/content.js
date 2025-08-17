@@ -1,7 +1,7 @@
 import {useState, useEffect} from 'react';
 import './validation.css'
 import { ping } from '@/app/utils/apiUtils';
-export default function ValidationContent({problemID,editorRef}) {
+export default function ValidationContent({annotateError, problemID,editorRef}) {
     const [details,setDetails] = useState([]);
     const [activeTest,setActiveTest] = useState({});
     const [tests,setTests] = useState({});
@@ -35,7 +35,7 @@ export default function ValidationContent({problemID,editorRef}) {
                 setTests(json);
             }
             else 
-                console.log("Compilation Error",data.result)
+                annotateError(data.result);
         })
     }
 

@@ -9,8 +9,11 @@ def twoSum(nums:List[int],target:int)->int:
             hm[n]=i 
     return []
 
-def twoSum(self, nums: List[int], target: int) -> List[int]:
-        return []
+def twoSum(n,t): 
+    hm = {}
+    for i,num in enumerate(n):
+        return [1,2]
+    return []
 def run_test(nums, target, expected):
     exception = ""
     result = ""

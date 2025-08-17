@@ -2,9 +2,9 @@ import {useState,useEffect} from 'react'
 import { ping,get } from '@/app/utils/apiUtils';
 import ReactPlayer from 'react-player'
 import './content.css'
-export function QuestionContent ({title,difficulty,description}) {
+export function QuestionContent ({title,difficulty,description,handleMouseUp}) {
     return <>
-        <div className='questionContainer'>
+        <div className='questionContainer' onMouseUp={handleMouseUp}>
             <h1 className='title'> {title}</h1>
             <h2>{difficulty}</h2>
             <h3>{description}</h3>

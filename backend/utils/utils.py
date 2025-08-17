@@ -121,6 +121,22 @@ CODE_HINTS_PROMPT_2 = """You are a technical intervewier for a software engineer
     ONLY hints to each relevant line number of their code specifying what they are missing, but do NOT put the actual solution in the commented code. You MUST always respond in the following template and no other text.\n
     {format_instructions}"""
 
+CODE_HINTS_PROMPT_3 = """You are a technical intervewier for a software engineer.
+    The interviewee has been updating their code following your guidance as shown here
+    {code}. You compare the candidate's code against the solution {solution} and 
+    notice that their code fails on the following tests cases: {cases}. 
+    You don't want to give them the answer, but want them to improve their problem solving abilitiy in technical interviews. 
+    ONLY hints to each relevant line number of their code specifying what they are missing, but do NOT put the actual solution in the commented code. You MUST always respond in the following template and no other text.\n
+    {format_instructions}"""
+ASK_AI_PROMPT = """
+You are a teachnical interviewer for a software engineer. The problem statement is {question}.
+They are confused on what what a particular section of the problem means. Help them out as concisely as you can. You MUST always respond in the following template and no other text.\n {format_instructions}
+"""
+ERROR_PROMPT = """
+You are going to play the role of the interpreter. It is known that the following code {code} has the error {error}. When ran with the imports {imports} and tested like this {tests}.
+Identify the line number of the code snippet that needs to be replaced and what syntically correct python code it needs to be replaced by to fix the error. Note that since the snippet is a part
+of a larger file, the line numbers are relative to the file, not the snippet. Since the replacement lines will be pasted in exactly character by character, be sure to include any leading tabs. You MUST always respond in the following template and no other text.\n {format_instructions}
+"""
 def get_ai_hints(code,tests,problem_id=1):
     _,solution_section,_ = get_file_sections(id_to_file_name(problem_id))
     with open(os.path.join(settings.MEDIA_ROOT, "demo2.py"), "w") as f:
@@ -214,6 +230,43 @@ def get_annotated_ai_hints(code,tests,problem_id=1):
         output_str = raw_response.get("output")
         output_dict = json.loads(output_str)  # Convert JSON string to Python dict
         return output_dict
+    except Exception as e:
+        return {"Error":e,"raw":raw_response}
+
+def ask_ai(question,text):
+    class ResearchResponse(BaseModel):
+        response: str   
+    load_dotenv()
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0,)
+    parser = PydanticOutputParser(pydantic_object=ResearchResponse)
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                ASK_AI_PROMPT,
+            ),
+            ("placeholder", "{chat_history}"),
+            ("human", "{query}"),
+            ("placeholder", "{agent_scratchpad}"),
+        ]
+    ).partial(format_instructions=parser.get_format_instructions(),question=question)
+
+    tools = [ save_tool]
+    agent = create_tool_calling_agent(
+        llm=llm,
+        prompt=prompt,
+        tools=tools
+    )
+
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+    query = f"I'm not sure what {text} exactly means in the context of the problem statement. Can you help me understand it better?"
+    raw_response = agent_executor.invoke({"query":query})
+    try:
+        output_str = raw_response.get("output")
+        output_dict = json.loads(output_str)  # Convert JSON string to Python dict
+        
+        return output_dict
+    
     except Exception as e:
         return {"Error":e,"raw":raw_response}
 
@@ -336,3 +389,45 @@ def pattern_to_video(name,data):
     # Render with manim
     subprocess.run(["manim", new_path, "-ql","-o",new_name[:-3],'--disable_caching'], check=True)
     return {"data":f'media/videos/{new_name[:-3]}/480p15/{new_name[:-3]}.mp4'}
+
+def get_error_details(problem_id,error,code):
+    imports,_,tests = get_file_sections(id_to_file_name(problem_id))
+    imprts = ''.join(imports)
+    tsts = ''.join(tests)
+
+    class ResearchResponse(BaseModel):
+        line_number_to_replacement: Dict[int,str]
+        expalantions_of_hint: str
+        
+    load_dotenv()
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0,)
+    parser = PydanticOutputParser(pydantic_object=ResearchResponse)
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                ERROR_PROMPT,
+            ),
+            ("placeholder", "{agent_scratchpad}"),
+        ]
+    ).partial(format_instructions=parser.get_format_instructions(),code=code,imports=imprts,tests=tsts,error=error)
+    # llm.invoke(prompt)
+    # tools = [ save_tool]
+    # agent = create_tool_calling_agent(
+    #     llm=llm,
+    #     prompt=prompt,
+    #     tools=tools
+    # )
+
+    # agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+    raw_response = llm.invoke(prompt.format_prompt().to_messages())
+
+    try:
+        # output_str = raw_response.get("output")
+        # output_dict = json.loads(output_str) 
+        output_str = raw_response.content  # ✅ not .get()
+        output_dict = parser.parse(output_str)  # ✅ directly parse into your Pydantic model
+        return output_dict.dict()
+    
+    except Exception as e:
+        return {"Error": str(e), "raw": raw_response.content}
