@@ -7,7 +7,9 @@ from django.views.decorators.csrf import csrf_exempt
 import io
 import sys
 from django.conf import settings
-from .models import ProblemCategory, Problem
+from .models import ProblemCategory, Problem, ProblemCompletion, User
+
+import traceback
 
 import os
 from utils.utils import *
@@ -82,50 +84,46 @@ def run_python(request):
 @csrf_exempt
 def run_learn_tests(request):
     media_path = settings.MEDIA_ROOT
-    
-    print("=" * 50)
-    print("RUN LEARN TESTS REQUEST:")
-    print(f"Request method: {request.method}")
-    print(f"Content type: '{request.content_type}'")
-    print("=" * 50)
-    
+
     if request.method == "POST":
         content_type = request.content_type or ''
-        
+
         if 'application/json' in content_type:
-            import json
             try:
                 body = json.loads(request.body)
                 code = body.get("code", "")
                 problem_id = body.get("problem_id", "1_2sum")
-                
-                print(f"Running tests for problem: {problem_id}")
-                
-                # Map problem IDs to their respective files
-                
+
+                # Make sure the user is logged in
+                if not request.user.is_authenticated:
+                    return JsonResponse({"error": "Authentication required"}, status=403)
+
+                user = request.user
+
+                # Find the problem
+                try:
+                    problem = Problem.objects.get(problem_id=problem_id)
+                except Problem.DoesNotExist:
+                    return JsonResponse({"error": f"Problem {problem_id} not found"}, status=404)
+
+                # Insert user code into test file (your existing logic)
                 file_name = f"{problem_id}.py"
                 file_path = os.path.join(media_path, file_name)
-                
+
                 if not os.path.exists(file_path):
                     return JsonResponse({"error": f"Problem file {file_name} not found"}, status=404)
-                
-                # Insert user code into the test file
+
                 res = insert_user_code(file_path, code, sample=f"test_{problem_id}.py")
-                
-                # Capture both stdout and create a custom results variable
+
+                # Capture stdout
                 old_stdout = sys.stdout
                 sys.stdout = mystdout = io.StringIO()
-                
-                # Create a namespace to capture the results
                 namespace = {}
-                
+
                 try:
                     exec(res, namespace)
-                    
-                    # Extract the results from the namespace
-                    test_results = namespace.get('results', {})
-                    
-                    # Convert the results to a list format for frontend
+
+                    test_results = namespace.get("results", {})
                     formatted_results = []
                     for test_name, result in test_results.items():
                         formatted_results.append({
@@ -134,25 +132,42 @@ def run_learn_tests(request):
                             "expected": result.get("expected"),
                             "actual": result.get("actual"),
                             "error": result.get("error", ""),
-                            "input": result.get("graph") or result.get("nums") or result.get("input", ""),  # Handle different input types
+                            "input": result.get("graph") or result.get("nums") or result.get("input", ""),
                             "description": f"Test case {test_name.split('_')[-1]}" if "_" in test_name else test_name
                         })
-                    
-                    print(f"Successfully executed tests. Found {len(formatted_results)} test cases")
-                    
+
+                    passed_tests = sum(1 for r in formatted_results if r["passed"])
+                    total_tests = len(formatted_results)
+                    if total_tests > 0 and passed_tests == total_tests:
+                        completion, created = ProblemCompletion.objects.get_or_create(
+                            user=user,
+                            problem=problem
+                        )
+                        completion.mark_as_completed(user_solution=code)
+
+                        # Update user progress
+                        user.progress.update_progress()
+
+                        return JsonResponse({
+                            "success": True,
+                            "message": "All tests passed! Problem marked as completed.",
+                            "test_results": formatted_results,
+                            "total_tests": total_tests,
+                            "passed_tests": passed_tests,
+                            "next_problem": user.progress.current_problem.problem_id if user.progress.current_problem else None
+                        })
+
+                    # If some tests failed → just return results
                     return JsonResponse({
                         "success": True,
                         "test_results": formatted_results,
-                        "total_tests": len(formatted_results),
-                        "passed_tests": sum(1 for r in formatted_results if r["passed"])
+                        "total_tests": total_tests,
+                        "passed_tests": passed_tests
                     })
-                    
+
                 except Exception as e:
                     error_msg = str(e)
-                    print(f"Execution failed: {error_msg}")
-                    import traceback
                     traceback.print_exc()
-                    
                     return JsonResponse({
                         "success": False,
                         "error": error_msg,
@@ -160,12 +175,10 @@ def run_learn_tests(request):
                     })
                 finally:
                     sys.stdout = old_stdout
-                
+
             except json.JSONDecodeError as e:
                 return JsonResponse({"error": f"JSON decode error: {str(e)}"}, status=400)
             except Exception as e:
-                print(f"General error: {e}")
-                import traceback
                 traceback.print_exc()
                 return JsonResponse({"error": str(e)}, status=400)
         else:
@@ -261,8 +274,9 @@ def get_all_categories(request):
     """get all categories and their problems"""
     if request.method == "GET":
         categories = ProblemCategory.objects.prefetch_related('problems').all()
-        print(categories)
         result = {}
+        user = request.user
+        print(request.user)
         for category in categories:
             result[category.key] = {
                 "title": category.title,
@@ -272,7 +286,8 @@ def get_all_categories(request):
                         "id": problem.problem_id,
                         "title": problem.title,
                         "description": problem.description,
-                        "difficulty": problem.difficulty
+                        "difficulty": problem.difficulty,
+                        "unlocked":not (problem.is_locked_by_default) #or problem.is_unlocked_for_user(user)
                     }
                     for problem in category.problems.order_by('order') #ignore # Removed is_active filter since your model might not have it
                 ]
@@ -432,3 +447,28 @@ def run_test_case(request):
             return JsonResponse({'error': str(e)}, status=500)
     
     return JsonResponse({"error": "Method not allowed"}, status=405)
+
+from django.contrib.auth import authenticate, login, logout
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt  # for testing — better to configure CSRF properly
+def login_view(request):
+    if request.method == "POST":
+        data = json.loads(request.body.decode("utf-8"))
+        username = data.get("username")
+        password = data.get("password")
+
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return JsonResponse({"success": True, "message": "Logged in"})
+        else:
+            return JsonResponse({"success": False, "message": "Invalid credentials"}, status=400)
+    return JsonResponse({"success": False, "message": "Only POST allowed"}, status=405)
+
+@csrf_exempt
+def logout_view(request):
+    logout(request)
+    return JsonResponse({"success": True, "message": "Logged out"})
