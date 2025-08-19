@@ -11,6 +11,9 @@ urlpatterns = [
     path('tests',get_tests),
     path('get_animation',get_animation),
     path("get_pattern_media",get_pattern_media),
-    path("annotate",annotate)
+    path("annotate",annotate),
+    path("ask",ask),
+    path("next_thread", next_thread),
+    path("annotate_errors", annotate_errors),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

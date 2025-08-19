@@ -10,7 +10,9 @@ from django.conf import settings
 
 import os
 from utils.utils import *
+from utils.agents import *
 from utils.problem_info import *
+
 # backend functions whose urls are mapped in /api/urls.py
 @csrf_exempt
 def run_python(request):
@@ -170,4 +172,47 @@ def annotate(request):
         except Exception as e:
             return JsonResponse({"Error Occured": str(e)}, status=400)
     print('malformed request')
+    return JsonResponse({"error": "Malformed Request"}, status=400)
+@csrf_exempt
+def ask(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        import json
+        try:
+            body = json.loads(request.body)
+            text = body.get("text", "")
+            question = body.get("question", "")
+            print(question,text)
+            resp = ask_ai(question,text) 
+            print("response is resp",resp)
+            return JsonResponse(resp)
+        except Exception as e:
+            return JsonResponse({"Error Occured": str(e)}, status=400)
+    return JsonResponse({"error": "Malformed Request"}, status=400)
+@csrf_exempt
+def next_thread(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        import json
+        try:
+            body = json.loads(request.body)
+            ask = body.get("ask", "")
+            question = body.get("question", "")
+            code = body.get("code", "")
+            resp = get_next_conversation(ask,code,question) 
+            return JsonResponse(resp)
+        except Exception as e:
+            return JsonResponse({"Error Occured": str(e)}, status=400)
+    return JsonResponse({"error": "Malformed Request"}, status=400)
+@csrf_exempt
+def annotate_errors(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        import json
+        try:
+            body = json.loads(request.body)
+            code = body.get("code", "")
+            error = body.get("error", "")
+            id = body.get("id", "")
+            resp = get_error_details(id,error,code) 
+            return JsonResponse(resp,safe=False)
+        except Exception as e:
+            return JsonResponse({"Error Occured": str(e)}, status=400)
     return JsonResponse({"error": "Malformed Request"}, status=400)

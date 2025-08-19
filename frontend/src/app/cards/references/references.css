@@ -1,3 +1,16 @@
+.references-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #ffffff;
+}
+.input-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding: 10px;
+    gap: 10px;
+}
 .chat-bubble {
     display: inline-block; 
     background-color: #f0f0f0;
@@ -11,10 +24,14 @@
 }
 .button-container {
     display: flex;
-    justify-content: center;
+    align-items: center;
 }
 .chat-container {
-padding: 5px;
+  height:80%;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 5px;
+
 }
 #test {
     align-self: flex-end !important;

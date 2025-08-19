@@ -5,7 +5,6 @@ import {Editor} from '@monaco-editor/react'
 import {useRef,useState, useEffect} from 'react';
 import Card from '../templates/card/card';
 import Header from '../templates/header/header';
-
 import ValidationContent from "../cards/validation/content";
 import {ReferencesContent,Tools} from "../cards/references/content";
 import {patternToTabs} from '../patterns/mappings'
@@ -15,14 +14,24 @@ import { QuestionContent } from "../cards/content/content";
 export default function Home({id}) {
   //defines an annotation div
   class HoverWidget {
-    constructor(editor, monaco, message,n=1) {
+    constructor(editor, monaco,i=1, message,n=1,replaceEditorLine) {
       this._editor = editor;
       this._monaco = monaco;
       this._message = message;
-      //A simple pink <span>message</span> element
-      this._domNode = document.createElement('span');
-      this._domNode.className = 'my-hover-widget';
-      this._domNode.textContent = message;
+      this.i = i
+      //Div that has a nested annotation message and a button
+      this._domNode = document.createElement('div');
+      const span = document.createElement('span');
+      span.className = 'my-hover-widget';
+      span.textContent = message;
+
+      const button = document.createElement('button');
+      button.className = 'my-hover-widget-button';
+      button.textContent = '✔';
+
+      button.onclick = () => replaceEditorLine(i,n,this._message);
+      this._domNode.appendChild(span);
+      this._domNode.appendChild(button);
       this._id = `hover.widget-${n}`;
       this._position = null;
       this.n = n
@@ -58,6 +67,7 @@ export default function Home({id}) {
     }
   }
 
+
   /*States */
   const editorRef = useRef(null);
   const widgetRef = useRef(null)
@@ -65,12 +75,15 @@ export default function Home({id}) {
   const widgetRefs = useRef([])
   const decorationRefs = useRef([])
 
+  const errorWidgetRefs = useRef([])
+  const errorDecorationRefs = useRef([])
 
+  const [textHighlights, setTextHighlights] = useState("");
   const [output, setOutput] = useState("");
   const [response,setResponse] = useState("")
   const [details,setDetails] = useState({});
 
-  
+
   /*Init Problem Info */
   useEffect(() => {
     ping({problem_id:1}, "problem_details")
@@ -88,6 +101,77 @@ export default function Home({id}) {
   },[details])
 
   /*Methods*/
+  //Hight to ask
+  function handleMouseUp()  {
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) {
+      ping({
+        text: selection.toString(),
+        question: details?.title + "\n" + details?.description 
+        },"ask")
+      .then(data => {
+        setResponse(data.response);
+      })
+      console.log("Selected text:", selection.toString());
+    }
+  }
+  const annotateError = (codeError) => {  
+    const editor = editorRef.current 
+    const monaco = monacoRef.current
+    const prev = errorDecorationRefs.current
+    if (editor && monaco) {
+      const model = editor.getModel()
+      const n = model.getLineCount();
+      let code = '';
+      //Send the current code line-numbered 
+      for (let i = 1; i <=n;i++) {
+        code += `${i} | ${model.getLineContent(i)}\n`
+      }
+      //Ping the endpoint with the code /backend/api/views.py: annotate()
+      // const data = {
+      //   line_number_to_comment: {1: "def my_function(param1, param2):",
+      //   2: "def another_function(param1):"} ,
+      //   expalantions_of_hint: codeError,  
+      // }
+      ping({code: code, error : codeError,id:1},"annotate_errors")
+      .then((data) => {
+        const resp = data.line_number_to_replacement
+        setResponse(data.expalantions_of_hint)      
+        //Generate a new set of highlights for each annotation
+        const decorations = Object.keys(resp).map(( line ) => 
+          ({
+            range: new monaco.Range(Number(line),1,Number(line),1),
+            options:  {
+              isWholeLine: true,
+              className: "error-highlight"
+            }
+          })
+        )
+        errorDecorationRefs.current  = editor.deltaDecorations(prev,decorations)
+        //Generate corrosponding pink anotation comments
+        const widgets = Object.entries(resp).map(( [line,message],i ) => 
+          (
+            new HoverWidget(editor,monaco,i,message,Number(line),replaceEditorLine)
+          )
+        )
+        errorWidgetRefs.current = widgets
+        widgets.forEach((widg) => {
+          editor.addContentWidget(widg)
+
+        })
+
+        })
+
+
+    }
+    else {
+      alert("Please wait for the editor to load and try again!")
+    }
+
+
+  }
+  //Anotate the code editor 
+  
   const annotate = () => {  
     const editor = editorRef.current 
     const monaco = monacoRef.current
@@ -103,10 +187,8 @@ export default function Home({id}) {
       //Ping the endpoint with the code /backend/api/views.py: annotate()
       ping({code: code, tests : {}},"annotate")
       .then((data) => {
-
         const resp = data.line_number_to_comment
-        setResponse(data.expalantions_of_hint)
-        
+        setResponse(data.expalantions_of_hint)      
         //Generate a new set of highlights for each annotation
         const decorations = Object.keys(resp).map(( line ) => 
           ({
@@ -121,7 +203,7 @@ export default function Home({id}) {
         //Generate corrosponding pink anotation comments
         const widgets = Object.entries(resp).map(( [line,message] ) => 
           (
-            new HoverWidget(editor,monaco,message,Number(line))
+            new HoverWidget(editor,monaco,0,message,Number(line),replaceEditorLine)
           )
         )
         widgetRefs.current = widgets
@@ -137,36 +219,89 @@ export default function Home({id}) {
 
 
   }
+
+  function nextThread(input) {
+    const problemQuestion = details?.title + "\n" + details?.description 
+    const code = editorRef.current ? editorRef.current.getValue() : "";
+    ping({
+      ask: input,
+      code: code,
+      question: problemQuestion,
+
+    },"next_thread")
+    .then(data => {
+      setResponse(data.response);
+    })
+
+  }
   //When editor is loaded
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
     monacoRef.current = monaco;
     editor.onMouseMove((e) => {
       //Registers hover events over the code editor
+      console.log("errors",errorDecorationRefs.current)
+
       const position = e.target.position;
-      if (!position || decorationRefs.current.length == 0 || widgetRefs.current.length == 0) {
+      if (!position ) {
          return; 
       } 
       const n = position.lineNumber;
       const model = editor.getModel()
       decorationRefs.current.forEach((id,i) => {
-      const range  =  model.getDecorationRange(id);
-      const widget = widgetRefs.current[i]
-      //Check that a hover event occured over this higlight's line number
-      if (range && range.startLineNumber==n ) 
-        widget.showAt(position)  //Show the current annotation
-      else 
-        widget.hide()
+        const range  =  model.getDecorationRange(id);
+
+        const widget = widgetRefs.current[i]
+
+        //Check that a hover event occured over this higlight's line number
+        if (range && range.startLineNumber==n ) {
+            widget.n = range.startLineNumber
+            widget.showAt(position)  //Show the current annotation
+        
+        }
+        else 
+          widget.hide()
+      })
+
+      errorDecorationRefs.current.forEach((id,i) => {
+        const range  =  model.getDecorationRange(id);
+        const widget = errorWidgetRefs.current[i]
+        //Check that a hover event occured over this higlight's line number
+        if (range && range.startLineNumber==n ) {
+            widget.n = range.startLineNumber
+            widget.showAt(position)  //Show the current annotation
+        
+        }
+        else 
+          widget.hide()
       })
 
     });
+  }
+
+  function replaceEditorLine(i,line,code) {
+    const editor = editorRef.current;
+    const ln = editor.getModel().getDecorationRange(errorDecorationRefs.current[i]).startLineNumber;
+    const range = new monacoRef.current.Range(ln, 1, ln, editor.getModel().getLineMaxColumn(ln));
+    editor.executeEdits("", [{
+    range: range,
+    text: code
+    }]);
+    const prev = errorDecorationRefs.current
+    const widg = errorWidgetRefs.current[i]
+    editor.deltaDecorations([prev[i]],[])
+    errorDecorationRefs.current = errorDecorationRefs.current.splice(i,1)
+    editor.removeContentWidget(widg)
+
+
+
   }
   const addQuestionTab =(title,difficulty,description) => {
     setContentTabs(prev => ({
       ...prev,
           question: {
       label: "Question", 
-      content: (<><QuestionContent title={title} difficulty={difficulty} description={description}/></>)
+      content: (<><QuestionContent title={title} difficulty={difficulty} description={description} handleMouseUp={handleMouseUp} /></>)
       }
     }))
   }
@@ -231,7 +366,7 @@ export default function Home({id}) {
   //label is the display name up content is the component that gets rendered
   const [validationTabs,setValidationTabs] = useState({
     test: { label: "Tests", 
-            content: (<><ValidationContent editorRef={editorRef} problemID={1} output={output} /></>) 
+            content: (<><ValidationContent annotateError={annotateError} editorRef={editorRef} problemID={1} output={output} /></>) 
           },
     })
   const [codeTabs,setCodeTabs] = useState({
@@ -241,13 +376,13 @@ export default function Home({id}) {
       }
   })
   const [contentTabs,setContentTabs] = useState({
-    question : {label: "Question",content: (<QuestionContent/>)}
+    question : {label: "Question",content: (<QuestionContent handleMouseUp={handleMouseUp} />)}
   })
 
   const references = {
     ai: { 
       label: "AI", 
-      content: (<><ReferencesContent viewHint={annotate} response={response}/></>) 
+      content: (<><ReferencesContent viewHint={annotate} response={response} nextThread={nextThread}/></>) 
     },
   };
 

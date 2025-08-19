@@ -4,7 +4,7 @@ import networkx as nx
 # class AutoLayoutGraph(Scene):
 class DFSGraph(Scene):
     def construct(self):
-        edges = [[1,2],[2,5],[3,5]]
+        edges = [[1,2]]
         self.clear()
         title = Text("DFS", font_size=40).to_edge(UP)
         divider = Line(title.get_left(), title.get_right())
@@ -12,8 +12,6 @@ class DFSGraph(Scene):
         self.play(Write(title), Write(divider))
         self.play(Write(Text("Time: O(E)\n\nSpace: O(E) ",font_size=33).to_edge(RIGHT,buff=.5)))
         G = nx.Graph()
-
-        
         G.add_edges_from(edges)
         pos = nx.spring_layout(G, scale=3)
         node_radius = 0.3
