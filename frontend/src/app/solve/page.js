@@ -14,7 +14,7 @@ import { QuestionContent } from "../cards/content/content";
 export default function Home({id}) {
   //defines an annotation div
   class HoverWidget {
-    constructor(editor, monaco,i=1, message,n=1,replaceEditorLine) {
+    constructor(editor, monaco,i=1, message,n=1,type,replaceEditorLine) {
       this._editor = editor;
       this._monaco = monaco;
       this._message = message;
@@ -29,7 +29,7 @@ export default function Home({id}) {
       button.className = 'my-hover-widget-button';
       button.textContent = '✔';
 
-      button.onclick = () => replaceEditorLine(i,n,this._message);
+      button.onclick = () => replaceEditorLine(i,type,this._message);
       this._domNode.appendChild(span);
       this._domNode.appendChild(button);
       this._id = `hover.widget-${n}`;
@@ -81,6 +81,7 @@ export default function Home({id}) {
   const [textHighlights, setTextHighlights] = useState("");
   const [output, setOutput] = useState("");
   const [response,setResponse] = useState("")
+  const [loading, setLoading] = useState(false)
   const [details,setDetails] = useState({});
 
 
@@ -105,13 +106,16 @@ export default function Home({id}) {
   function handleMouseUp()  {
     const selection = window.getSelection();
     if (selection && selection.toString().length > 0) {
+      setLoading(true);
       ping({
         text: selection.toString(),
         question: details?.title + "\n" + details?.description 
         },"ask")
       .then(data => {
         setResponse(data.response);
+        setLoading(false);
       })
+      .catch(() => setLoading(false));
       console.log("Selected text:", selection.toString());
     }
   }
@@ -133,10 +137,12 @@ export default function Home({id}) {
       //   2: "def another_function(param1):"} ,
       //   expalantions_of_hint: codeError,  
       // }
+      setLoading(true);
       ping({code: code, error : codeError,id:1},"annotate_errors")
       .then((data) => {
         const resp = data.line_number_to_replacement
-        setResponse(data.expalantions_of_hint)      
+        setResponse(data.expalantions_of_hint)
+        setLoading(false);      
         //Generate a new set of highlights for each annotation
         const decorations = Object.keys(resp).map(( line ) => 
           ({
@@ -151,7 +157,7 @@ export default function Home({id}) {
         //Generate corrosponding pink anotation comments
         const widgets = Object.entries(resp).map(( [line,message],i ) => 
           (
-            new HoverWidget(editor,monaco,i,message,Number(line),replaceEditorLine)
+            new HoverWidget(editor,monaco,i,message,Number(line),0,replaceEditorLine)
           )
         )
         errorWidgetRefs.current = widgets
@@ -161,6 +167,7 @@ export default function Home({id}) {
         })
 
         })
+      .catch(() => setLoading(false));
 
 
     }
@@ -185,10 +192,12 @@ export default function Home({id}) {
         code += `${i} | ${model.getLineContent(i)}\n`
       }
       //Ping the endpoint with the code /backend/api/views.py: annotate()
+      setLoading(true);
       ping({code: code, tests : {}},"annotate")
       .then((data) => {
         const resp = data.line_number_to_comment
-        setResponse(data.expalantions_of_hint)      
+        setResponse(data.expalantions_of_hint)
+        setLoading(false);      
         //Generate a new set of highlights for each annotation
         const decorations = Object.keys(resp).map(( line ) => 
           ({
@@ -201,9 +210,9 @@ export default function Home({id}) {
         )
         decorationRefs.current  = editor.deltaDecorations(prev,decorations)
         //Generate corrosponding pink anotation comments
-        const widgets = Object.entries(resp).map(( [line,message] ) => 
+        const widgets = Object.entries(resp).map(( [line,message],i ) => 
           (
-            new HoverWidget(editor,monaco,0,message,Number(line),replaceEditorLine)
+            new HoverWidget(editor,monaco,i,message,Number(line),1,replaceEditorLine)
           )
         )
         widgetRefs.current = widgets
@@ -212,6 +221,7 @@ export default function Home({id}) {
         })
 
         })
+      .catch(() => setLoading(false));
     }
     else {
       alert("Please wait for the editor to load and try again!")
@@ -223,6 +233,7 @@ export default function Home({id}) {
   function nextThread(input) {
     const problemQuestion = details?.title + "\n" + details?.description 
     const code = editorRef.current ? editorRef.current.getValue() : "";
+    setLoading(true);
     ping({
       ask: input,
       code: code,
@@ -231,7 +242,9 @@ export default function Home({id}) {
     },"next_thread")
     .then(data => {
       setResponse(data.response);
+      setLoading(false);
     })
+    .catch(() => setLoading(false));
 
   }
   //When editor is loaded
@@ -279,22 +292,35 @@ export default function Home({id}) {
     });
   }
 
-  function replaceEditorLine(i,line,code) {
+  function replaceEditorLine(i,type,code) {
     const editor = editorRef.current;
-    const ln = editor.getModel().getDecorationRange(errorDecorationRefs.current[i]).startLineNumber;
-    const range = new monacoRef.current.Range(ln, 1, ln, editor.getModel().getLineMaxColumn(ln));
-    editor.executeEdits("", [{
-    range: range,
-    text: code
-    }]);
-    const prev = errorDecorationRefs.current
-    const widg = errorWidgetRefs.current[i]
-    editor.deltaDecorations([prev[i]],[])
-    errorDecorationRefs.current = errorDecorationRefs.current.splice(i,1)
-    editor.removeContentWidget(widg)
-
-
-
+    let prevRefs = null;
+    let widgets = null;
+    if (type == 0) {
+      widgets = errorWidgetRefs.current
+      prevRefs = errorDecorationRefs.current
+      //Replace the line with the code
+      const ln = editor.getModel().getDecorationRange(prevRefs[i]).startLineNumber;
+      const range = new monacoRef.current.Range(ln, 1, ln, editor.getModel().getLineMaxColumn(ln));
+      editor.executeEdits("", [{
+      range: range,
+      text: code
+      }]);
+      //Remove the decoration and widget, update the refs
+      editor.deltaDecorations([prevRefs[i]],[])
+      editor.removeContentWidget(widgets[i])
+      errorDecorationRefs.current.splice(i,1)
+      errorWidgetRefs.current.splice(i,1)
+    }
+    else {
+      //Remove the decoration and widget, update the refs
+      widgets = widgetRefs.current
+      prevRefs = decorationRefs.current
+      editor.deltaDecorations([prevRefs[i]],[])
+      editor.removeContentWidget(widgets[i])
+      decorationRefs.current.splice(i,1)
+      widgetRefs.current.splice(i,1)
+    }
   }
   const addQuestionTab =(title,difficulty,description) => {
     setContentTabs(prev => ({
@@ -335,12 +361,15 @@ export default function Home({id}) {
   const askAboutTool = (pattern,deets) => {
      if (editorRef.current)
     {
-        ping({code: editorRef.current.getValue(),pattern: pattern},
+        setLoading(true);
+      ping({code: editorRef.current.getValue(),pattern: pattern},
         "tool_hints").then(data=>{
             setResponse(data.explanation)
             editorRef.current.setValue(data.updatedCode)
+            setLoading(false);
 
         })
+        .catch(() => setLoading(false));
     } 
 
     setValidationTabs(prev => ({
@@ -353,12 +382,15 @@ export default function Home({id}) {
   const hint = () => {
     if (editorRef.current)
     {
+      setLoading(true);
       ping({code: editorRef.current.getValue(),tests: ""},"hints")
       .then(data=>{
           setResponse(data.expalantions_of_hint)
           editorRef.current.setValue(data.annotated_code + "\n\n" + data.thought_provoking_test_case_to_consider_as_comment_block);
+          setLoading(false);
         }
       )
+      .catch(() => setLoading(false));
     }
   }
   /* Tabs */
@@ -372,7 +404,26 @@ export default function Home({id}) {
   const [codeTabs,setCodeTabs] = useState({
     editor: {
       label: "Editor", 
-      content: (<><Editor height="100%" width="100%" language="python"theme="vs-dark"onMount={handleEditorDidMount} /></>)
+      content: (
+        <div className="editor-container" style={{borderRadius: ".5rem"}}>
+          <Editor 
+
+            language="python" 
+            theme="vs-dark" 
+            onMount={handleEditorDidMount}
+            options={{
+              minimap: { enabled: false }
+            }}
+          />
+          <button 
+            className="editor-run-button"
+            title="AI Hint"
+            onClick={() => annotate()}
+          >
+            <img src="ai.png" alt="AI" />
+          </button>
+        </div>
+      )
       }
   })
   const [contentTabs,setContentTabs] = useState({
@@ -381,16 +432,14 @@ export default function Home({id}) {
 
   const references = {
     ai: { 
-      label: "AI", 
-      content: (<><ReferencesContent viewHint={annotate} response={response} nextThread={nextThread}/></>) 
+      label: <div className="ai-tab-label"><img src="ai.png" className="ai-tab-icon"/>Neo</div>, 
+      content: (<><ReferencesContent viewHint={annotate} response={response} loading={loading} nextThread={nextThread}/></>) 
     },
   };
 
-
-
   return <>
-    <div className="Page">
-        <Header createNewWidget={annotate}/>
+    <div className="page">
+        <Header />
         <div className="main">
           <Card className="content" tabs={contentTabs} />
           <Card className="references" tabs={references}  />

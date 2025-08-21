@@ -1,10 +1,9 @@
 import { useState } from "react"
-export default function Header ({createNewWidget}) {
-    const [input,setInput] = useState("")
+import "./header.css"
+export default function Header () {
     return <>
-        <div className="container">
-            <img className="logo" src="/favicon.png" style={{ width: "40px", height: "40px" }} alt="Logo" />
-            <input onChange={(e) => setInput(e.target.value)} value={input} type="text"></input>
+        <div className="header-div">
+            <img src={"favicon.png"}></img>
         </div>
     </>
 }
