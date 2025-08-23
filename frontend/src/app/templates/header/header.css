@@ -1,5 +1,15 @@
 .header-div {
     display: flex;
+    align-items: center;
+    padding: 8px 0px;
     background-color: var(--dbl-3);
-    height: 5% !important;
+    height: 7%;
+    gap: 10px;
+    padding: 5px 20px;
+
+}
+
+.imgg-icon {
+    width: 30px;
+    height: 30px;
 }
