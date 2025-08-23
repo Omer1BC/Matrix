@@ -2,12 +2,20 @@ import {useState,useEffect} from 'react'
 import { ping,get } from '@/app/utils/apiUtils';
 import ReactPlayer from 'react-player'
 import './content.css'
-export function QuestionContent ({title,difficulty,description}) {
+export function QuestionContent ({title,difficulty,description,handleMouseUp}) {
     return <>
-        <div className='questionContainer'>
-            <h1 className='title'> {title}</h1>
-            <h2>{difficulty}</h2>
-            <h3>{description}</h3>
+        <div className='questionContainer' onMouseUp={handleMouseUp}>
+            <div className="title-bubble">
+                <h1 className='title'> {title}</h1>
+                <div className="difficulty-meter">
+                    <div className="difficulty-bar active"></div>
+                    <div className="difficulty-bar active"></div>
+                    <div className="difficulty-bar"></div>
+                </div>
+            </div>
+            <div className="description-bubble">
+                <h2>{description}</h2>
+            </div>
         </div>
 
     </>

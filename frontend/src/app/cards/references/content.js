@@ -3,30 +3,90 @@ import { ping } from '@/app/utils/apiUtils';
 import './references.css';
 import { Typewriter } from 'react-simple-typewriter';
 import ToolPill from './ToolPill';
-export function ReferencesContent({viewHint,response}) {
 
-
+export function ReferencesContent({viewHint,response,loading,nextThread}) {
+  const [ask,setAsk]= useState("")
+  const [conversation, setConversation] = useState([])
+  
+  useEffect(() => {
+    if (response && response.trim()) {
+      setConversation(prev => [...prev, { type: 'ai', content: response }])
+    }
+  }, [response])
+  
+  function handleChange(e) {
+    console.log("ask",e.target.value)  
+    setAsk(e.target.value);
+  }
+  function clickedSubmit() {
+    if (ask.trim()) {
+      setConversation(prev => [...prev, { type: 'user', content: ask }])
+      nextThread(ask)
+      setAsk("")
+    }
+  }
+  
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') {
+      clickedSubmit()
+    }
+  }
     return (
         <div className="references-content">
             <div className='chat-container'>
-                {/* {messages.map((message, index) => ( */}
-                    <div className="chat-bubble" style={{textAlign: 'left'  }}> 
-                        <span  ><Typewriter
-                        words={[response]}
-                        key = {response}
-                        typeSpeed={25}
-                        deleteSpeed={50}
-                        delaySpeed={1000}
-                        cursor
-                        /></span>
-                    </div>
-                {/* )
-            )}  */}
+                {conversation.map((message, index) => (
+                    <div 
+                        key={index} 
+                        className={`chat-bubble ${message.type === 'user' ? 'user-bubble' : 'ai-bubble'}`} 
+                        style={{textAlign: message.type === 'user' ? 'right' : 'left'}}> 
+                        {message.type === 'ai' ? (
+                            <div className="ai-message-content">
+                                <div className="ai-icon">🤖</div>
+                                <div className="ai-text">
+                                  <div className="highlight-ai">
+                                    {index === conversation.length - 1 ? (
+                                        <Typewriter
+                                            words={[message.content]}
+                                            key={message.content}
+                                            typeSpeed={25}
+                                            deleteSpeed={50}
+                                            delaySpeed={1000}
+                                            cursor/>
+                                    ) : (
+                                        message.content
+                                    )}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="user-message-content">
+                                                                <div className="highlight-user">
+                                                                  <div className="user-text">{message.content}</div>
+</div>
 
+                                <div className="user-icon">👤</div>
+                            </div>
+                        )}
+                    </div>
+                ))}
+                {loading && (
+                    <div className="chat-bubble ai-bubble" style={{textAlign: 'left'}}>
+                        <div className="ai-message-content">
+                            <div className="ai-icon">🤖</div>
+                            <div className="ai-text">
+                                <div className="highlight-ai">
+                                    <div className="loading-dots">
+                                        <span>.</span><span>.</span><span>.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
-                <div className='button-container'>
-                      <button onClick={viewHint} type="button" id='test' className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Hint</button>
-                </div>
+            <div className='input-container'>
+                <input className='input' type="text" id="simple-search"  class="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" onChange={(e) => handleChange(e)} onKeyDown={handleKeyDown} value={ask} placeholder="What are you stuck on?" />
+            </div>
 
         </div>
     );

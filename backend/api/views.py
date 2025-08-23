@@ -11,7 +11,10 @@ from .models import ProblemCategory, Problem
 
 import os
 from utils.utils import *
+from utils.agents import *
 from utils.problem_info import *
+
+# backend functions whose urls are mapped in /api/urls.py
 @csrf_exempt
 def run_python(request):
     media_path = settings.MEDIA_ROOT  # Absolute path to media folder
@@ -173,6 +176,55 @@ def run_learn_tests(request):
     else:
         return JsonResponse({"error": f"Expected POST method, got: {request.method}"}, status=405)
 
+def problem_details(request):
+    print(request.method,request.content_type)
+    if request.method == "POST" and request.content_type == "application/json":
+        import json
+        try:
+            body = json.loads(request.body)
+            #Modularize
+            print(body)
+            problem_id = body.get("problem_id", "")
+            res = {
+                "title": "Number of Connected Components in an Undirected Graph",
+                "difficulty" : "Medium",
+                "description" : '''There is an undirected graph with n nodes. There is also an edges array, where edges[i] = [a, b] means that there is an edge between node a and node b in the graph.
+
+The nodes are numbered from 0 to n - 1.
+
+Return the total number of connected components in that graph.''',
+                "method_stub" : "def countComponents(n: int, edges: List[List[int]]):\n        return 0",
+                "input_args": ["nums","target","output","expected"],
+                 "tools" : {"DFS":{"description": "Algorithm for traversing a graph",
+                                    "args": {
+                                        "edges": {"type": "List[List[int]]","default_value": "[[1,2]]"}
+                                        },
+                                    "code": '''#DFS
+visit = set()
+def dfs(u):
+    visit.add(u)
+    for nbr in nbrs(u):
+        if nbr not in visit:
+            dfs(nbr)'''
+                                    },
+                            "Set" : {"description": "Unordered data structure with O(1) insertion, removal, and find",
+                                    "args": {"numbers": {"type":"List[int]","default_value":"[1,2,3,1,4,2,5]"}
+                                        },
+                                    "code":'''#Set
+elements = set()
+elements.add(2) # O(1)
+if 2 in elements: # O(1)
+elements.remove(2) # O(1)'''
+                                    }                     
+                            },
+            }
+            result,error = run(problem_id,res['method_stub']) 
+            res['tests'] = result if not error else {}
+            # problem_details = get_problem_details(problem_id) 
+            return JsonResponse(res)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+    return JsonResponse({"error": "Malformed Request"}, status=400)
 @csrf_exempt
 def get_tests(request):
     if request.method == "POST" and request.content_type == "application/json":
@@ -254,6 +306,49 @@ def annotate(request):
         except Exception as e:
             return JsonResponse({"Error Occured": str(e)}, status=400)
     print('malformed request')
+    return JsonResponse({"error": "Malformed Request"}, status=400)
+@csrf_exempt
+def ask(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        import json
+        try:
+            body = json.loads(request.body)
+            text = body.get("text", "")
+            question = body.get("question", "")
+            print(question,text)
+            resp = ask_ai(question,text) 
+            print("response is resp",resp)
+            return JsonResponse(resp)
+        except Exception as e:
+            return JsonResponse({"Error Occured": str(e)}, status=400)
+    return JsonResponse({"error": "Malformed Request"}, status=400)
+@csrf_exempt
+def next_thread(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        import json
+        try:
+            body = json.loads(request.body)
+            ask = body.get("ask", "")
+            question = body.get("question", "")
+            code = body.get("code", "")
+            resp = get_next_conversation(ask,code,question) 
+            return JsonResponse(resp)
+        except Exception as e:
+            return JsonResponse({"Error Occured": str(e)}, status=400)
+    return JsonResponse({"error": "Malformed Request"}, status=400)
+@csrf_exempt
+def annotate_errors(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        import json
+        try:
+            body = json.loads(request.body)
+            code = body.get("code", "")
+            error = body.get("error", "")
+            id = body.get("id", "")
+            resp = get_error_details(id,error,code) 
+            return JsonResponse(resp,safe=False)
+        except Exception as e:
+            return JsonResponse({"Error Occured": str(e)}, status=400)
     return JsonResponse({"error": "Malformed Request"}, status=400)
 # Replace your existing get_all_categories function with this:
 @csrf_exempt

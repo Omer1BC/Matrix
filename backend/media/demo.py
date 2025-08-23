@@ -34,19 +34,20 @@ def run_test(nums, target, expected):
     exception = ""
     result = ""
     try:
-        result = (twoSum(nums, target))
+        result = countComponents(n, edges)
         
     except Exception as e:
         exception = str(e)
-    return {"target": target, 
-          "nums": nums, 
-          "expected": sorted(expected),
+    return {"n": n, 
+          "edges": edges, 
+          "expected": expected,
           "actual": result, 
-          "error": exception}
+        #   
+        }
 test_cases = [
-    ([2, 7, 11, 15], 9, [0, 1]),
-    ([3, 2, 4], 6, [1, 2]),
-    ([3, 3], 6, [0, 1]),
+    (5, [[0,1],[1,2],[3,4]], 2),
+    (5, [[0,1],[1,2],[2,3],[3,4]], 1),
+    (3, [], 3),
 ]
-results = { f"{i}": run_test(nums, target, expected) for i, (nums, target, expected) in enumerate(test_cases)}
+results = { f"{i}": run_test(n, edges, expected) for i, (n, edges, expected) in enumerate(test_cases)}
 print(results)

@@ -23,3 +23,26 @@ Navigate to ```/Matrix/frontend``` and run ```npm run dev``` which will start on
 
 ### /solve Layout
 ```/solve/page.js``` is compose of 4 cards whose template is found at ```/src/app/templates/cards```. The 4 sections are named content for the video section (top left), references (bottom left), code (top right), and validation (bottom right). Each card is passed key, value pairs specify the name of the tab and the content (other components) to render for each tab. The code editor is provided by react, and hints can be tested for the twoSum problem with an api key. Expected solution is found at ```/backend/media/1_2sum.py```. The test button will append to the file the current code and run the tests.
+
+# Setting Up WSL + VS Code Workspace
+
+## 1. Install VS Code
+
+- Install [Visual Studio Code](https://code.visualstudio.com/)
+- Follow the prompts to complete setup (default options are fine)
+
+## 2. Install and Configure WSL
+
+- Open the Start menu and search for **"Turn Windows features on or off"**
+- Enable **"Windows Subsystem for Linux"**
+- Go to the Microsoft Store and install **Ubuntu** (or your preferred WSL distribution)
+- Run Ubuntu (WSL) for the first time
+- When prompted for a UNIX username, **close Ubuntu**
+- Run Ubuntu again — you are now logged in as **root**
+
+### Update and Install WSL
+
+```bash
+sudo apt update
+sudo apt upgrade
+sudo apt install wsl

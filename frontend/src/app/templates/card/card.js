@@ -8,29 +8,23 @@ export default function Card({ tabs, className}) {
     return (
         <>
             <div className={className}>
-              <div id="header" className="border-b border-gray-200 dark:border-gray-700">
-                <ul className="flex flex-wrap -mb-px text-sm font-medium text-center" role="tablist">
+              <div id="header" className="">
+                <div className="tab-list" role="tablist">
                   {Object.keys(tabs).map((key) => { 
                     const tab = tabs[key]
                     return (
-                    
-                    <li key={key} className="me-2" role="presentation">
                       <button
+                        key={key}
                         type="button"
-                        className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                          activeTab === key
-                            ? "text-blue-600 border-blue-600 active dark:text-blue-500 dark:border-blue-500"
-                            : "border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
-                        }`}
+                        className={`tab-button ${activeTab === key ? 'active' : ''}`}
                         role="tab"
                         aria-selected={activeTab === key}
                         onClick={() => setActiveTab(key)}
                       >
                         {tab.label}
                       </button>
-                    </li>
                   ) }) }
-                </ul> 
+                </div> 
               </div>
               <div id="body">
                       {/* {content} */}
