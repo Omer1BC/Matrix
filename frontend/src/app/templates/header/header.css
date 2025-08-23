@@ -1,6 +1,5 @@
-.container {
+.header-div {
     display: flex;
-    justify-content: center;
-    align-items: center;
-
+    background-color: var(--dbl-3);
+    height: 5% !important;
 }

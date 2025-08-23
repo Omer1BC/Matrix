@@ -745,8 +745,6 @@ class Node(VGroup):
 		if not right and not left:
 			rt.move_to(self.loc)
 			scene.play(FadeIn(rt,run_time=run_t))
-
-
 class Tree(VGroup):
 	def __init__(self,layers,scene=None):
 		super().__init__()

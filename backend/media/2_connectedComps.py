@@ -1,5 +1,6 @@
+''''''
 from typing import *
-
+''''''
 def countComponents(n: int, edges: List[List[int]]) -> int:
     graph = {i: [] for i in range(n)}
     for a, b in edges:
@@ -21,8 +22,7 @@ def countComponents(n: int, edges: List[List[int]]) -> int:
             components += 1
     
     return components
-
-
+''''''
 def run_test(n, edges, expected):
     exception = ""
     result = ""

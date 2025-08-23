@@ -3,6 +3,25 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Custom Color Palette */
+  --bl-1: #18183C;
+  --bl-2: #282850;
+  --bl-3: #3E3E52;
+  --bl-4: #C3C3DC;
+  --dbl-1: #2b2b2b;
+  --dbl-2: #383838;
+  --dbl-3: #4e4e4e;
+  --dbl-4: #696969;
+  --gr-1: #06B79A;
+  --gr-2: #7dff7d;
+  
+  /* Grid Item Border Radius */
+  --grid-border-radius: .5rem;
+  
+  /* Test Result Colors */
+  --success-color: #22c55e;
+  --failure-color: #ef4444;
 }
 
 @theme inline {

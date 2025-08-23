@@ -76,7 +76,7 @@ def get_problem_details(problem_id):
 
    
 def id_to_file_name(problem_id):
-    res = "1_2sum.py"  
+    res = "2_connectedComps.py"  
     return os.path.join(settings.MEDIA_ROOT, res)  
 
 def run(problem_id,code):
@@ -350,7 +350,11 @@ def insert_animation(path,action):
         f.writelines(lines)
 
 def pattern_to_file(pattern):
-    return os.path.join(settings.MEDIA_ROOT,"3_dfs.py")
+    keys = {
+        "DFS": "3_dfs.py",
+        "Set": "4_set.py",
+    }
+    return os.path.join(settings.MEDIA_ROOT,keys[pattern])
 def file_from_pattern(pattern):
     return os.path.join(settings.MEDIA_ROOT,"patterns","Array.py"),os.path.join("/media/videos/Array/480p15/Array.mp4")
 def pattern_to_video(name,data): 
