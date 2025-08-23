@@ -9,25 +9,20 @@ def twoSum(nums:List[int],target:int)->int:
             hm[n]=i 
     return []
 
-# BFS to calculate sum for each layer
+# Create a Node class for graph representation
 
-from collections import deque
-
-class GraphNode:
-    def __init__(self, val):
-        self.val = val
-        self.neighbors = []
-
-def bfs_layer_sums(start_node):
-    """
-    Perform BFS and return sum of values at each layer.
-    Args:
-        start_node: GraphNode - starting node for BFS
-    Returns:
-        list: sum of values at each layer [layer0_sum, layer1_sum, ...]
-    """
-    # Implement BFS with layer sum calculation
-    pass
+class Node:
+    def __init__(self, value):
+        # Initialize node with a value and empty connections list
+        pass
+    
+    def add_connection(self, node):
+        # Add a connection to another node
+        pass
+    
+    def get_connections(self):
+        # Return list of connected nodes
+        pass
 
 
 def run_test(nums, target, expected):
