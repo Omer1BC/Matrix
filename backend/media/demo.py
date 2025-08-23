@@ -1,29 +1,31 @@
 from typing import *
 
-def countComponents(n: int, edges: List[List[int]]) -> int:
-    graph = {i: [] for i in range(n)}
-    for a, b in edges:
-        graph[a].append(b)
-        graph[b].append(a)
-    visited = set()
-    components = 0
+def twoSum(nums:List[int],target:int)->int:
+    hm = {}
+    for i,n in enumerate(nums):
+        if target - n in hm:
+            return [hm[target-n],i]
+        else:
+            hm[n]=i 
+    return []
+
+# Create a Node class for graph representation
+
+class Node:
+    def __init__(self, value):
+        # Initialize node with a value and empty connections list
+        pass
     
-    def dfs(node):
-        if node in visited:
-            return
-        visited.add(node)
-        for neighbor in graph[node]:
-            dfs(neighbor)
+    def add_connection(self, node):
+        # Add a connection to another node
+        pass
     
-    for i in range(n):
-        if i not in visited:
-            dfs(i)
-            components += 1
-    
-    return components
+    def get_connections(self):
+        # Return list of connected nodes
+        pass
 
 
-def run_test(n, edges, expected):
+def run_test(nums, target, expected):
     exception = ""
     result = ""
     try:
