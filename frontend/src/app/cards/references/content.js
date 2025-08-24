@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useRef} from 'react';
 import { ping } from '@/app/utils/apiUtils';
 import './references.css';
 import { Typewriter } from 'react-simple-typewriter';
@@ -7,12 +7,19 @@ import ToolPill from './ToolPill';
 export function ReferencesContent({viewHint,response,loading,nextThread}) {
   const [ask,setAsk]= useState("")
   const [conversation, setConversation] = useState([])
+  const chatContainerRef = useRef(null)
   
   useEffect(() => {
     if (response && response.trim()) {
       setConversation(prev => [...prev, { type: 'ai', content: response }])
     }
   }, [response])
+  
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+    }
+  }, [conversation, loading])
   
   function handleChange(e) {
     console.log("ask",e.target.value)  
@@ -33,7 +40,7 @@ export function ReferencesContent({viewHint,response,loading,nextThread}) {
   }
     return (
         <div className="references-content">
-            <div className='chat-container'>
+            <div className='chat-container' ref={chatContainerRef}>
                 {conversation.map((message, index) => (
                     <div 
                         key={index} 
@@ -41,7 +48,9 @@ export function ReferencesContent({viewHint,response,loading,nextThread}) {
                         style={{textAlign: message.type === 'user' ? 'right' : 'left'}}> 
                         {message.type === 'ai' ? (
                             <div className="ai-message-content">
-                                <div className="ai-icon">🤖</div>
+                                <div className="ai-icon">
+                                    <img src="/matrix_logo.png" alt="Matrix AI" className="w-4 h-4" />
+                                </div>
                                 <div className="ai-text">
                                   <div className="highlight-ai">
                                     {index === conversation.length - 1 ? (
@@ -72,7 +81,9 @@ export function ReferencesContent({viewHint,response,loading,nextThread}) {
                 {loading && (
                     <div className="chat-bubble ai-bubble" style={{textAlign: 'left'}}>
                         <div className="ai-message-content">
-                            <div className="ai-icon">🤖</div>
+                            <div className="ai-icon">
+                                <img src="/matrix_logo.png" alt="Matrix AI" className="w-5 h-5" />
+                            </div>
                             <div className="ai-text">
                                 <div className="highlight-ai">
                                     <div className="loading-dots">
