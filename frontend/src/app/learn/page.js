@@ -27,40 +27,40 @@ export default function ProblemsPage() {
   });
   const [problemDetails, setProblemDetails] = useState(null);
   const [testCases, setTestCases] = useState([]);
+  const [refreshKey, setRefreshKey] = useState(false)
+  const [completionPercentage, setCompletionPercentage] = useState(0)
+  function toggleRefresh() {
+    setRefreshKey(!refreshKey)
+  }
+
+
+
+  useEffect(()=>{
+    pingPercentage()
+  },[])
+  useEffect(() => {
+    pingPercentage()
+}, [refreshKey]);
+
+  function pingPercentage(){
+      fetch("http://localhost:8000/api/completion", {
+    method: "GET",
+    
+          credentials: "include",
+  })
+    .then(response => response.json())
+    .then(data => {
+      setCompletionPercentage(data.percentage);
+    })
+    .catch(error => {
+      console.error("Error fetching completion percentage:", error);
+    });
+  }
 
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
     // Set initial code based on current problem
     editor.setValue('# Write your solution here\nprint("Hello, World!")');
-  }
-
-  async function runCode(problemId) {
-    // If problemId is an event object (from onClick), use the current problem ID instead
-    const actualProblemId = (typeof problemId === 'object' && problemId.target)
-      ? currentProblem.id
-      : (problemId || currentProblem.id);
-
-    let val = editorRef.current.getValue();
-    try {
-      const requestBody = JSON.stringify({
-        code: val,
-        problem_id: actualProblemId
-      });
-
-      const res = await fetch("http://localhost:8000/api/run", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: requestBody,
-      });
-
-      const data = await res.json();
-      console.log('Response:', res);
-      setOutput(data.output || data.error || "No output returned");
-    } catch (err) {
-      setOutput("Error sending POST request: " + err.message);
-    }
   }
 
   const handleProblemSelect = async (problem) => {
@@ -134,119 +134,119 @@ export default function ProblemsPage() {
     setIdx(1);
   };
 
- return (
-  <div className="Page h-screen bg-gray-100 overflow-hidden">
-    {/* Main 3-Column Grid with custom column widths */}
-    <div className="grid grid-cols-[1fr_3fr_1fr] gap-6 h-full p-6 mx-auto">
+  return (
+    <div className="Page h-screen bg-gray-100 overflow-hidden">
+      {/* Main 3-Column Grid with custom column widths */}
+      <div className="grid grid-cols-[1fr_3fr_1fr] gap-6 h-full p-6 mx-auto">
 
-      {/* Column 1: Problem Menu with vertical progress bar */}
-      <div className="relative bg-white rounded-lg shadow-lg p-4 overflow-y-auto flex">
-        {/* Progress Bar Container */}
-        <div className="relative w-2 mr-4 rounded-full bg-gray-300">
-          {/* Filled part */}
-          <div
-            className="bg-green-500 rounded-full w-full absolute  left-0 transition-all duration-300"
-            style={{ height: `5%` }}
-          />
+        {/* Column 1: Problem Menu with vertical progress bar */}
+        <div className="relative bg-white rounded-lg shadow-lg p-4 overflow-y-auto flex">
+          {/* Progress Bar Container */}
+          <div className="relative w-2 mr-4 rounded-full bg-gray-300">
+            {/* Filled part */}
+            <div
+              className="bg-green-500 rounded-full w-full absolute  left-0 transition-all duration-300"
+              style={{ height: `${completionPercentage}%` }}
+            />
+          </div>
+
+          {/* Actual Problem Menu content */}
+          <div className="flex-1">
+            <ProblemMenu onProblemSelect={handleProblemSelect} refreshKey={refreshKey} />
+          </div>
         </div>
 
-        {/* Actual Problem Menu content */}
-        <div className="flex-1">
-          <ProblemMenu onProblemSelect={handleProblemSelect} />
-        </div>
-      </div>
+        {/* Column 2: Exercise, Editor, Video */}
+        <div className="flex flex-col gap-4 overflow-y-auto">
 
-      {/* Column 2: Exercise, Editor, Video */}
-      <div className="flex flex-col gap-4 overflow-y-auto">
-        
-        {/* Exercise Section */}
-        <div className="bg-white rounded-lg shadow-lg p-6 flex-shrink-0">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">
-              Exercise {currentProblem.id}: {problemDetails?.title || currentProblem.title}
-            </h2>
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-              (problemDetails?.difficulty || currentProblem.difficulty) === 'Easy'
+          {/* Exercise Section */}
+          <div className="bg-white rounded-lg shadow-lg p-6 flex-shrink-0">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">
+                Exercise {currentProblem.id}: {problemDetails?.title || currentProblem.title}
+              </h2>
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${(problemDetails?.difficulty || currentProblem.difficulty) === 'Easy'
                 ? 'bg-green-100 text-green-800'
                 : (problemDetails?.difficulty || currentProblem.difficulty) === 'Medium'
-                ? 'bg-yellow-100 text-yellow-800'
-                : 'bg-red-100 text-red-800'
-            }`}>
-              {problemDetails?.difficulty || currentProblem.difficulty}
-            </span>
+                  ? 'bg-yellow-100 text-yellow-800'
+                  : 'bg-red-100 text-red-800'
+                }`}>
+                {problemDetails?.difficulty || currentProblem.difficulty}
+              </span>
+            </div>
+            <div className="text-gray-600 mb-4 whitespace-pre-wrap">
+              {problemDetails?.description || currentProblem.description}
+            </div>
+            {problemDetails?.category && (
+              <div className="text-sm text-gray-500">
+                Category: {problemDetails.category}
+              </div>
+            )}
           </div>
-          <div className="text-gray-600 mb-4 whitespace-pre-wrap">
-            {problemDetails?.description || currentProblem.description}
+
+          {/* Code Editor */}
+          <div className="bg-white rounded-lg shadow-lg h-96 overflow-hidden flex-shrink-0">
+            <Editor
+              height="100%"
+              width="100%"
+              language="python"
+              theme="vs-dark"
+              onMount={handleEditorDidMount}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                lineNumbers: 'on',
+                scrollBeyondLastLine: false,
+                automaticLayout: true
+              }}
+            />
           </div>
-          {problemDetails?.category && (
-            <div className="text-sm text-gray-500">
-              Category: {problemDetails.category}
+
+          {/* Video Player */}
+          <div className="bg-white rounded-lg shadow-lg p-4 flex-shrink-0">
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">Tutorial Video</h3>
+            <div className="aspect-video">
+              <ReactPlayer
+                muted={true}
+                playing={false}
+                className="react-player"
+                onEnded={handleEnded}
+                controls={true}
+                url={urls[idx]}
+                width="100%"
+                height="100%"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Column 3: Test Cases and Output */}
+        <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col overflow-y-auto">
+
+          {/* Output Display */}
+          {output && (
+            <div className="mb-6 flex-shrink-0">
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">Console Output:</h4>
+              <pre className="bg-gray-900 text-green-400 p-3 rounded text-sm font-mono overflow-auto max-h-32">
+                {output}
+              </pre>
             </div>
           )}
-        </div>
 
-        {/* Code Editor */}
-        <div className="bg-white rounded-lg shadow-lg h-96 overflow-hidden flex-shrink-0">
-          <Editor
-            height="100%"
-            width="100%"
-            language="python"
-            theme="vs-dark"
-            onMount={handleEditorDidMount}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              lineNumbers: 'on',
-              scrollBeyondLastLine: false,
-              automaticLayout: true
-            }}
-          />
-        </div>
-
-        {/* Video Player */}
-        <div className="bg-white rounded-lg shadow-lg p-4 flex-shrink-0">
-          <h3 className="text-lg font-semibold mb-3 text-gray-800">Tutorial Video</h3>
-          <div className="aspect-video">
-            <ReactPlayer
-              muted={true}
-              playing={false}
-              className="react-player"
-              onEnded={handleEnded}
-              controls={true}
-              url={urls[idx]}
-              width="100%"
-              height="100%"
+          {/* Test Cases Panel */}
+          <div className="flex-1 min-h-0">
+            <TestCasesPanel
+              problemId={currentProblem.id}
+              editorRef={editorRef}
+              onAllTestsPassed={toggleRefresh}
             />
           </div>
         </div>
+
       </div>
-
-      {/* Column 3: Test Cases and Output */}
-      <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col overflow-y-auto">
-        
-        {/* Output Display */}
-        {output && (
-          <div className="mb-6 flex-shrink-0">
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">Console Output:</h4>
-            <pre className="bg-gray-900 text-green-400 p-3 rounded text-sm font-mono overflow-auto max-h-32">
-              {output}
-            </pre>
-          </div>
-        )}
-
-        {/* Test Cases Panel */}
-        <div className="flex-1 min-h-0">
-          <TestCasesPanel
-            problemId={currentProblem.id}
-            editorRef={editorRef}
-          />
-        </div>
-      </div>
-
     </div>
-  </div>
-);
+  );
 
 
-  
+
 }

@@ -1,6 +1,5 @@
-''''''
 from typing import *
-''''''
+
 class ListNode:
     def __init__(self, val=0, next=None):
         self.val = val
@@ -38,7 +37,7 @@ def recursive_sum(head):
     else:
         return recrusive_sum(head.next)+head.val
 
-''''''
+
 def run_test(test_input, expected):
     exception = ""
     result = ""
@@ -67,8 +66,7 @@ def run_test(test_input, expected):
 test_cases = [
     ([1, 2, 3, 4], 10),
     ([5], 5),
+    ([], 0),
     ([10, -5, 3], 8),
     ([0, 0, 0], 0)
 ]
-
-results = {f"test_{i}": run_test(test_input, expected) for i, (test_input, expected) in enumerate(test_cases)}

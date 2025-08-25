@@ -2,7 +2,7 @@
 import "../templates.css"
 import { useRef, useState, useEffect } from 'react';
 
-export default function ProblemDrawer({ isOpen, onClose, onProblemSelect }) {
+export default function ProblemDrawer({ isOpen, onClose, onProblemSelect, refreshKey }) {
   const [activeSection, setActiveSection] = useState(null);
   const [selectedProblem, setSelectedProblem] = useState(null);
   const [problemCategories, setProblemCategories] = useState({});
@@ -29,6 +29,7 @@ export default function ProblemDrawer({ isOpen, onClose, onProblemSelect }) {
 
     login();
   }, []);
+
 
 
 

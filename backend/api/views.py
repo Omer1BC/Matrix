@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 import io
 import sys
 from django.conf import settings
-from .models import ProblemCategory, Problem, ProblemCompletion, User
+from .models import ProblemCategory, Problem, ProblemCompletion, User, UserProgress
 
 import traceback
 
@@ -17,6 +17,14 @@ from utils.agents import *
 from utils.problem_info import *
 
 # backend functions whose urls are mapped in /api/urls.py
+@csrf_exempt
+def get_completion(request):
+    if request.method == "GET":
+        user = request.user
+        print(user)
+        print(user.completion_percentage)
+        return JsonResponse({"percentage": user.completion_percentage}, status=400)
+    
 @csrf_exempt
 def run_python(request):
     media_path = settings.MEDIA_ROOT  # Absolute path to media folder
@@ -116,7 +124,7 @@ def run_learn_tests(request):
                 if not os.path.exists(file_path):
                     return JsonResponse({"error": f"Problem file {file_name} not found"}, status=404)
 
-                res = insert_user_code(file_path, code, sample=f"test_{problem_id}.py")
+                res = insert_user_code(file_path, code)
 
                 # Capture stdout
                 old_stdout = sys.stdout
@@ -125,7 +133,6 @@ def run_learn_tests(request):
 
                 try:
                     exec(res, namespace)
-
                     test_results = namespace.get("results", {})
                     formatted_results = []
                     for test_name, result in test_results.items():
@@ -149,6 +156,9 @@ def run_learn_tests(request):
                         completion.mark_as_completed(user_solution=code)
 
                         # Update user progress
+                        
+                        if not hasattr(user, 'progress'):
+                            UserProgress.objects.create(user=user)
                         user.progress.update_progress()
 
                         return JsonResponse({
@@ -382,7 +392,7 @@ def get_all_categories(request):
                         "title": problem.title,
                         "description": problem.description,
                         "difficulty": problem.difficulty,
-                        "unlocked":not (problem.is_locked_by_default) #or problem.is_unlocked_for_user(user)
+                        "unlocked":not (problem.is_locked_by_default) or problem.is_unlocked_for_user(user)
                     }
                     for problem in category.problems.order_by('order') #ignore # Removed is_active filter since your model might not have it
                 ]

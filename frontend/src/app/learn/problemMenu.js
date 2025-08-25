@@ -3,7 +3,7 @@
 "use client"
 import { useState, useEffect } from 'react';
 
-export default function ProblemMenu({ onProblemSelect }) {
+export default function ProblemMenu({ onProblemSelect, refreshKey }) {
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [problemCategories, setProblemCategories] = useState({});
   const [loading, setLoading] = useState(true);
@@ -25,6 +25,28 @@ export default function ProblemMenu({ onProblemSelect }) {
 
     login();
   }, []);
+
+
+    useEffect(() => {
+      const fetchCategories = async () => {
+        try {
+          setLoading(true);
+          const res = await fetch("http://localhost:8000/api/categories", {
+            credentials: "include",
+          });
+          const data = await res.json();
+          setProblemCategories(data);
+        } catch (err) {
+          console.error(err);
+          setError("Failed to load problems.");
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchCategories();
+    }, [refreshKey]);
+  
 
   useEffect(() => {
     const fetchCategories = async () => {

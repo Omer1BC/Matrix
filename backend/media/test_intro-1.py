@@ -27,7 +27,7 @@ def compute_graph_sum(graph: Dict[str, Dict]) -> int:
 # }
 
 def compute_graph_sum(graph):
-    # Replace pass with your implementation
+    return sum(node_data['value'] for node_data in graph.values())
     pass
 def run_test(graph, expected):
     exception = ""

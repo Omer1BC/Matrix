@@ -2,7 +2,7 @@
 import "../templates.css"
 import { useRef, useState, useEffect } from 'react';
 
-export default function TestCasesPanel ({ problemId, editorRef }) {
+export default function TestCasesPanel ({ problemId, editorRef, onAllTestsPassed }) {
   const [runningTests, setRunningTests] = useState(false);
   const [testResults, setTestResults] = useState([]);
 
@@ -31,24 +31,33 @@ export default function TestCasesPanel ({ problemId, editorRef }) {
       if (response.ok) {
         const data = await response.json();
         console.log('Test results:', data);
-
+        
         if (data.success) {
           setTestResults(data.test_results || []);
         } else {
           console.error('Test execution failed:', data.error);
           setTestResults([]);
         }
+        const allPassed = data.test_results?.every(r => r.passed);
+        if (allPassed && typeof onAllTestsPassed === 'function') {
+            onAllTestsPassed();
+        }
+
       } else {
         const errorData = await response.json();
         console.error('HTTP error:', errorData);
         setTestResults([]);
       }
+
+    
     } catch (error) {
       console.error('Network error:', error);
       setTestResults([]);
     } finally {
       setRunningTests(false);
     }
+
+    
   };
 
   return (

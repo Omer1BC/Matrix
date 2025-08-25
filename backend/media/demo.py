@@ -1,31 +1,43 @@
 from typing import *
 
-def twoSum(nums:List[int],target:int)->int:
-    hm = {}
-    for i,n in enumerate(nums):
-        if target - n in hm:
-            return [hm[target-n],i]
-        else:
-            hm[n]=i 
-    return []
-
-# Create a Node class for graph representation
-
-class Node:
-    def __init__(self, value):
-        # Initialize node with a value and empty connections list
-        pass
+def countComponents(n: int, edges: List[List[int]]) -> int:
+    graph = {i: [] for i in range(n)}
+    for a, b in edges:
+        graph[a].append(b)
+        graph[b].append(a)
+    visited = set()
+    components = 0
     
-    def add_connection(self, node):
-        # Add a connection to another node
-        pass
+    def dfs(node):
+        if node in visited:
+            return
+        visited.add(node)
+        for neighbor in graph[node]:
+            dfs(neighbor)
     
-    def get_connections(self):
-        # Return list of connected nodes
-        pass
+    for i in range(n):
+        if i not in visited:
+            dfs(i)
+            components += 1
+    
+    return components
 
+# Write a program that computes the sum of all node values in a graph
+# The graph is represented as a dictionary where keys are node names
+# and values are dictionaries containing 'value' and 'connections'
+#
+# Example graph structure:
+# graph = {
+#     'A': {'value': 5, 'connections': ['B', 'C']},
+#     'B': {'value': 3, 'connections': ['A', 'D']},
+#     'C': {'value': 7, 'connections': ['A']},
+#     'D': {'value': 2, 'connections': ['B']}
+# }
 
-def run_test(nums, target, expected):
+def compute_graph_sum(graph):
+    # Replace pass with your implementation
+    pass
+def run_test(n, edges, expected):
     exception = ""
     result = ""
     try:
