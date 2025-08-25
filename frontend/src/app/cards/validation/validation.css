@@ -52,12 +52,12 @@
 }
 
 .test-case:hover{
-    cursor:pointer;
+    cursor: pointer;
     background-color: var(--dbl-3);
 }
 #test-button {
     background-color: var(--gr-2);
-    color: var(--dbl-1);
+    color: --var(dbl-1);
 }
 #test-button:hover {
     background-color: var(--gr-1);
@@ -112,12 +112,12 @@
 
 .victory-content p {
     margin-bottom: 1.5rem;
-    color: #fbfbfb;
+    color: var(--gr-2);
 }
 
 .victory-close-btn {
-    background-color: #22c55e;
-    color: white;
+    background-color: var(--gr-2);
+    color: var(--dbl-1);
     border: none;
     padding: 0.5rem 1.5rem;
     border-radius: 0.5rem;
@@ -126,7 +126,7 @@
 }
 
 .victory-close-btn:hover {
-    background-color: #16a34a;
+    background-color: var(--gr-1);
 }
 
 .test-output-value {
@@ -137,4 +137,123 @@
     font-size: 0.875rem;
     color: var(--gr-2);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.metrics-container {
+    margin: 1.5rem 0;
+}
+
+.metrics-container h3 {
+    color: #fbfbfb;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.star-graph-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem 0;
+    width: 100%;
+    min-height: 400px;
+    overflow: visible;
+}
+
+.victory-modal {
+    max-width: 650px;
+}
+
+.metrics-values {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.metric-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.metric-item .metric-label {
+    color: #fbfbfb;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.metric-value {
+    color: #22c55e;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.metric-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #4b5563;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.metric-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.metric-info-tooltip {
+    position: absolute;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.metric-info-content {
+    background-color: var(--dbl-3);
+    border: 1px solid var(--gr-2);
+    border-radius: 8px;
+    padding: 1rem;
+    max-width: 250px;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    pointer-events: all;
+}
+
+.metric-info-content strong {
+    color: var(--gr-2);
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.metric-info-content p {
+    color: #fbfbfb;
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.info-close-btn {
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.info-close-btn:hover {
+    color: var(--gr-2);
+}
+
+.star-graph-container {
+    position: relative;
 }
