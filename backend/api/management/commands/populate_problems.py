@@ -16,7 +16,7 @@ class Command(BaseCommand):
         problem_categories_data = {
             'introduction': {
                 'title': "Introduction",
-                'icon': "🚀",
+                'icon': "",
                 'items': [
                     {
                         "id": "intro-1",
@@ -76,12 +76,12 @@ class Command(BaseCommand):
             },
             'representation': {
                 'title': "Graph Representation",
-                'icon': "🗂️",
+                'icon': "",
                 'items': [
                     {
                         'id': "rep-1", 
                         'title': "Adjacency List Implementation", 
-                        'description': "Create a Graph class using adjacency list representation. Implement methods to add vertices, add edges, and display the graph.",
+                        'description': "",
                         'difficulty': "Easy",
                         "is_locked_by_default":False,
                         'points_reward':1,
@@ -98,7 +98,7 @@ class Command(BaseCommand):
                     {
                         'id': "rep-2", 
                         'title': "Adjacency Matrix Implementation", 
-                        'description': "Create a Graph class using adjacency matrix representation. Implement methods to add edges and check if an edge exists.",
+                        'description': "",
                         'difficulty': "Medium",
                         "is_locked_by_default":True,
                         'points_reward':1,
@@ -116,12 +116,12 @@ class Command(BaseCommand):
             },
             'nodesandedges': {
                 'title': "Nodes & Edges",
-                'icon': "📊",
+                'icon': "",
                 'items': [
                     {
                         'id': "ds-1", 
                         'title': "Node Representation", 
-                        'description': "Learn how to represent a node in a graph structure. Create a simple Node class with value and connections.",
+                        'description': "",
                         'difficulty': "Easy",
                         "is_locked_by_default":False,
                         'points_reward':1,
@@ -138,7 +138,7 @@ class Command(BaseCommand):
                     {
                         'id': "ds-2", 
                         'title': "Edge Representation", 
-                        'description': "Create an Edge class to represent connections between nodes with optional weights.",
+                        'description': "",
                         'difficulty': "Easy",
                         "is_locked_by_default":True,
                         'points_reward':1,
@@ -155,7 +155,7 @@ class Command(BaseCommand):
                     {
                         'id': "ds-3", 
                         'title': "Cycle Detection", 
-                        'description': "Implement a function to detect if a cycle exists in a simple graph representation.",
+                        'description': "",
                         'difficulty': "Medium",
                         "is_locked_by_default":True,
                         'points_reward':1,
@@ -172,7 +172,7 @@ class Command(BaseCommand):
                     {
                         'id': "ds-4", 
                         'title': "Valid Components from Edge List", 
-                        'description': "Given a list of edges, determine if they form valid connected components (no duplicate edges, valid connections).",
+                        'description': "",
                         'difficulty': "Medium",
                         "is_locked_by_default":True,
                         'points_reward':1,
@@ -195,12 +195,12 @@ class Command(BaseCommand):
             },
             'traversal': {
                 'title': "Graph Traversal",
-                'icon': "🔍",
+                'icon': "",
                 'items': [
                     {
                         'id': "trav-1", 
                         'title': "DFS Fibonacci Tree", 
-                        'description': "Use Depth-First Search to traverse a fibonacci-based tree structure and return all values in DFS order.",
+                        'description': "",
                         'difficulty': "Medium",
                         "is_locked_by_default":False,
                         'points_reward':1,
@@ -217,7 +217,7 @@ class Command(BaseCommand):
                     {
                         'id': "trav-2", 
                         'title': "BFS Layer Sum", 
-                        'description': "Use Breadth-First Search to traverse a graph and calculate the sum of values at each layer/level.",
+                        'description': "",
                         'difficulty': "Medium",
                         "is_locked_by_default":True,
                         'points_reward':1,
@@ -235,12 +235,12 @@ class Command(BaseCommand):
             },
             'pathsandcycles': {
                 'title': "Paths And Cycles",
-                'icon': "🔄",
+                'icon': "",
                 'items': [
                     {
                         'id': "path-1", 
                         'title': "Find Path", 
-                        'description': "Find a path between two nodes in a graph using depth-first search.",
+                        'description': "",
                         'difficulty': "Medium",
                         "is_locked_by_default":True,
                         'points_reward':1,
@@ -258,12 +258,12 @@ class Command(BaseCommand):
             },
             'connectedcomponents': {
                 'title': "Connected Components",
-                'icon': "🔢",
+                'icon': "",
                 'items': [
                     {
                         'id': "cc-1", 
                         'title': "Count Components", 
-                        'description': "Count the number of connected components in an undirected graph.",
+                        'description': "",
                         'difficulty': "Medium",
                         "is_locked_by_default":True,
                         'points_reward':1,
@@ -281,12 +281,12 @@ class Command(BaseCommand):
             },
             'decision': {
                 'title': "Decision Problems",
-                'icon': "🤔",
+                'icon': "",
                 'items': [
                     {
                         'id': "dec-1", 
                         'title': "Even or Odd", 
-                        'description': "Determine whether a given number is even or odd.",
+                        'description': "",
                         'difficulty': "Easy",
                         "is_locked_by_default":True,
                         'points_reward':1,
@@ -308,7 +308,7 @@ class Command(BaseCommand):
                     {
                         'id': "dec-2", 
                         'title': "Prime Check", 
-                        'description': "Check if a given number is prime (only divisible by 1 and itself).",
+                        'description': "",
                         'difficulty': "Medium",
                         "is_locked_by_default":True,
                         'points_reward':1,
