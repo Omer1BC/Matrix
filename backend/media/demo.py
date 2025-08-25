@@ -22,21 +22,30 @@ def countComponents(n: int, edges: List[List[int]]) -> int:
     
     return components
 
-# Write a program that computes the sum of all node values in a graph
-# The graph is represented as a dictionary where keys are node names
-# and values are dictionaries containing 'value' and 'connections'
-#
-# Example graph structure:
-# graph = {
-#     'A': {'value': 5, 'connections': ['B', 'C']},
-#     'B': {'value': 3, 'connections': ['A', 'D']},
-#     'C': {'value': 7, 'connections': ['A']},
-#     'D': {'value': 2, 'connections': ['B']}
-# }
+# Implement a Graph using Adjacency List
 
-def compute_graph_sum(graph):
-    # Replace pass with your implementation
-    pass
+class Graph:
+    def __init__(self):
+        # Initialize empty adjacency list
+        pass
+    
+    def add_vertex(self, vertex):
+        # Add a vertex to the graph
+        pass
+    
+    def add_edge(self, v1, v2):
+        # Add an edge between v1 and v2 (undirected)
+        pass
+    
+    def get_neighbors(self, vertex):
+        # Return list of neighbors for given vertex
+        pass
+    
+    def display(self):
+        # Print the adjacency list representation
+        pass
+
+
 def run_test(n, edges, expected):
     exception = ""
     result = ""

@@ -212,7 +212,7 @@ export default function ProblemsPage() {
                 className="react-player"
                 onEnded={handleEnded}
                 controls={true}
-                url={urls[idx]}
+                src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
                 width="100%"
                 height="100%"
               />
