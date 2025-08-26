@@ -95,7 +95,7 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
             className="w-full text-left font-semibold flex items-center gap-2"
             style={{color: 'var(--gr-2)'}}
           >
-            <span>{expandedCategory === key ? "▲" : "▼"}</span>
+            <span>{expandedCategory === key ? "▼" : "▶"}</span>
             <span className="text-2xl">{section.icon}</span>
             {section.title}
           </button>

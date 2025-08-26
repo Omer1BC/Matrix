@@ -446,7 +446,8 @@ def problem_details(request):
 The nodes are numbered from 0 to n - 1.
 
 Return the total number of connected components in that graph.''',
-                    "method_stub": "def twoSum(self, nums: List[int], target: int) -> List[int]:\n        return []",
+                    "method_stub": '''def countComponents(n: int, edges: List[List[int]]) -> int:
+        return 0''',
                     "input_args": ["nums", "target", "output", "expected"],
                     "tools": {
                         "DFS": {

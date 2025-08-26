@@ -29,8 +29,14 @@ export default function ProblemsPage() {
   const [testCases, setTestCases] = useState([]);
   const [refreshKey, setRefreshKey] = useState(false)
   const [completionPercentage, setCompletionPercentage] = useState(0)
+  const [showVictoryModal, setShowVictoryModal] = useState(false)
   function toggleRefresh() {
     setRefreshKey(!refreshKey)
+  }
+  
+  function handleAllTestsPassed() {
+    setShowVictoryModal(true)
+    // toggleRefresh()
   }
 
 
@@ -242,12 +248,32 @@ export default function ProblemsPage() {
             <TestCasesPanel
               problemId={currentProblem.id}
               editorRef={editorRef}
-              onAllTestsPassed={toggleRefresh}
+              onAllTestsPassed={handleAllTestsPassed}
             />
           </div>
         </div>
 
       </div>
+
+      {/* Victory Modal */}
+      {showVictoryModal && (
+        <div className="victory-modal-overlay" onClick={() => setShowVictoryModal(false)}>
+          <div className="victory-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="victory-content">
+              <h2>Right on! 👍</h2>
+              <p>All test cases passed successfully!</p>
+              <p>You've completed: {problemDetails?.title || currentProblem.title}</p>
+              
+              <button 
+                className="victory-close-btn"
+                onClick={() => setShowVictoryModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
