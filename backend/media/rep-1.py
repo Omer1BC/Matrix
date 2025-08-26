@@ -1,69 +1,49 @@
 ''''''
 from typing import *
+from collections import defaultdict
 ''''''
-class Graph:
-    def __init__(self):
-        """Initialize empty adjacency list"""
-        # User code will be inserted here
-        pass
-    
-    def add_vertex(self, vertex: str) -> None:
-        """Add a vertex to the graph"""
-        # User code will be inserted here
-        pass
-    
-    def add_edge(self, v1: str, v2: str) -> None:
-        """Add an edge between v1 and v2 (undirected)"""
-        # User code will be inserted here
-        pass
-    
-    def get_neighbors(self, vertex: str) -> List[str]:
-        """Return list of neighbors for given vertex"""
-        # User code will be inserted here
-        pass
-    
-    def get_adjacency_list(self) -> Dict[str, List[str]]:
-        """Return the adjacency list representation"""
-        # User code will be inserted here
-        pass
+def edges_to_adj_list(edges: List[List[int]]) -> Dict[int, List[int]]:
+    """Convert edge list to adjacency list representation"""
+    # User code will be inserted here
+    pass
 ''''''
-def run_test(operations, expected):
+def run_test(edges, expected):
     exception = ""
     result = ""
     try:
-        g = Graph()
-        for op in operations:
-            if op[0] == "add_vertex":
-                g.add_vertex(op[1])
-            elif op[0] == "add_edge":
-                g.add_edge(op[1], op[2])
-        
-        result = g.get_adjacency_list()
+        raw_result = edges_to_adj_list(edges)
+        # Sort the dictionary keys and the lists within each key for consistent comparison
+        result = {k: sorted(v) for k, v in sorted(raw_result.items())} if raw_result else {}
+        expected_sorted = {k: sorted(v) for k, v in sorted(expected.items())} if expected else {}
     except Exception as e:
         exception = str(e)
+        expected_sorted = expected
     return {
-        "operations": operations, 
-        "expected": expected,
+        "nums": edges, 
+        "expected": expected_sorted,
         "actual": result, 
         "error": exception,
-        "passed": result == expected if not exception else False
+        "passed": result == expected_sorted if not exception else False
     }
 
 test_cases = [
     (
-        [("add_vertex", "A"), ("add_vertex", "B"), ("add_vertex", "C"), 
-         ("add_edge", "A", "B"), ("add_edge", "B", "C")],
-        {"A": ["B"], "B": ["A", "C"], "C": ["B"]}
+        [[1, 2], [2, 3], [1, 3]],
+        {1: [2, 3], 2: [1, 3], 3: [1, 2]}
     ),
     (
-        [("add_vertex", "X")],
-        {"X": []}
+        [],
+        {}
     ),
     (
-        [("add_vertex", "P"), ("add_vertex", "Q"), ("add_edge", "P", "Q")],
-        {"P": ["Q"], "Q": ["P"]}
+        [[0, 1], [1, 2]],
+        {0: [1], 1: [0, 2], 2: [1]}
+    ),
+    (
+        [[5, 6]],
+        {5: [6], 6: [5]}
     )
 ]
 
 # Generate results without printing
-results = {f"test_{i}": run_test(operations, expected) for i, (operations, expected) in enumerate(test_cases)}
+results = {f"test_{i}": run_test(edges, expected) for i, (edges, expected) in enumerate(test_cases)}

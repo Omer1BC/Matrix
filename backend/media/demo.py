@@ -22,30 +22,8 @@ def countComponents(n: int, edges: List[List[int]]) -> int:
     
     return components
 
-# Implement a Graph using Adjacency List
-
-class Graph:
-    def __init__(self):
-        # Initialize empty adjacency list
-        pass
-    
-    def add_vertex(self, vertex):
-        # Add a vertex to the graph
-        pass
-    
-    def add_edge(self, v1, v2):
-        # Add an edge between v1 and v2 (undirected)
-        pass
-    
-    def get_neighbors(self, vertex):
-        # Return list of neighbors for given vertex
-        pass
-    
-    def display(self):
-        # Print the adjacency list representation
-        pass
-
-
+def twoSum(self, nums: List[int], target: int) -> List[int]:
+        return []
 def run_test(n, edges, expected):
     exception = ""
     result = ""

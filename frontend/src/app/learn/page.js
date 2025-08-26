@@ -140,81 +140,86 @@ export default function ProblemsPage() {
       <div className="grid grid-cols-[1fr_3fr_1fr] gap-6 h-full p-6 mx-auto">
 
         {/* Column 1: Problem Menu with vertical progress bar */}
-        <div className="relative bg-white rounded-lg shadow-lg p-4 overflow-y-auto flex">
+        <div className="relative rounded-lg shadow-lg p-4 overflow-y-auto flex" style={{backgroundColor: 'var(--dbl-2)'}}>
           {/* Progress Bar Container */}
-          <div className="relative w-2 mr-4 rounded-full bg-gray-300">
+          <div className="relative w-2 mr-4 rounded-full" style={{backgroundColor: 'var(--dbl-4)'}}>
             {/* Filled part */}
             <div
-              className="bg-green-500 rounded-full w-full absolute  left-0 transition-all duration-300"
-              style={{ height: `${completionPercentage}%` }}
-            />
-          </div>
-
-          {/* Actual Problem Menu content */}
-          <div className="flex-1">
-            <ProblemMenu onProblemSelect={handleProblemSelect} refreshKey={refreshKey} />
-          </div>
-        </div>
-
-        {/* Column 2: Exercise, Editor, Video */}
-        <div className="flex flex-col gap-4 overflow-y-auto">
-
-          {/* Exercise Section */}
-          <div className="bg-white rounded-lg shadow-lg p-6 flex-shrink-0">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">
-                Exercise {currentProblem.id}: {problemDetails?.title || currentProblem.title}
-              </h2>
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${(problemDetails?.difficulty || currentProblem.difficulty) === 'Easy'
-                ? 'bg-green-100 text-green-800'
-                : (problemDetails?.difficulty || currentProblem.difficulty) === 'Medium'
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : 'bg-red-100 text-red-800'
-                }`}>
-                {problemDetails?.difficulty || currentProblem.difficulty}
-              </span>
-            </div>
-            <div className="text-gray-600 mb-4 whitespace-pre-wrap">
-              {problemDetails?.description || currentProblem.description}
-            </div>
-            {problemDetails?.category && (
-              <div className="text-sm text-gray-500">
-                Category: {problemDetails.category}
-              </div>
-            )}
-          </div>
-
-          {/* Code Editor */}
-          <div className="bg-white rounded-lg shadow-lg h-96 overflow-hidden flex-shrink-0">
-            <Editor
-              height="100%"
-              width="100%"
-              language="python"
-              theme="vs-dark"
-              onMount={handleEditorDidMount}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                lineNumbers: 'on',
-                scrollBeyondLastLine: false,
-                automaticLayout: true
+              className="rounded-full w-full absolute left-0 transition-all duration-300"
+              style={{ 
+                height: `${completionPercentage}%`,
+                backgroundColor: 'var(--gr-2)'
               }}
             />
           </div>
 
+          {/* Actual Problem Menu content */}
+          <div className="flex-1" style={{backgroundColor: 'var(--dbl-2)'}}>
+            <ProblemMenu onProblemSelect={handleProblemSelect} refreshKey={refreshKey} />
+          </div>
+        </div>
+
+        {/* Column 2: Video, Exercise & Editor */}
+        <div className="flex flex-col gap-4 overflow-y-auto">
+
           {/* Video Player */}
-          <div className="bg-white rounded-lg shadow-lg p-4 flex-shrink-0">
-            <h3 className="text-lg font-semibold mb-3 text-gray-800">Tutorial Video</h3>
-            <div className="aspect-video">
-              <ReactPlayer
-                muted={true}
-                playing={false}
-                className="react-player"
-                onEnded={handleEnded}
-                controls={true}
-                src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
-                width="100%"
+          <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0">
+            {/* Video Title Section */}
+            <div className="p-4" style={{backgroundColor: 'var(--dbl-3)'}}>
+              <h3 className="text-lg font-semibold" style={{color: 'var(--gr-2)'}}>{problemDetails?.title || currentProblem.title}</h3>
+            </div>
+            {/* Video Content Section */}
+            <div className="p-4" style={{backgroundColor: 'var(--dbl-2)'}}>
+              <div className="max-h-78 flex justify-center items-center">
+                <ReactPlayer
+                  muted={true}
+                  playing={false}
+                  onEnded={handleEnded}
+                  controls={true}
+                  src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
+                  width="auto"
+                  height="312px"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Exercise & Code Editor Combined */}
+          <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0">
+            {/* Exercise Header */}
+            <div className="p-4" style={{backgroundColor: 'var(--dbl-3)'}}>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-xl font-bold" style={{color: 'var(--gr-2)'}}>
+                  Exercise {currentProblem.id}: {problemDetails?.title || currentProblem.title}
+                </h2>
+                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${(problemDetails?.difficulty || currentProblem.difficulty) === 'Easy'
+                  ? 'bg-green-100 text-green-800'
+                  : (problemDetails?.difficulty || currentProblem.difficulty) === 'Medium'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : 'bg-red-100 text-red-800'
+                  }`}>
+                  {problemDetails?.difficulty || currentProblem.difficulty}
+                </span>
+              </div>
+              <div className="text-sm whitespace-pre-wrap" style={{color: 'var(--gr-2)'}}>
+                {problemDetails?.description || currentProblem.description}
+              </div>
+            </div>
+            {/* Code Editor */}
+            <div className="h-80">
+              <Editor
                 height="100%"
+                width="100%"
+                language="python"
+                theme="vs-dark"
+                onMount={handleEditorDidMount}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  lineNumbers: 'on',
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true
+                }}
               />
             </div>
           </div>

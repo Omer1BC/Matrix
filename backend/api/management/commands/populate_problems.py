@@ -85,8 +85,15 @@ class Command(BaseCommand):
                         'difficulty': "Easy",
                         "is_locked_by_default":False,
                         'points_reward':1,
-                        'starter_code': '# Implement a Graph using Adjacency List\n\nclass Graph:\n    def __init__(self):\n        # Initialize empty adjacency list\n        pass\n    \n    def add_vertex(self, vertex):\n        # Add a vertex to the graph\n        pass\n    \n    def add_edge(self, v1, v2):\n        # Add an edge between v1 and v2 (undirected)\n        pass\n    \n    def get_neighbors(self, vertex):\n        # Return list of neighbors for given vertex\n        pass\n    \n    def display(self):\n        # Print the adjacency list representation\n        pass\n\n',
-                        'solution': 'class Graph:\n    def __init__(self):\n        self.adj_list = {}\n    \n    def add_vertex(self, vertex):\n        if vertex not in self.adj_list:\n            self.adj_list[vertex] = []\n    \n    def add_edge(self, v1, v2):\n        # Add both vertices if they don\'t exist\n        self.add_vertex(v1)\n        self.add_vertex(v2)\n        # Add edge in both directions (undirected)\n        self.adj_list[v1].append(v2)\n        self.adj_list[v2].append(v1)\n    \n    def get_neighbors(self, vertex):\n        return self.adj_list.get(vertex, [])\n    \n    def display(self):\n        for vertex in self.adj_list:\n            print(f"{vertex}: {self.adj_list[vertex]}")\n\ng = Graph()\ng.add_vertex("A")\ng.add_vertex("B")\ng.add_vertex("C")\ng.add_edge("A", "B")\ng.add_edge("B", "C")\ng.display()',
+                        'starter_code': '''def edges_to_adj_list(edges: List[List[int]]) -> Dict[int, List[int]]:
+    """Convert edge list to adjacency list representation"""
+    pass''',
+                        'solution': '''def build_adjacency_list(edges):
+    graph = defaultdict(list)
+    for u, v in edges:
+        graph[u].append(v)
+        graph[v].append(u)
+    return graph''',
                         'test_cases': [
                             {
                                 'input': 'Graph with vertices A,B,C and edges A-B, B-C',

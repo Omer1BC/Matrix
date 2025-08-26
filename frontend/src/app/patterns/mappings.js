@@ -75,7 +75,7 @@ export function AnimationPlayer({name,url}) {
     return (
         <>
         <div className='anim-container'>
-            <ReactPlayer key={url} muted={true} controls={false} playing={true} className="react"  src={url} />
+            <ReactPlayer key={url} muted={true} controls={false} playing={true} className="react" src={url} />
         </div>
         </>
     )
