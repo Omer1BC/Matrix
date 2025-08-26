@@ -22,8 +22,13 @@ def countComponents(n: int, edges: List[List[int]]) -> int:
     
     return components
 
-def twoSum(self, nums: List[int], target: int) -> List[int]:
-        return []
+def compute_graph_sum(graph):
+    total_sum = 0
+    for node in graph:
+        total_sum += graph[node]['value']
+    return total_sum
+
+
 def run_test(n, edges, expected):
     exception = ""
     result = ""
