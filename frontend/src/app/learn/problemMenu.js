@@ -86,7 +86,7 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
 
   return (
     <div className="w-full" style={{backgroundColor: 'var(--dbl-2)'}}>
-      <h2 className="text-xl font-bold mb-4" style={{color: 'var(--gr-2)'}}>Problems</h2>
+      <h2 className="text-xl font-bold mb-4" style={{color: 'var(--gr-2)'}}>Graphs</h2>
 
       {Object.entries(problemCategories).map(([key, section]) => (
         <div key={key} className="mb-4">
