@@ -143,7 +143,7 @@ export default function ProblemsPage() {
         <div className="rounded-lg shadow-lg overflow-hidden flex flex-col">
           {/* Navigation Menu Header */}
           <div className="p-4" style={{backgroundColor: 'var(--dbl-3)'}}>
-            <h2 className="text-lg font-bold text-center" style={{color: 'var(--gr-2)'}}>Navigation Menu</h2>
+            <h2 className="text-lg font-bold text-center" style={{color: 'var(--gr-2)'}}>Menu</h2>
           </div>
 
           {/* Problem Menu with Progress Bar */}

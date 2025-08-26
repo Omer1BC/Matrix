@@ -25,7 +25,7 @@ class Command(BaseCommand):
                         "difficulty": "Easy",
                         "is_locked_by_default":False,
                         'points_reward':1,
-                        "starter_code": "# Write a program that computes the sum of all node values in a graph\n# The graph is represented as a dictionary where keys are node names\n# and values are dictionaries containing 'value' and 'connections'\n#\n# Example graph structure:\n# graph = {\n#     'A': {'value': 5, 'connections': ['B', 'C']},\n#     'B': {'value': 3, 'connections': ['A', 'D']},\n#     'C': {'value': 7, 'connections': ['A']},\n#     'D': {'value': 2, 'connections': ['B']}\n# }\n\ndef compute_graph_sum(graph):\n    # Replace pass with your implementation\n    pass",
+                        "starter_code": "def compute_graph_sum(graph):\n    total_sum = 0\n    for node in graph:\n        total_sum += graph[node]['value']\n    return total_sum\n\n",
                         "solution": "def compute_graph_sum(graph):\n    total_sum = 0\n    for node in graph:\n        total_sum += graph[node]['value']\n    return total_sum\n\n",
                         "test_cases": [
                             {
@@ -50,10 +50,10 @@ class Command(BaseCommand):
                         "title": "Recursive Sum of Linked List",
                         "description": "Write a recursive function to compute the sum of all values in a linked list. Each node has a value and a reference to the next node.",
                         "difficulty": "Easy",
-                        "is_locked_by_default":True,
+                        "is_locked_by_default":False,
                         'points_reward':1,
-                        "starter_code": "# Linked List Node class\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\ndef recursive_sum(head):\n    \"\"\"\n    Recursively compute the sum of all values in a linked list.\n    Args:\n        head: ListNode - the head of the linked list\n    Returns:\n        int - sum of all values in the list\n    \"\"\"\n    # Replace pass with your recursive implementation\n    pass\n\n",
-                        "solution": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\ndef recursive_sum(head):\n    # Base case: if head is None, return 0\n    if head is None:\n        return 0\n    # Recursive case: current value + sum of rest\n    return head.val + recursive_sum(head.next)\n\n",
+                        "starter_code": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\ndef recursive_sum(head):\n    if head is None:\n        return 0\n    return head.val + recursive_sum(head.next)\n\n",
+                        "solution": "class ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\ndef recursive_sum(head):\n    if head is None:\n        return 0\n    return head.val + recursive_sum(head.next)\n\n",
                         "test_cases": [
                             {
                                 "input": "LinkedList: 1->2->3->4",
@@ -281,56 +281,6 @@ class Command(BaseCommand):
                                 'input': 'Graph with 3 components: {A-B}, {C-D}, {E}',
                                 'expected_output': 'Number of connected components: 3',
                                 'description': 'Should count 3 separate components'
-                            }
-                        ]
-                    }
-                ]
-            },
-            'decision': {
-                'title': "Decision Problems",
-                'icon': "",
-                'items': [
-                    {
-                        'id': "dec-1", 
-                        'title': "Even or Odd", 
-                        'description': "",
-                        'difficulty': "Easy",
-                        "is_locked_by_default":True,
-                        'points_reward':1,
-                        'starter_code': '# Determine if a number is even or odd\n\ndef is_even(number):\n    """\n    Check if a number is even.\n    Returns True if even, False if odd.\n    """\n    # Implement even/odd check\n    pass\n\n',
-                        'solution': 'def is_even(number):\n    return number % 2 == 0\n\ntest_numbers = [2, 3, 10, 15, 0]\nfor num in test_numbers:\n    result = "even" if is_even(num) else "odd"\n    print(f"{num} is {result}")',
-                        'test_cases': [
-                            {
-                                'input': 'is_even(4)',
-                                'expected_output': 'True',
-                                'description': '4 should be even'
-                            },
-                            {
-                                'input': 'is_even(7)',
-                                'expected_output': 'False',
-                                'description': '7 should be odd'
-                            }
-                        ]
-                    },
-                    {
-                        'id': "dec-2", 
-                        'title': "Prime Check", 
-                        'description': "",
-                        'difficulty': "Medium",
-                        "is_locked_by_default":True,
-                        'points_reward':1,
-                        'starter_code': '# Check if a number is prime\n\ndef is_prime(n):\n    """\n    Check if a number is prime.\n    Returns True if prime, False otherwise.\n    """\n    # Implement prime checking algorithm\n    pass\n\n',
-                        'solution': 'def is_prime(n):\n    if n < 2:\n        return False\n    if n == 2:\n        return True\n    if n % 2 == 0:\n        return False\n    \n    for i in range(3, int(n**0.5) + 1, 2):\n        if n % i == 0:\n            return False\n    return True\n\ntest_numbers = [2, 3, 4, 17, 25, 29]\nfor num in test_numbers:\n    result = "prime" if is_prime(num) else "not prime"\n    print(f"{num} is {result}")',
-                        'test_cases': [
-                            {
-                                'input': 'is_prime(17)',
-                                'expected_output': 'True',
-                                'description': '17 should be prime'
-                            },
-                            {
-                                'input': 'is_prime(25)',
-                                'expected_output': 'False',
-                                'description': '25 should not be prime'
                             }
                         ]
                     }
