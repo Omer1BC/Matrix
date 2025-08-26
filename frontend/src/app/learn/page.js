@@ -180,9 +180,9 @@ export default function ProblemsPage() {
             <div className="p-4" style={{backgroundColor: 'var(--dbl-2)'}}>
               <div className="max-h-78 flex justify-center items-center">
                 <ReactPlayer
-                  muted={true}
+                  muted={false}
                   playing={true}
-                  controls={true}
+                  controls={false}
                   src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
                   width="auto"
                   height="312px"
