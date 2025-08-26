@@ -81,7 +81,7 @@ class Command(BaseCommand):
                     {
                         'id': "rep-1", 
                         'title': "Adjacency List Implementation", 
-                        'description': "",
+                        'description': "Give a list of edges where edges[i] = [a,b] represents an undirected edge, create an adjancecy list representation.",
                         'difficulty': "Easy",
                         "is_locked_by_default":False,
                         'points_reward':1,

@@ -181,8 +181,7 @@ export default function ProblemsPage() {
               <div className="max-h-78 flex justify-center items-center">
                 <ReactPlayer
                   muted={true}
-                  playing={false}
-                  onEnded={handleEnded}
+                  playing={true}
                   controls={true}
                   src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
                   width="auto"
