@@ -464,7 +464,7 @@ def dfs(u):
                         },
                         "Set": {
                             "description": "Unordered data structure with O(1) insertion, removal, and find",
-                            "args": {"nums": {"type": "List[int]", "default_value": "[1,2,3,2,5]"}},
+                            "args": {"numbers": {"type": "List[int]", "default_value": "[1,2,3,2,5]"}},
                             "code": '''#Set
 elements = set()
 elements.add(2) # O(1)
