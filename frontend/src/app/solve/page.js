@@ -21,17 +21,24 @@ export default function Home({id}) {
       this.i = i
       //Div that has a nested annotation message and a button
       this._domNode = document.createElement('div');
-      const span = document.createElement('span');
-      span.className = 'my-hover-widget';
-      span.textContent = message;
-
+      this._domNode.className = 'my-hover-widget';
+      
+      const buttonSection = document.createElement('div');
+      buttonSection.className = 'my-hover-widget-button-section';
+      
       const button = document.createElement('button');
       button.className = 'my-hover-widget-button';
       button.textContent = '✔';
-
       button.onclick = () => replaceEditorLine(i,type,this._message);
-      this._domNode.appendChild(span);
-      this._domNode.appendChild(button);
+      
+      buttonSection.appendChild(button);
+      
+      const messageSection = document.createElement('div');
+      messageSection.className = 'my-hover-widget-message';
+      messageSection.textContent = message;
+
+      this._domNode.appendChild(buttonSection);
+      this._domNode.appendChild(messageSection);
       this._id = `hover.widget-${n}`;
       this._position = null;
       this.n = n

@@ -36,7 +36,7 @@ export default function ProblemsPage() {
   
   function handleAllTestsPassed() {
     setShowVictoryModal(true)
-    // toggleRefresh()
+    toggleRefresh()
   }
 
 
@@ -198,7 +198,7 @@ export default function ProblemsPage() {
           </div>
 
           {/* Exercise & Code Editor Combined */}
-          <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0">
+          <div className="rounded-lg shadow-lg overflow-hidden flex-1">
             {/* Exercise Header */}
             <div className="p-4" style={{backgroundColor: 'var(--dbl-3)'}}>
               <div className="mb-2">
