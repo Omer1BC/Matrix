@@ -183,7 +183,7 @@ export default function ProblemsPage() {
               <h3 className="text-lg font-semibold" style={{color: 'var(--gr-2)'}}>{problemDetails?.title || currentProblem.title}</h3>
             </div>
             {/* Video Content Section */}
-            <div className="p-4" style={{backgroundColor: 'var(--dbl-2)'}}>
+            <div className="" style={{backgroundColor: 'var(--dbl-5)'}}>
               <div className="max-h-78 flex justify-center items-center">
                 <ReactPlayer
                   muted={false}
@@ -198,7 +198,7 @@ export default function ProblemsPage() {
           </div>
 
           {/* Exercise & Code Editor Combined */}
-          <div className="rounded-lg shadow-lg overflow-hidden flex-1">
+          <div className="rounded-lg shadow-lg overflow-hidden flex-1 flex flex-col">
             {/* Exercise Header */}
             <div className="p-4" style={{backgroundColor: 'var(--dbl-3)'}}>
               <div className="mb-2">
@@ -211,7 +211,7 @@ export default function ProblemsPage() {
               </div>
             </div>
             {/* Code Editor */}
-            <div className="h-80">
+            <div className="flex-1">
               <Editor
                 height="100%"
                 width="100%"

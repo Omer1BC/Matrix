@@ -96,7 +96,7 @@ export function ReferencesContent({viewHint,response,loading,nextThread}) {
                 )}
             </div>
             <div className='input-container'>
-                <input className='input' type="text" id="simple-search"  class="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" onChange={(e) => handleChange(e)} onKeyDown={handleKeyDown} value={ask} placeholder="What are you stuck on?" />
+                <input type="text" id="simple-search"  className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" onChange={(e) => handleChange(e)} onKeyDown={handleKeyDown} value={ask} placeholder="What are you stuck on?" />
             </div>
 
         </div>
