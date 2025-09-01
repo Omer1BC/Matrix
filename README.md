@@ -24,6 +24,9 @@ Navigate to ```/Matrix/frontend``` and run ```npm run dev``` which will start on
 ### /solve Layout
 ```/solve/page.js``` is compose of 4 cards whose template is found at ```/src/app/templates/cards```. The 4 sections are named content for the video section (top left), references (bottom left), code (top right), and validation (bottom right). Each card is passed key, value pairs specify the name of the tab and the content (other components) to render for each tab. The code editor is provided by react, and hints can be tested for the twoSum problem with an api key. Expected solution is found at ```/backend/media/1_2sum.py```. The test button will append to the file the current code and run the tests.
 
+### /learn layout
+The learn layout is comprised of 3 different components, the left navigation window, the main code window with the video player, and the run code window on the right. The learn page utilizes our user authentication system in our user table to figure out what problems a user has completed, which then allows us to calculate which specific problems are available to said user. From there, we display the available questions in the leftmost window. Clicking on a question will auto fill the method stub and generate a video, from there a solution can be inputted and running the tests will run them in our backend similarly to the solve page.
+
 # Setting Up WSL + VS Code Workspace
 
 ## 1. Install VS Code
