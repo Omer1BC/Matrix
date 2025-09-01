@@ -23,6 +23,11 @@ Endpoints can be found at ```/Matrix/backend/api/urls.py``` which reference meth
 - The Problem table has a category, id, title, description, difficulty, order, method_stub, solution, test_case, is_locked_by_default, points, input_args, tools, are the required fields.
 - Problem completion holds the answer that the user has submitted for a specific problem, the variabels are a user, problem, is_completed, is_attempted, completion_date, first_attempt_date, user_solution, attempts_count, hints_used, time_spent_seconds, test_cases_pased, total_test_cases, points_earned, efficiency_score, create_at, updated_at.
 
+#### default populations
+These default populations of the database are found in ```/backend/api/management/commands```
+- default populated users are an Administrator with an empty user progress
+- The problems themselves
+
 
 
 
