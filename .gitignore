@@ -10,3 +10,4 @@ backend/media/3_dfs-1.py
 backend/media/*-[0-9].py
 backend/media/demo.py
 backend/utils/.env
+backend/db.sqlite3
