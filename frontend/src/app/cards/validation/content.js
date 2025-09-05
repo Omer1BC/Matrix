@@ -201,6 +201,7 @@ export default function ValidationContent({annotateError, problemID,editorRef}) 
     const [tests,setTests] = useState({});
     const [activeKey,setActiveKey] = useState(0);
     const [showVictoryModal, setShowVictoryModal] = useState(false);
+    const [hasError, setHasError] = useState(false);
 
     const fetchDetails = () => {
         ping({problem_id:problemID}, "problem_details")
@@ -221,6 +222,7 @@ export default function ValidationContent({annotateError, problemID,editorRef}) 
     
     useEffect(() => fetchDetails,[editorRef]);
     const test = () => {
+        setHasError(false); // Reset error state when starting new test
         ping({problem_id: 1,code: editorRef.current.getValue()}, "tests")
         .then(data => {
             if (data.error !== 1) {
@@ -239,8 +241,10 @@ export default function ValidationContent({annotateError, problemID,editorRef}) 
 
 
             }
-            else 
+            else {
+                setHasError(true); // Set error state when there's an error
                 annotateError(data.result);
+            }
         })
     }
 
@@ -254,7 +258,18 @@ export default function ValidationContent({annotateError, problemID,editorRef}) 
 
                 ))}
                 <div style={{paddingBottom: '10px'}}></div>
-                <button id='test-button' onClick={test} type="button" className="focus:outline-none text-white bg-green-700  focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Test</button>
+                <button 
+                    id='test-button' 
+                    onClick={test} 
+                    type="button" 
+                    className="focus:outline-none text-white font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
+                    style={{
+                        backgroundColor: hasError ? 'var(--failure-color)' : 'var(--gr-2)',
+                        color: 'var(--dbl-1)'
+                    }}
+                >
+                    Test
+                </button>
 
             </div>
             <div className="output">
@@ -281,9 +296,9 @@ export default function ValidationContent({annotateError, problemID,editorRef}) 
                             {/* Star Graph with Integrated Metrics */}
                             <div className="metrics-container">
                                 <StarGraph metrics={{
-                                    robustness: 2,
+                                    robustness: 5,
                                     efficiency: 5,
-                                    readability: 4
+                                    readability: 3,
                                 }} />
                             </div>
                             

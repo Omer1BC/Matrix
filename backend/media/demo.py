@@ -22,30 +22,28 @@ def countComponents(n: int, edges: List[List[int]]) -> int:
     
     return components
 
-# Implement a Graph using Adjacency List
+def countComponents(n: int, edges:List[List[int]]) -> int:
+    #create an adjacency list of the edges
+    graph = {i: [] for i in range(n)}
+    for a,b in edges:
+        graph[a].append(b)
+        graph[b].append(a)
 
-class Graph:
-    def __init__(self):
-        # Initialize empty adjacency list
-        pass
-    
-    def add_vertex(self, vertex):
-        # Add a vertex to the graph
-        pass
-    
-    def add_edge(self, v1, v2):
-        # Add an edge between v1 and v2 (undirected)
-        pass
-    
-    def get_neighbors(self, vertex):
-        # Return list of neighbors for given vertex
-        pass
-    
-    def display(self):
-        # Print the adjacency list representation
-        pass
-
-
+    #define dfs
+    visited = [False]*n
+    def dfs(node):
+        if visited[node]:
+            return
+        visited[node]=True
+        for neighbor in graph[node]:
+            dfs(neighbor)
+    #call dfs on every node and increment the components
+    components = 0
+    for i in range(n):
+        if not visited[i]:
+            dfs(i)
+            components +=1
+    return components
 def run_test(n, edges, expected):
     exception = ""
     result = ""

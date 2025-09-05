@@ -85,20 +85,19 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
-    <div className="w-full">
-      <h2 className="text-xl font-bold mb-4 text-gray-800">Problems</h2>
+    <div className="w-full" style={{backgroundColor: 'var(--dbl-2)'}}>
+      <h2 className="text-xl font-bold mb-4" style={{color: 'var(--gr-2)'}}>Graphs</h2>
 
       {Object.entries(problemCategories).map(([key, section]) => (
         <div key={key} className="mb-4">
           <button
             onClick={() => toggleCategory(key)}
-            className="w-full text-left text-blue-600 hover:text-blue-800 font-semibold flex justify-between items-center"
+            className="w-full text-left font-semibold flex items-center gap-2"
+            style={{color: 'var(--gr-2)'}}
           >
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">{section.icon}</span>
-              {section.title}
-            </div>
-            <span>{expandedCategory === key ? "▲" : "▼"}</span>
+            <span>{expandedCategory === key ? "▼" : "▶"}</span>
+            <span className="text-2xl">{section.icon}</span>
+            {section.title}
           </button>
 
           {expandedCategory === key && (
@@ -111,18 +110,25 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
                     disabled={isLocked}
                     className={`w-full text-left p-2 rounded-md ${
                       isLocked
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                        ? 'text-gray-400 cursor-not-allowed'
+                        : 'hover:opacity-80'
                     }`}
+                    style={{
+                      backgroundColor: 'var(--dbl-3)',
+                      color: isLocked ? undefined : 'var(--gr-2)'
+                    }}
                     onClick={() => !isLocked && onProblemSelect(problem)}
                   >
-                    <div className="flex justify-between items-center">
+                    <div className="flex items-center justify-between w-full">
                       <span className="font-medium">{problem.title}</span>
-                      <span className={`text-xs ${getDifficultyColor(problem.difficulty)}`}>
-                        {problem.difficulty}
-                      </span>
+                      <div 
+                        className="w-4 h-4 rounded-full border-2"
+                        style={{
+                          backgroundColor: problem.completed ? 'var(--success-color)' : 'transparent',
+                          borderColor: isLocked ? 'var(--dbl-1)' : (problem.completed ? 'var(--success-color)' : 'var(--gr-2)')
+                        }}
+                      />
                     </div>
-                    <p className="text-sm text-gray-500">{problem.description}</p>
                   </button>
                 );
               })}

@@ -85,23 +85,51 @@
   background-color: rgba(255, 0, 0, 0.4); /* semi-transparent yellow */
 }
 .my-hover-widget {
-  display: inline-block;
-  background-color: rgb(210, 114, 114);
-  min-width : 400px; 
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 12px;
-  padding:5px
-
+  display: flex;
+  flex-direction: column;
+  background-color: var(--dbl-3);
+  min-width: 300px;
+  max-width: 450px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--dbl-4);
+  overflow: hidden;
 }
+
+.my-hover-widget-button-section {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  background-color: var(--dbl-4);
+  padding: 8px 4px 8px 8px;
+  border-bottom: 1px solid var(--dbl-1);
+}
+
+.my-hover-widget-message {
+  font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  color: var(--gr-2);
+  line-height: 1.4;
+  padding: 12px 16px;
+}
+
 .my-hover-widget-button {
-  background: none;       /* no background */
-  border: none;           /* remove border */
-  color: green;           /* green checkmark */
-  padding: 0;             /* no padding */
-  font-size: 14px;        /* slightly larger checkmark */
+  background-color: var(--gr-2);
+  border: none;
+  color: var(--dbl-1);
+  padding: 4px 6px;
+  font-size: 11px;
   cursor: pointer;
-  margin-left: 5px;
-  line-height: 1;         /* keeps it aligned with text */
+  border-radius: 3px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.my-hover-widget-button:hover {
+  background-color: var(--gr-1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .content {

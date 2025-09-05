@@ -92,7 +92,7 @@
 }
 
 .victory-modal {
-    background-color: rgb(63, 64, 75);
+    background-color: var(--dbl-2);
     border-radius: 1rem;
     padding: 2rem;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
