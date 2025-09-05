@@ -65,32 +65,17 @@ return (
 }
 
 export function AnimationPlayer({name,url}) {
-    const [hasError, setHasError] = useState(false);
-    const fallbackUrl = "http://localhost:8000/media/videos/4_set-1/480p15/4_set-1.mp4";
-    
-    useEffect(()=> {
-        console.log("In Animation player",url)
-        setHasError(false);
-    },[url])
-
-    const handleError = (error) => {
-        console.warn("ReactPlayer error, switching to fallback:", error);
-        setHasError(true);
-    };
-
-    const videoSrc = hasError ? fallbackUrl : url;
 
     return (
         <>
         <div className='anim-container'>
             <ReactPlayer 
-                key={videoSrc} 
+                key={url} 
                 muted={true} 
                 controls={false} 
                 playing={true} 
                 className="react" 
-                src={videoSrc}
-                onError={handleError}
+                src={url}
             />
         </div>
         </>

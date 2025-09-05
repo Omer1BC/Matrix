@@ -189,6 +189,7 @@ export default function ProblemsPage() {
                   muted={false}
                   playing={true}
                   controls={false}
+                  playbackRate={2}
                   src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
                   width="auto"
                   height="312px"
