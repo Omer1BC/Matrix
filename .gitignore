@@ -1,5 +1,6 @@
 *__pycache__
 *.venv
+*.env
 Animations/Graphs/1_Intro.py
 *.mp4
 .cache
