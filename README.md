@@ -1,3 +1,19 @@
+# Git Practices
+## Creating a feature branch
+Click the story, and in the development section, click the link to create the branch.
+
+<img width="227" height="50" alt="image" src="https://github.com/user-attachments/assets/6db2d6ed-a42b-4da2-a126-583b6952404b" />
+
+Then, you may check out to the specified branch to work on your feature.
+
+## Staying in sync with main
+Before beginning any session, make sure you check out to main and ```git pull```. In the time that you last checked the repository, main may have been updated with a commit.
+
+When your feature branch is behind, we will resolve issues with merge commits. On your feature branch, run ```git merge main``` and resolve the merge conflicts. Do not make any assumptions, and identify the person whose commit your branch is in conflict with. Work with them to resolve the files at issue. The merge commit message should follow the convention ```merge: <message>``` where the message details anything of note.
+
+This video may be helpful: https://www.youtube.com/watch?v=DkWDHzmMvyg&t=114s  
+## Updating feature branch
+Commit often. Commit messages should be descriptive in case we need to pinpoint a particular history of the project. It follows the convention ```<scope>: <message>```. For example, if I changed the database to support users, I would say ```backend: updated database to accomodate users```. Aim for messages that are concise and effective.
 # Matrix
 
 An integrated learning platform for technical interview-style programming questions
