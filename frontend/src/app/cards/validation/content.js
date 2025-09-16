@@ -1,6 +1,6 @@
 import {useState, useEffect} from 'react';
 import './validation.css'
-import { ping } from '@/app/utils/apiUtils';
+import { ping } from '../../utils/apiUtils';
 
 // StarGraph Component
 function StarGraph({ metrics }) {

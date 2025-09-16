@@ -16,6 +16,8 @@ from utils.utils import *
 from utils.agents import *
 from utils.problem_info import *
 
+
+
 # backend functions whose urls are mapped in /api/urls.py
 @csrf_exempt
 def get_completion(request):
@@ -578,3 +580,34 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return JsonResponse({"success": True, "message": "Logged out"})
+
+#---------- Supabase implementation functionality -------#
+
+import json
+from supabase import create_client
+
+SUPABASE_URL = "https://lskkeazcckgvxtvvyqbw.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxza2tlYXpjY2tndnh0dnZ5cWJ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Nzk4OTE3NSwiZXhwIjoyMDczNTY1MTc1fQ.njTAUkwk_9W1qoUxB_Ga_pvcEMhWlsXffEUwTTCEy5U"
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+@csrf_exempt
+def signup(request):
+    if request.method == 'POST':
+        body = json.loads(request.body)
+        email = body.get("email")
+        password = body.get("password")
+        
+        response = supabase.auth.sign_up({
+            "email": email,
+            "password": password
+        })
+        
+        if response.user:
+            return JsonResponse({"success": True, "user": response.user.email})
+        else:
+            return JsonResponse({"success": False, "error": response.error}, status=400)    
+        
+
+
+#--------------#

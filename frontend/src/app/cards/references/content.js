@@ -1,5 +1,5 @@
 import {useState, useEffect, useRef} from 'react';
-import { ping } from '@/app/utils/apiUtils';
+import { ping } from '../../utils/apiUtils';
 import './references.css';
 import { Typewriter } from 'react-simple-typewriter';
 import ToolPill from './ToolPill';
