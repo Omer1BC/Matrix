@@ -22,8 +22,25 @@ def countComponents(n: int, edges: List[List[int]]) -> int:
     
     return components
 
-def countComponents(n: int, edges: List[List[int]]) -> int:
-        return 0
+def count_connected_components(n, edges):
+    g = [[] for _ in range(n)]
+    for u, v in edges:
+        g[u].append(v)
+        g[v].append(u)
+    seen = [False] * n
+    c = 0
+    for i in range(n):
+        if not seen[i]:
+            c += 1
+            stack = [i]
+            seen[i] = True
+            while stack:
+                u = stack.pop()
+                for w in g[u]:
+                    if not seen[w]:
+                        seen[w] = True
+                        stack.append(w)
+    return c
 def run_test(n, edges, expected):
     exception = ""
     result = ""
