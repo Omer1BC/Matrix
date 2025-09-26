@@ -1,21 +1,59 @@
 .header-div {
     display: flex;
-    align-items: center;
+    justify-content: space-between;
     padding: 8px 0px;
     background-color: var(--dbl-3);
     height: 7%;
     gap: 10px;
-    padding: 5px 20px;
-
+    padding: 2px 10px;
 }
 
 .imgg-icon {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
 }
 
 .logo-title {
     display: flex;
     align-items: center;
     gap: 10px;
+    font-size: 50px;
+    color: var(--gr-2);
 }
+
+.log-in-button {
+    padding: 10px;
+    gap: 10px;
+    color: var(--gr-2);
+    font-size: 40px;
+    cursor: pointer;
+}
+
+.login-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+  }
+  
+  .login-popup-content {
+    background-color: gray;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    text-align: center;
+  }
+
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; 
+  }

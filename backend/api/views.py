@@ -25,7 +25,8 @@ def get_completion(request):
         user = request.user
         print(user)
         print(user.completion_percentage)
-        return JsonResponse({"percentage": user.completion_percentage}, status=400)
+        return JsonResponse({"percentage": user.completion_percentage}, status=200)
+    return JsonResponse({"error": "Method not allowed"}, status=405)
     
 @csrf_exempt
 def run_python(request):
@@ -597,6 +598,8 @@ def signup(request):
         body = json.loads(request.body)
         email = body.get("email")
         password = body.get("password")
+        firstname = body.get("firstname")
+        lastname = body.get("lastname")
         
         response = supabase.auth.sign_up({
             "email": email,
@@ -604,10 +607,53 @@ def signup(request):
         })
         
         if response.user:
-            return JsonResponse({"success": True, "user": response.user.email})
+            response2 = (
+                supabase.table('profiles')
+                .insert({
+                    "id": response.user.id,
+                    "first_name": firstname,
+                    "last_name": lastname,
+                })
+                .execute()
+            )
+            if response2: 
+                return JsonResponse({"success": True, "user": response2.data})
         else:
             return JsonResponse({"success": False, "error": response.error}, status=400)    
         
-
-
+@csrf_exempt
+def logout(request):
+    try:
+        supabase.auth.sign_out()
+        return JsonResponse({"success": True, "message": "Logged out successfully"}, status=200)
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+    
+@csrf_exempt
+def supabase_login(request):
+    if request.method == "POST":
+        body = json.loads(request.body)
+        email = body.get("email")
+        password = body.get("password")
+        
+        response = supabase.auth.sign_in_with_password({
+            "email": email,
+            "password": password,
+        })
+        if response.user:
+            user_id = response.user.id
+            response2 = (
+                supabase.table("profiles")
+                .select("*")
+                .eq("id", user_id)
+                .execute()
+            )
+            if response2.data:
+                return JsonResponse({"success": True, "user": response2.data})
+        else:
+            return JsonReponse({"success": False, "message": "Could not retrieve from profiles"}, status=400)
+    else:
+        return JsonReponse({"success": False, "message": "Incorrect method"}, status=405)
+        
+        
 #--------------#

@@ -5,6 +5,7 @@ import {Editor} from '@monaco-editor/react'
 import {useRef,useState, useEffect} from 'react';
 import Card from '../templates/card/card';
 import Header from '../templates/header/header';
+import "../templates/header/header.css"
 import ValidationContent from "../cards/validation/content";
 import {ReferencesContent,Tools} from "../cards/references/content";
 import {patternToTabs} from '../patterns/mappings'
@@ -445,8 +446,8 @@ export default function Home({id}) {
   };
 
   return <>
+    <Header />
     <div className="page">
-        <Header />
         <div className="main">
           <Card className="content" tabs={contentTabs} />
           <Card className="references" tabs={references}  />

@@ -12,7 +12,8 @@ import Card from '../templates/card/card';
 import ValidationContent from "../cards/validation/content";
 import TestCasesPanel from "./testCasesPanel"
 import ProblemMenu from "./problemMenu";
-
+import Header from '../templates/header/header';
+import "../templates/header/header.css"
 // Problem Selection Drawer Component
 
 export default function ProblemsPage() {
@@ -33,7 +34,6 @@ export default function ProblemsPage() {
   function toggleRefresh() {
     setRefreshKey(!refreshKey)
   }
-  
   function handleAllTestsPassed() {
     setShowVictoryModal(true)
     toggleRefresh()
@@ -41,9 +41,9 @@ export default function ProblemsPage() {
 
 
 
-  useEffect(()=>{
-    pingPercentage()
-  },[])
+//   useEffect(()=>{
+//     pingPercentage()
+//   },[])
   useEffect(() => {
     pingPercentage()
 }, [refreshKey]);
@@ -57,6 +57,7 @@ export default function ProblemsPage() {
     .then(response => response.json())
     .then(data => {
       setCompletionPercentage(data.percentage);
+      console.log(completionPercentage)
     })
     .catch(error => {
       console.error("Error fetching completion percentage:", error);
@@ -141,140 +142,143 @@ export default function ProblemsPage() {
   };
 
   return (
-    <div className="Page h-screen overflow-hidden" style={{backgroundColor: 'var(--dbl-1)'}}>
-      {/* Main 3-Column Grid with custom column widths */}
-      <div className="grid grid-cols-[1fr_3fr_1fr] gap-6 h-full p-6 mx-auto">
+    <div>
+      <Header />
+      <div className="Page h-screen overflow-hidden" style={{backgroundColor: 'var(--dbl-1)'}}>
+        {/* Main 3-Column Grid with custom column widths */}
+        <div className="grid grid-cols-[1fr_3fr_1fr] gap-6 h-full p-6 mx-auto">
 
-        {/* Column 1: Problem Menu with vertical progress bar */}
-        <div className="rounded-lg shadow-lg overflow-hidden flex flex-col">
-          {/* Navigation Menu Header */}
-          <div className="p-4" style={{backgroundColor: 'var(--dbl-3)'}}>
-            <h2 className="text-lg font-bold text-center" style={{color: 'var(--gr-2)'}}>Menu</h2>
-          </div>
-
-          {/* Problem Menu with Progress Bar */}
-          <div className="relative p-4 overflow-y-auto flex flex-1" style={{backgroundColor: 'var(--dbl-2)'}}>
-            {/* Progress Bar Container */}
-            <div className="relative w-2 mr-4 rounded-full" style={{backgroundColor: 'var(--dbl-4)'}}>
-              {/* Filled part */}
-              <div
-                className="rounded-full w-full absolute left-0 transition-all duration-300"
-                style={{ 
-                  height: `${completionPercentage}%`,
-                  backgroundColor: 'var(--gr-2)'
-                }}
-              />
-            </div>
-
-            {/* Actual Problem Menu content */}
-            <div className="flex-1" style={{backgroundColor: 'var(--dbl-2)'}}>
-              <ProblemMenu onProblemSelect={handleProblemSelect} refreshKey={refreshKey} />
-            </div>
-          </div>
-        </div>
-
-        {/* Column 2: Video, Exercise & Editor */}
-        <div className="flex flex-col gap-4 overflow-y-auto">
-
-          {/* Video Player */}
-          <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0">
-            {/* Video Title Section */}
+          {/* Column 1: Problem Menu with vertical progress bar */}
+          <div className="rounded-lg shadow-lg overflow-hidden flex flex-col">
+            {/* Navigation Menu Header */}
             <div className="p-4" style={{backgroundColor: 'var(--dbl-3)'}}>
-              <h3 className="text-lg font-semibold" style={{color: 'var(--gr-2)'}}>{problemDetails?.title || currentProblem.title}</h3>
+              <h2 className="text-lg font-bold text-center" style={{color: 'var(--gr-2)'}}>Menu</h2>
             </div>
-            {/* Video Content Section */}
-            <div className="" style={{backgroundColor: 'var(--dbl-5)'}}>
-              <div className="max-h-78 flex justify-center items-center">
-                <ReactPlayer
-                  muted={false}
-                  playing={true}
-                  controls={false}
-                  playbackRate={2}
-                  src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
-                  width="auto"
-                  height="312px"
+
+            {/* Problem Menu with Progress Bar */}
+            <div className="relative p-4 overflow-y-auto flex flex-1" style={{backgroundColor: 'var(--dbl-2)'}}>
+              {/* Progress Bar Container */}
+              <div className="relative w-2 mr-4 rounded-full" style={{backgroundColor: 'var(--dbl-4)'}}>
+                {/* Filled part */}
+                <div
+                  className="rounded-full w-full absolute left-0 transition-all duration-300"
+                  style={{ 
+                    height: `${completionPercentage}%`,
+                    backgroundColor: 'var(--gr-2)'
+                  }}
+                />
+              </div>
+
+              {/* Actual Problem Menu content */}
+              <div className="flex-1" style={{backgroundColor: 'var(--dbl-2)'}}>
+                <ProblemMenu onProblemSelect={handleProblemSelect} refreshKey={refreshKey} />
+              </div>
+            </div>
+          </div>
+
+          {/* Column 2: Video, Exercise & Editor */}
+          <div className="flex flex-col gap-4 overflow-y-auto">
+
+            {/* Video Player */}
+            <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0">
+              {/* Video Title Section */}
+              <div className="p-4" style={{backgroundColor: 'var(--dbl-3)'}}>
+                <h3 className="text-lg font-semibold" style={{color: 'var(--gr-2)'}}>{problemDetails?.title || currentProblem.title}</h3>
+              </div>
+              {/* Video Content Section */}
+              <div className="" style={{backgroundColor: 'var(--dbl-5)'}}>
+                <div className="max-h-78 flex justify-center items-center">
+                  <ReactPlayer
+                    muted={false}
+                    playing={false}
+                    controls={true}
+                    playbackRate={2}
+                    src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
+                    width="auto"
+                    height="312px"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Exercise & Code Editor Combined */}
+            <div className="rounded-lg shadow-lg overflow-hidden flex-1 flex flex-col">
+              {/* Exercise Header */}
+              <div className="p-4" style={{backgroundColor: 'var(--dbl-3)'}}>
+                <div className="mb-2">
+                  <h2 className="text-xl font-bold" style={{color: 'var(--gr-2)'}}>
+                    Exercise {currentProblem.id}: {problemDetails?.title || currentProblem.title}
+                  </h2>
+                </div>
+                <div className="text-sm whitespace-pre-wrap" style={{color: 'var(--gr-2)'}}>
+                  {problemDetails?.description || currentProblem.description}
+                </div>
+              </div>
+              {/* Code Editor */}
+              <div className="flex-1">
+                <Editor
+                  height="100%"
+                  width="100%"
+                  language="python"
+                  theme="vs-dark"
+                  onMount={handleEditorDidMount}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    lineNumbers: 'on',
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true
+                  }}
                 />
               </div>
             </div>
           </div>
 
-          {/* Exercise & Code Editor Combined */}
-          <div className="rounded-lg shadow-lg overflow-hidden flex-1 flex flex-col">
-            {/* Exercise Header */}
-            <div className="p-4" style={{backgroundColor: 'var(--dbl-3)'}}>
-              <div className="mb-2">
-                <h2 className="text-xl font-bold" style={{color: 'var(--gr-2)'}}>
-                  Exercise {currentProblem.id}: {problemDetails?.title || currentProblem.title}
-                </h2>
+          {/* Column 3: Test Cases and Output */}
+          <div className="rounded-lg shadow-lg p-6 flex flex-col overflow-y-auto" style={{backgroundColor: 'var(--dbl-2)'}}>
+
+            {/* Output Display */}
+            {output && (
+              <div className="mb-6 flex-shrink-0">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Console Output:</h4>
+                <pre className="bg-gray-900 text-green-400 p-3 rounded text-sm font-mono overflow-auto max-h-32">
+                  {output}
+                </pre>
               </div>
-              <div className="text-sm whitespace-pre-wrap" style={{color: 'var(--gr-2)'}}>
-                {problemDetails?.description || currentProblem.description}
-              </div>
-            </div>
-            {/* Code Editor */}
-            <div className="flex-1">
-              <Editor
-                height="100%"
-                width="100%"
-                language="python"
-                theme="vs-dark"
-                onMount={handleEditorDidMount}
-                options={{
-                  minimap: { enabled: false },
-                  fontSize: 14,
-                  lineNumbers: 'on',
-                  scrollBeyondLastLine: false,
-                  automaticLayout: true
-                }}
+            )}
+
+            {/* Test Cases Panel */}
+            <div className="flex-1 min-h-0">
+              <TestCasesPanel
+                problemId={currentProblem.id}
+                editorRef={editorRef}
+                onAllTestsPassed={handleAllTestsPassed}
               />
             </div>
           </div>
+
         </div>
 
-        {/* Column 3: Test Cases and Output */}
-        <div className="rounded-lg shadow-lg p-6 flex flex-col overflow-y-auto" style={{backgroundColor: 'var(--dbl-2)'}}>
-
-          {/* Output Display */}
-          {output && (
-            <div className="mb-6 flex-shrink-0">
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">Console Output:</h4>
-              <pre className="bg-gray-900 text-green-400 p-3 rounded text-sm font-mono overflow-auto max-h-32">
-                {output}
-              </pre>
+        {/* Victory Modal */}
+        {showVictoryModal && (
+          <div className="victory-modal-overlay" onClick={() => setShowVictoryModal(false)}>
+            <div className="victory-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="victory-content">
+                <h2>Right on! 👍</h2>
+                <p>All test cases passed successfully!</p>
+                <p>You've completed: {problemDetails?.title || currentProblem.title}</p>
+                
+                <button 
+                  className="victory-close-btn"
+                  onClick={() => setShowVictoryModal(false)}
+                >
+                  Close
+                </button>
+              </div>
             </div>
-          )}
-
-          {/* Test Cases Panel */}
-          <div className="flex-1 min-h-0">
-            <TestCasesPanel
-              problemId={currentProblem.id}
-              editorRef={editorRef}
-              onAllTestsPassed={handleAllTestsPassed}
-            />
           </div>
-        </div>
-
+        )}
       </div>
-
-      {/* Victory Modal */}
-      {showVictoryModal && (
-        <div className="victory-modal-overlay" onClick={() => setShowVictoryModal(false)}>
-          <div className="victory-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="victory-content">
-              <h2>Right on! 👍</h2>
-              <p>All test cases passed successfully!</p>
-              <p>You've completed: {problemDetails?.title || currentProblem.title}</p>
-              
-              <button 
-                className="victory-close-btn"
-                onClick={() => setShowVictoryModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 

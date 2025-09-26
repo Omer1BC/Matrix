@@ -276,7 +276,7 @@ export default function ValidationContent({annotateError, problemID,editorRef}) 
                  <div className="output-content">
                     {Object.entries(activeTest).map(([key, val]) => (
                     <>
-                        <div>{key}</div>
+                        <div id={key}>{key}</div>
                         <div className="test-output-value">
                             {JSON.stringify(val)}
                         </div>

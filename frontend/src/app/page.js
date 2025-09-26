@@ -8,7 +8,7 @@ import ReactPlayer from 'react-player'
 import {Editor} from '@monaco-editor/react'
 import {useRef} from 'react';
 import Link from 'next/link'
-
+import { UserProvider } from './contexts/usercontext';
 
 const navigation = [
   { name: 'Tab 1', href: '#', current: true },
@@ -134,55 +134,54 @@ export default function Home() {
     alert(editorRef.current.getValue());
   }
     return <>
-    <ul>
-      <li>
-        <Link href="/">Solve</Link>
-      </li>
-      <li>
-        <Link href="/solve">Solve</Link>
-      </li>
-      <li>
-        <Link href="/learn">Learn</Link>
-      </li>
-      <li>
-        <Link href="/blog/hello-world">Blog Post</Link>
-      </li>
-      <li>
-        <Link href="/homepage">Homepage</Link>
-      </li>
-    </ul>
-    {/* <div className="Page">
-        Hello
-        <div className="main">
-          <div className="content">
-              <div className="vid" style= {{display: "flex", justifyContent: "center",height: "100%",width: "100%"}}>
-                  <div className="player-wrapper" >
-                      <ReactPlayer height="100%" width="100%" controls={true} src='videos/proj_vid.mp4' />
-                  </div>
-              </div>
-              
-          </div> 
+        <ul>
+          <li>
+            <Link href="/">Solve</Link>
+          </li>
+          <li>
+            <Link href="/solve">Solve</Link>
+          </li>
+          <li>
+            <Link href="/learn">Learn</Link>
+          </li>
+          <li>
+            <Link href="/blog/hello-world">Blog Post</Link>
+          </li>
+          <li>
+            <Link href="/homepage">Homepage</Link>
+          </li>
+        </ul>
+      {/* <div className="Page">
+          Hello
+          <div className="main">
+            <div className="content">
+                <div className="vid" style= {{display: "flex", justifyContent: "center",height: "100%",width: "100%"}}>
+                    <div className="player-wrapper" >
+                        <ReactPlayer height="100%" width="100%" controls={true} src='videos/proj_vid.mp4' />
+                    </div>
+                </div>
+                
+            </div> 
 
-          <div className="references">
-          </div>  
+            <div className="references">
+            </div>  
 
-          <div className="code">
-                  <Editor 
-                  height="80%" 
-                  width="100%" 
-                  language="python"
-                  theme="vs-dark"
-                  onMount={handleEditorDidMount}
-                  />
-                  <button style={{zIndex: 10,backgroundColor: "BLUE",cursor:"pointer"}} onClick={showValue}>Run</button>
+            <div className="code">
+                    <Editor 
+                    height="80%" 
+                    width="100%" 
+                    language="python"
+                    theme="vs-dark"
+                    onMount={handleEditorDidMount}
+                    />
+                    <button style={{zIndex: 10,backgroundColor: "BLUE",cursor:"pointer"}} onClick={showValue}>Run</button>
+            </div>
+
+            <div className="validation">    
+            </div>          
           </div>
 
-          <div className="validation">    
-          </div>          
-        </div>
-
-    </div> */}
-
+      </div> */}
     </>
 }
 

@@ -28,6 +28,8 @@ urlpatterns = [
     
     
     #user accounts
-    path('signup', signup)
+    path('signup', signup),
+    path('logout', logout),
+    path('supabase_login', supabase_login),
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

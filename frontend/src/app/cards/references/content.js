@@ -119,5 +119,3 @@ export function Tools({tools, details, addToolCode,  askAboutTool}) {
   )
 
 }
-
-export {ReferencesContent,Tools};
