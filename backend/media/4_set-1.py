@@ -2,7 +2,7 @@ from manim import *
 
 class Set(Scene):
     def construct(self):
-        numbers = [1,5,7,9]
+        numbers = [1,2,3,2,5]
         #List
         self.clear()
         lBrace,rBrace=Text("{"),Text("}")

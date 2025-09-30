@@ -1,7 +1,13 @@
-from django.conf import settings
 import os
 import sys
 import io
+import ast
+import json
+import re
+from typing import Dict, List, Any
+from langchain.tools import Tool
+from datetime import datetime
+from django.conf import settings
 import subprocess
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -9,13 +15,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain.agents import create_tool_calling_agent, AgentExecutor
-# from tools import save_tool
-import json
-import re
-from typing import Dict
 
-from langchain.tools import Tool
-from datetime import datetime
+# from tools import save_tool
+
 
 def save_to_txt(data: str, filename: str = "research_output.txt"):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -23,14 +25,17 @@ def save_to_txt(data: str, filename: str = "research_output.txt"):
 
     # with open(filename, "a", encoding="utf-8") as f:
     #     f.write(formatted_text)
-    
+
     return f"Data successfully saved to {filename}"
+
 
 save_tool = Tool(
     name="save_text_to_file",
     func=save_to_txt,
     description="Saves structured research data to a text file.",
 )
+
+
 def get_file_sections(file_path):
     with open(file_path, "r") as f:
         lines = f.readlines()
@@ -40,12 +45,59 @@ def get_file_sections(file_path):
         if line.strip().startswith(prefix):
             sections.append([])
         else:
-            print('error')
+            print("error")
             sections[-1].append(line)
     return sections
 
-def insert_user_code(file_path, user_code,sample=None):
-    imports,solution,tests = get_file_sections(file_path)
+
+def extract_func_name_from_stub(stub: str) -> str | None:
+    m = re.search(r"^\s*def\s+([A-Za-z_]\w*)\s*\(", stub, re.M)
+    return m.group(1) if m else None
+
+
+def expected_entrypoint(problem_id: int) -> str | None:
+    tpl_path = id_to_file_name(problem_id)
+    imports, solution, tests = get_file_sections(tpl_path)
+    imports_str = "".join(imports)
+    tests_str = "".join(tests)
+    soln_str = "".join(solution)
+
+    m = re.search(r'ENTRYPOINT\s*=\s*["\']([A-Za-z_]\w*)["\']', imports_str)
+    if m:
+        return m.group(1)
+
+    m = re.search(r"^\s*result\s*=\s*([A-Za-z_]\w*)\s*\(", tests_str, re.M)
+    if m:
+        return m.group(1)
+
+    m = re.search(r"^\s*def\s+([A-Za-z_]\w*)\s*\(", soln_str, re.M)
+    if m:
+        return m.group(1)
+
+    return None
+
+
+def user_defines_func(name: str, code: str) -> bool:
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return False
+    return any(isinstance(n, ast.FunctionDef) and n.name == name for n in tree.body)
+
+
+def insert_user_code(file_path, user_code, sample=None, include_solution=False):
+    imports, solution, tests = get_file_sections(file_path)
+
+    parts = ["".join(imports)]
+
+    if include_solution:
+        parts += ["\n", "".join(solution)]
+    parts += ["\n", user_code, "\n", "".join(tests)]
+    res = "".join(parts)
+    if sample:
+        with open(os.path.join(settings.MEDIA_ROOT, sample), "w") as f:
+            f.write(res)
+    return res
 
     # import_lines = []
     # rest_lines = []
@@ -54,52 +106,92 @@ def insert_user_code(file_path, user_code,sample=None):
     #         import_lines.append(line)
     #     else:
     #         rest_lines.append(line)
-    res = (''.join(imports) + "\n" + ''.join(solution) + "\n" + user_code + "\n" + ''.join(tests))
-    if sample:
-        with open(os.path.join(settings.MEDIA_ROOT, sample), "w") as f:
-            f.write(res)
-    return res
+    # res = (
+    #     "".join(imports)
+    #     + "\n"
+    #     + "".join(solution)
+    #     + "\n"
+    #     + user_code
+    #     + "\n"
+    #     + "".join(tests)
+    # )
+    # if sample:
+    #     with open(os.path.join(settings.MEDIA_ROOT, sample), "w") as f:
+    #         f.write(res)
+    # return res
+
+
 def get_problem_details(problem_id):
     # This function should fetch problem details from a database or other source
     # For demonstration, we return a static response
 
-    res =  {
+    res = {
         "title": "Example Problem",
         "description": "Description of the problem goes here.",
         "test_cases": 3,
         "method_stub": "def twoSum(self, nums: List[int], target: int) -> List[int]:\n        return []",
-        "input_args": ["nums","target","output","expected"] 
+        "input_args": ["nums", "target", "output", "expected"],
     }
-    result,error = run(res['method_stub'])
-    res ['tests'] = result if not error else {}
+    result, error = run(res["method_stub"])
+    res["tests"] = result if not error else {}
     return res
 
-   
-def id_to_file_name(problem_id):
-    res = "2_connectedComps.py"  
-    return os.path.join(settings.MEDIA_ROOT, res)  
 
-def run(problem_id,code):
-    media_path = settings.MEDIA_ROOT  
-    test_file = id_to_file_name(problem_id)  
+def id_to_file_name(problem_id):
+    res = "2_connectedComps.py"
+    return os.path.join(settings.MEDIA_ROOT, res)
+
+
+def run(problem_id, code):
+    try:
+        compile(code, "user_code.py", "exec")
+    except SyntaxError as e:
+        return [
+            {
+                "type": "SyntaxError",
+                "msg": e.msg,
+                "lineno": e.lineno or 1,
+                "offset": e.offset or 1,
+                "line": (e.text or "").rstrip("\n"),
+            },
+            True,
+        ]
+
+    required = expected_entrypoint(problem_id)
+    if not required:
+        return [
+            {
+                "type": "EntrypointError",
+                "msg": "Template missing ENTRYPOINT; contact admin.",
+            },
+            True,
+        ]
+
+    if not user_defines_func(required, code):
+        return [
+            {
+                "type": "EntrypointError",
+                "msg": f"Define `{required}` with the required signature.",
+            },
+            True,
+        ]
+
+    media_path = settings.MEDIA_ROOT
+    test_file = id_to_file_name(problem_id)
     file_path = os.path.join(media_path, test_file)
-    return_pair = ["",False]
-    res = insert_user_code(
-    file_path,
-    code,sample="demo.py"
-    )
+
+    res = insert_user_code(file_path, code, sample="demo.py", include_solution=False)
     old_stdout = sys.stdout
     sys.stdout = mystdout = io.StringIO()
     try:
         exec(res, {})
         output = mystdout.getvalue()
+        return [output, False]
     except Exception as e:
-        output = str(e)
-        return_pair[1] = True
+        return [f"{type(e).__name__}: {e}", True]
     finally:
         sys.stdout = old_stdout
-    return_pair[0] = output
-    return return_pair
+
 
 CODE_HINTS_PROMPT = """You are a technical intervewier for a software engineer.
     The interviewee has been updating their code following your guidance as shown here
@@ -137,19 +229,25 @@ You are going to play the role of the interpreter. It is known that the followin
 Identify the line number of the code snippet that needs to be replaced and what syntically correct python code it needs to be replaced by to fix the error. Note that since the snippet is a part
 of a larger file, the line numbers are relative to the file, not the snippet. Since the replacement lines will be pasted in exactly character by character, be sure to include any leading tabs. You MUST always respond in the following template and no other text.\n {format_instructions}
 """
-def get_ai_hints(code,tests,problem_id=1):
-    _,solution_section,_ = get_file_sections(id_to_file_name(problem_id))
+
+
+def get_ai_hints(code, tests, problem_id=1):
+    _, solution_section, _ = get_file_sections(id_to_file_name(problem_id))
     with open(os.path.join(settings.MEDIA_ROOT, "demo2.py"), "w") as f:
-        f.write(''.join(solution_section))
-    soln = ''.join(solution_section)
+        f.write("".join(solution_section))
+    soln = "".join(solution_section)
+
     class ResearchResponse(BaseModel):
         annotated_code: str
         expalantions_of_hint: str
         thought_provoking_test_case_to_consider_as_comment_block: str
-        
+
     load_dotenv()
     # llm = ChatAnthropic(model="claude-3-5-sonnet-20241022")
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0,)
+    llm = ChatOpenAI(
+        model="gpt-4o-mini",
+        temperature=0.0,
+    )
     parser = PydanticOutputParser(pydantic_object=ResearchResponse)
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -161,43 +259,48 @@ def get_ai_hints(code,tests,problem_id=1):
             ("human", "{query}"),
             ("placeholder", "{agent_scratchpad}"),
         ]
-    ).partial(format_instructions=parser.get_format_instructions(),code=code,solution=soln,cases="""
+    ).partial(
+        format_instructions=parser.get_format_instructions(),
+        code=code,
+        solution=soln,
+        cases="""
     stderr: ❌ Test failed for input nums = [3, 2, 4], target = 6
     stderr: Expected output: [1, 2]
     stderr: Actual output: [2, 1]
-    """)
-
-    tools = [ save_tool]
-    agent = create_tool_calling_agent(
-        llm=llm,
-        prompt=prompt,
-        tools=tools
+    """,
     )
+
+    tools = [save_tool]
+    agent = create_tool_calling_agent(llm=llm, prompt=prompt, tools=tools)
 
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
     query = "My code is not working. Can you give me some suggestions to think about while not explicitly giving me the answer?"
-    raw_response = agent_executor.invoke({"query":query})
+    raw_response = agent_executor.invoke({"query": query})
 
     try:
         output_str = raw_response.get("output")
         output_dict = json.loads(output_str)  # Convert JSON string to Python dict
         return output_dict
     except Exception as e:
-        return {"Error":e,"raw":raw_response}
+        return {"Error": e, "raw": raw_response}
 
 
-def get_annotated_ai_hints(code,tests,problem_id=1):
-    _,solution_section,_ = get_file_sections(id_to_file_name(problem_id))
+def get_annotated_ai_hints(code, tests, problem_id=1):
+    _, solution_section, _ = get_file_sections(id_to_file_name(problem_id))
     # with open(os.path.join(settings.MEDIA_ROOT, "demo2.py"), "w") as f:
     #     f.write(''.join(solution_section))
-    soln = ''.join(solution_section)
+    soln = "".join(solution_section)
+
     class ResearchResponse(BaseModel):
-        line_number_to_comment: Dict[int,str]
+        line_number_to_comment: Dict[int, str]
         expalantions_of_hint: str
         thought_provoking_test_case_to_consider_as_comment_block: str
-        
+
     load_dotenv()
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0,)
+    llm = ChatOpenAI(
+        model="gpt-4o-mini",
+        temperature=0.0,
+    )
     parser = PydanticOutputParser(pydantic_object=ResearchResponse)
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -209,35 +312,41 @@ def get_annotated_ai_hints(code,tests,problem_id=1):
             ("human", "{query}"),
             ("placeholder", "{agent_scratchpad}"),
         ]
-    ).partial(format_instructions=parser.get_format_instructions(),code=code,solution=soln,cases="""
+    ).partial(
+        format_instructions=parser.get_format_instructions(),
+        code=code,
+        solution=soln,
+        cases="""
     stderr: ❌ Test failed for input nums = [3, 2, 4], target = 6
     stderr: Expected output: [1, 2]
     stderr: Actual output: [2, 1]
-    """)
-
-    tools = [ save_tool]
-    agent = create_tool_calling_agent(
-        llm=llm,
-        prompt=prompt,
-        tools=tools
+    """,
     )
+
+    tools = [save_tool]
+    agent = create_tool_calling_agent(llm=llm, prompt=prompt, tools=tools)
 
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
     query = "My code is not working. Can you give me some suggestions to think about while not explicitly giving me the answer?"
-    raw_response = agent_executor.invoke({"query":query})
+    raw_response = agent_executor.invoke({"query": query})
 
     try:
         output_str = raw_response.get("output")
         output_dict = json.loads(output_str)  # Convert JSON string to Python dict
         return output_dict
     except Exception as e:
-        return {"Error":e,"raw":raw_response}
+        return {"Error": e, "raw": raw_response}
 
-def ask_ai(question,text):
+
+def ask_ai(question, text):
     class ResearchResponse(BaseModel):
-        response: str   
+        response: str
+
     load_dotenv()
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0,)
+    llm = ChatOpenAI(
+        model="gpt-4o-mini",
+        temperature=0.0,
+    )
     parser = PydanticOutputParser(pydantic_object=ResearchResponse)
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -249,35 +358,35 @@ def ask_ai(question,text):
             ("human", "{query}"),
             ("placeholder", "{agent_scratchpad}"),
         ]
-    ).partial(format_instructions=parser.get_format_instructions(),question=question)
+    ).partial(format_instructions=parser.get_format_instructions(), question=question)
 
-    tools = [ save_tool]
-    agent = create_tool_calling_agent(
-        llm=llm,
-        prompt=prompt,
-        tools=tools
-    )
+    tools = [save_tool]
+    agent = create_tool_calling_agent(llm=llm, prompt=prompt, tools=tools)
 
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
     query = f"I'm not sure what {text} exactly means in the context of the problem statement. Can you help me understand it better?"
-    raw_response = agent_executor.invoke({"query":query})
+    raw_response = agent_executor.invoke({"query": query})
     try:
         output_str = raw_response.get("output")
         output_dict = json.loads(output_str)  # Convert JSON string to Python dict
-        
-        return output_dict
-    
-    except Exception as e:
-        return {"Error":e,"raw":raw_response}
 
-def get_tool_hints(code,pattern):
-    
+        return output_dict
+
+    except Exception as e:
+        return {"Error": e, "raw": raw_response}
+
+
+def get_tool_hints(code, pattern):
+
     class ResearchResponse(BaseModel):
         explanation: str
-        
+
     load_dotenv()
-    
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0,)
+
+    llm = ChatOpenAI(
+        model="gpt-4o-mini",
+        temperature=0.0,
+    )
     parser = PydanticOutputParser(pydantic_object=ResearchResponse)
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -289,45 +398,52 @@ def get_tool_hints(code,pattern):
             ("human", "{query}"),
             ("placeholder", "{agent_scratchpad}"),
         ]
-    ).partial(format_instructions=parser.get_format_instructions(),code=code,solution="""def two_sum(nums, target):
+    ).partial(
+        format_instructions=parser.get_format_instructions(),
+        code=code,
+        solution="""def two_sum(nums, target):
         seen = {}
         for i, num in enumerate(nums):
             complement = target - num
             if complement in seen:
                 return [seen[complement], i]
-            seen[num] = i""",pattern=pattern)
-    tools = [ save_tool]
-    agent = create_tool_calling_agent(
-        llm=llm,
-        prompt=prompt,
-        tools=tools
+            seen[num] = i""",
+        pattern=pattern,
     )
+    tools = [save_tool]
+    agent = create_tool_calling_agent(llm=llm, prompt=prompt, tools=tools)
 
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
     query = "I'm a little stuck here, can you give me some suggestions to think about to get closer to the solution"
-    raw_response = agent_executor.invoke({"query":query})
+    raw_response = agent_executor.invoke({"query": query})
 
     try:
         output_str = raw_response.get("output")
         output_dict = json.loads(output_str)  # Convert JSON string to Python dict
         return output_dict
     except Exception as e:
-        return {"Error":e,"raw":raw_response}
-def get_anim(data={"pattern": "Set","action":"Insert","step": 6}):
-    pattern,action, step = data['pattern'],data['action'],data["step"]
+        return {"Error": e, "raw": raw_response}
+
+
+def get_anim(data={"pattern": "Set", "action": "Insert", "step": 6}):
+    pattern, action, step = data["pattern"], data["action"], data["step"]
     path = pattern_to_file(pattern)
     # print('type',type(step))
-    insert_animation(path,action)
-    name =  f"step_{step}.mp4"
-    subprocess.run(["manim",path,"Array","-ql","-n",f"{str(step)},{str(step)}","-o",name],check=True)
-    
-    return {"name":name}
+    insert_animation(path, action)
+    name = f"step_{step}.mp4"
+    subprocess.run(
+        ["manim", path, "Array", "-ql", "-n", f"{str(step)},{str(step)}", "-o", name],
+        check=True,
+    )
 
-def insert_animation(path,action):
+    return {"name": name}
+
+
+def insert_animation(path, action):
 
     with open(path, "r", encoding="utf-8") as f:
         lines = f.readlines()
-    play_pattern = re.compile(r'^\s*self\.play\(.*\)\s*$')
+    play_pattern = re.compile(r"^\s*self\.play\(.*\)\s*$")
     last_play_index = None
 
     # Find the index of the last self.play(...) line
@@ -339,7 +455,7 @@ def insert_animation(path,action):
         raise ValueError("No self.play(...) line found in the file.")
 
     # Determine correct indentation (match the last play)
-    indentation = re.match(r'^(\s*)', lines[last_play_index]).group(1)
+    indentation = re.match(r"^(\s*)", lines[last_play_index]).group(1)
     insertion = indentation + action + "\n"
 
     # Insert the new play call right after the last one
@@ -349,15 +465,22 @@ def insert_animation(path,action):
     with open(path, "w", encoding="utf-8") as f:
         f.writelines(lines)
 
+
 def pattern_to_file(pattern):
     keys = {
         "DFS": "3_dfs.py",
         "Set": "4_set.py",
     }
-    return os.path.join(settings.MEDIA_ROOT,keys[pattern])
+    return os.path.join(settings.MEDIA_ROOT, keys[pattern])
+
+
 def file_from_pattern(pattern):
-    return os.path.join(settings.MEDIA_ROOT,"patterns","Array.py"),os.path.join("/media/videos/Array/480p15/Array.mp4")
-def pattern_to_video(name,data): 
+    return os.path.join(settings.MEDIA_ROOT, "patterns", "Array.py"), os.path.join(
+        "/media/videos/Array/480p15/Array.mp4"
+    )
+
+
+def pattern_to_video(name, data):
     # script_path,video_link = file_from_pattern(pattern)
     # subprocess.run(["manim", script_path,"Array","-ql"],check=True)
     # return {"data": video_link }
@@ -378,33 +501,39 @@ def pattern_to_video(name,data):
 
     # Insert edges assignment
     for input in data:
-        print('input')
-        lines.insert(insert_index,f'        {input}\n')
+        print("input")
+        lines.insert(insert_index, f"        {input}\n")
     # if edges_code not in lines:
     #     lines.insert(insert_index, edges_code)
 
     # Write the modified file back
     path_no_mime = path[:-3]
-    new_path = (path_no_mime + "-1" + path[-3:])
+    new_path = path_no_mime + "-1" + path[-3:]
     new_name = os.path.basename(new_path)
     with open(new_path, "w", encoding="utf-8") as f:
         f.writelines(lines)
 
     # Render with manim
-    subprocess.run(["manim", new_path, "-ql","-o",new_name[:-3],'--disable_caching'], check=True)
-    return {"data":f'media/videos/{new_name[:-3]}/480p15/{new_name[:-3]}.mp4'}
+    subprocess.run(
+        ["manim", new_path, "-ql", "-o", new_name[:-3], "--disable_caching"], check=True
+    )
+    return {"data": f"media/videos/{new_name[:-3]}/480p15/{new_name[:-3]}.mp4"}
 
-def get_error_details(problem_id,error,code):
-    imports,_,tests = get_file_sections(id_to_file_name(problem_id))
-    imprts = ''.join(imports)
-    tsts = ''.join(tests)
+
+def get_error_details(problem_id, error, code):
+    imports, _, tests = get_file_sections(id_to_file_name(problem_id))
+    imprts = "".join(imports)
+    tsts = "".join(tests)
 
     class ResearchResponse(BaseModel):
-        line_number_to_replacement: Dict[int,str]
+        line_number_to_replacement: Dict[int, str]
         expalantions_of_hint: str
-        
+
     load_dotenv()
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0,)
+    llm = ChatOpenAI(
+        model="gpt-4o-mini",
+        temperature=0.0,
+    )
     parser = PydanticOutputParser(pydantic_object=ResearchResponse)
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -414,7 +543,13 @@ def get_error_details(problem_id,error,code):
             ),
             ("placeholder", "{agent_scratchpad}"),
         ]
-    ).partial(format_instructions=parser.get_format_instructions(),code=code,imports=imprts,tests=tsts,error=error)
+    ).partial(
+        format_instructions=parser.get_format_instructions(),
+        code=code,
+        imports=imprts,
+        tests=tsts,
+        error=error,
+    )
     # llm.invoke(prompt)
     # tools = [ save_tool]
     # agent = create_tool_calling_agent(
@@ -428,10 +563,141 @@ def get_error_details(problem_id,error,code):
 
     try:
         # output_str = raw_response.get("output")
-        # output_dict = json.loads(output_str) 
+        # output_dict = json.loads(output_str)
         output_str = raw_response.content  # ✅ not .get()
-        output_dict = parser.parse(output_str)  # ✅ directly parse into your Pydantic model
+        output_dict = parser.parse(
+            output_str
+        )  # ✅ directly parse into your Pydantic model
         return output_dict.dict()
-    
+
     except Exception as e:
         return {"Error": str(e), "raw": raw_response.content}
+
+
+def parse_results_str(s: str) -> Dict[str, Any]:
+
+    if not s or not isinstance(s, str):
+        return {}
+    s = s.strip()
+
+    try:
+        return ast.literal_eval(s)
+    except Exception:
+        pass
+
+    try:
+        return json.loads(s.replace("'", '"'))
+    except Exception:
+        return {}
+
+
+# --- LLM Grader ---
+
+GRADING_PROMPT = """
+You are a strict but fair code reviewer for algorithmic interview solutions.
+
+Evaluate the user's solution using **only** the categories below on a 0.0–5.0 scale (one decimal is fine):
+
+- readability: variable naming, structure, clarity, comments, and idiomatic style
+- efficiency: time/space complexity relative to a typical optimal approach for this problem
+- robustness: handling of edge cases, input validation (where appropriate), and defensive coding
+
+Context:
+- Problem: {problem_title} ({difficulty})
+- Description: {problem_description}
+- User code:
+```python
+{code}
+
+Reference solution (may be empty):
+
+python
+Copy code
+{reference_solution}
+Test summary: {test_passed}/{test_total} passed
+
+Failing examples (up to 3):
+{fail_examples}
+
+Instructions:
+
+Be concise and specific in explanations for each category (what is good, what to improve).
+
+If all tests pass, it’s okay to give higher robustness; if tests fail, explain likely missed edges.
+
+Output must strictly match the schema.
+
+{format_instructions}
+"""
+
+
+class GradeSchema(BaseModel):
+    metrics: Dict[str, float]  # keys: readability, efficiency, robustness (0..5)
+    explanations: Dict[str, str]  # same keys with short explanations
+    verdict: bool  # LLM's guess, but server will override with actual tests
+    comment: str  # a short overall summary
+
+
+def get_solution_grade(
+    code: str,
+    problem_title: str,
+    problem_description: str,
+    reference_solution: str,
+    difficulty: str,
+    test_passed: int,
+    test_total: int,
+    fail_examples: List[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """
+    Call the LLM to grade the solution. Returns a dict with keys:
+    metrics, explanations, verdict, comment
+    """
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0)
+    parser = PydanticOutputParser(pydantic_object=GradeSchema)
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", GRADING_PROMPT),
+        ]
+    ).partial(
+        format_instructions=parser.get_format_instructions(),
+        problem_title=problem_title,
+        difficulty=difficulty,
+        problem_description=problem_description,
+        code=code,
+        reference_solution=reference_solution or "(not provided)",
+        test_passed=str(test_passed),
+        test_total=str(test_total),
+        fail_examples=json.dumps(fail_examples, ensure_ascii=False, indent=2),
+    )
+
+    try:
+        res = llm.invoke(prompt.format_prompt().to_messages())
+        parsed = parser.parse(res.content)
+        m = parsed.metrics or {}
+        metrics = {
+            "readability": float(m.get("readability", 0.0) or 0.0),
+            "efficiency": float(m.get("efficiency", 0.0) or 0.0),
+            "robustness": float(m.get("robustness", 0.0) or 0.0),
+        }
+        explanations = {
+            "readability": (parsed.explanations or {}).get("readability", ""),
+            "efficiency": (parsed.explanations or {}).get("efficiency", ""),
+            "robustness": (parsed.explanations or {}).get("robustness", ""),
+        }
+        return {
+            "metrics": metrics,
+            "explanations": explanations,
+            "verdict": bool(parsed.verdict),
+            "comment": parsed.comment or "",
+        }
+    except Exception as e:
+        return {
+            "metrics": {"readability": 0.0, "efficiency": 0.0, "robustness": 0.0},
+            "explanations": {
+                "readability": "Unable to grade due to an internal error.",
+                "efficiency": "Unable to grade due to an internal error.",
+                "robustness": "Unable to grade due to an internal error.",
+            },
+            "verdict": False,
+            "comment": f"Grader error: {e}",
+        }
