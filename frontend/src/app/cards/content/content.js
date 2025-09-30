@@ -1,5 +1,5 @@
 import {useState,useEffect} from 'react'
-import { ping,get } from '@/app/utils/apiUtils';
+import { ping,get } from '../../utils/apiUtils';
 import ReactPlayer from 'react-player'
 import './content.css'
 export function QuestionContent ({title,difficulty,description,handleMouseUp}) {

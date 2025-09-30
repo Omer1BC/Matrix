@@ -147,6 +147,9 @@ export default function Home() {
       <li>
         <Link href="/blog/hello-world">Blog Post</Link>
       </li>
+      <li>
+        <Link href="/homepage">Homepage</Link>
+      </li>
     </ul>
     {/* <div className="Page">
         Hello

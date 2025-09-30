@@ -1,6 +1,6 @@
 //Defines custom test case for each pattern
 import {useState,useEffect} from 'react'
-import { ping } from '@/app/utils/apiUtils';
+import { ping } from '../utils/apiUtils';
 import ReactPlayer from 'react-player'
 import './mappings.css'
 
