@@ -9,14 +9,16 @@ import {
   useMemo,
   useCallback,
   Fragment,
+  useContext,
 } from "react";
 import Card from "../templates/card/card";
 import Header from "../templates/header/header";
 import ValidationContent from "../cards/validation/content";
 import { ReferencesContent, Tools } from "../cards/references/content";
 import { patternToTabs } from "../patterns/mappings";
-import { ping } from "../utils/apiUtils";
+import { ping, agentCall } from "../utils/apiUtils";
 import { QuestionContent } from "../cards/content/content";
+import { UserContext } from "../contexts/usercontext";
 
 export default function Home({ id }) {
   //defines an annotation div
@@ -104,6 +106,8 @@ export default function Home({ id }) {
   const [toolsInfo, setToolsInfo] = useState([]);
   const addToolsTab = (tools) => setToolsInfo(tools);
 
+  const { user, setUser } = useContext(UserContext);
+
   useEffect(() => {
     showHintsRef.current = showHints;
   }, [showHints]);
@@ -137,15 +141,22 @@ export default function Home({ id }) {
     const selection = window.getSelection();
     if (selection && selection.toString().length > 0) {
       setLoading(true);
-      ping(
-        {
-          text: selection.toString(),
-          question: details?.title + "\n" + details?.description,
-        },
-        "ask"
-      )
-        .then((data) => {
-          setResponse(data.response);
+      // ping(
+      //   {
+      //     text: selection.toString(),
+      //     question: details?.title + "\n" + details?.description,
+      //   },
+      //   "ask"
+      // )
+      agentCall({
+        user_id: user,
+        problem_id: String(details?.id || 1),
+        intent: "chat",
+        message: selection.toString(),
+        question: details?.title + "\n" + details?.description,
+      })
+        .then((res) => {
+          setResponse(res?.data?.text ?? res?.data?.response ?? "");
           setLoading(false);
         })
         .catch(() => setLoading(false));
@@ -203,10 +214,17 @@ export default function Home({ id }) {
     }
     //Ping the endpoint with the code /backend/api/views.py: annotate()
     setLoading(true);
-    ping({ code: code, tests: {} }, "annotate")
-      .then((data) => {
+    // ping({ code: code, tests: {} }, "annotate")
+    agentCall({
+      user_id: user,
+      problem_id: String(details?.id || 1),
+      intent: "annotated_hints",
+      code: code,
+    })
+      .then((res) => {
+        const data = res?.data || {};
         const resp = data.line_number_to_comment;
-        setResponse(data.expalantions_of_hint);
+        setResponse(data.expalantions_of_hint || "");
         setLoading(false);
 
         //Generate a new set of highlights for each annotation
@@ -255,17 +273,23 @@ export default function Home({ id }) {
     for (let i = 1; i <= n; i++) {
       code += `${i} | ${model.getLineContent(i)}\n`;
     }
-    //Ping the endpoint with the code /backend/api/views.py: annotate()
-    // const data = {
-    //   line_number_to_comment: {1: "def my_function(param1, param2):",
-    //   2: "def another_function(param1):"} ,
-    //   expalantions_of_hint: codeError,
-    // }
+
     setLoading(true);
-    ping({ code: code, error: codeError, id: 1 }, "annotate_errors")
-      .then((data) => {
-        const resp = data.line_number_to_replacement;
-        setResponse(data.expalantions_of_hint);
+    // ping({ code: code, error: codeError, id: 1 }, "annotate_errors")
+    agentCall({
+      user_id: user,
+      problem_id: String(details?.id || 1),
+      intent: "annotate_errors",
+      code: code,
+      extras: {
+        error:
+          typeof codeError === "string" ? codeError : JSON.stringify(codeError),
+      },
+    })
+      .then((res) => {
+        const data = res?.data || {};
+        const resp = data.line_number_to_replacement || {};
+        setResponse(data.expalantions_of_hint || "");
         setLoading(false);
 
         const prevIds = Array.from(errorWidgetByDeco.current.keys());
@@ -300,16 +324,24 @@ export default function Home({ id }) {
     const problemQuestion = details?.title + "\n" + details?.description;
     const code = editorRef.current ? editorRef.current.getValue() : "";
     setLoading(true);
-    ping(
-      {
-        ask: input,
-        code: code,
-        question: problemQuestion,
-      },
-      "next_thread"
-    )
-      .then((data) => {
-        setResponse(data.response);
+    // ping(
+    //   {
+    //     ask: input,
+    //     code: code,
+    //     question: problemQuestion,
+    //   },
+    //   "next_thread"
+    // )
+    agentCall({
+      user_id: user,
+      problem_id: String(details?.id || 1),
+      intent: "chat",
+      message: input,
+      code: code,
+      question: problemQuestion,
+    })
+      .then((res) => {
+        setResponse(res?.data?.text ?? res?.data?.response ?? "");
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -384,10 +416,18 @@ export default function Home({ id }) {
     (pattern) => {
       if (!editorRef.current) return;
       setLoading(true);
-      ping({ code: editorRef.current.getValue(), pattern }, "tool_hints")
-        .then((data) => {
-          setResponse(data.explanation);
-          editorRef.current.setValue(data.updatedCode);
+      // ping({ code: editorRef.current.getValue(), pattern }, "tool_hints")
+      agentCall({
+        user_id: user,
+        problem_id: String(details?.id || 1),
+        intent: "tool_hints",
+        code: editorRef.current.getValue(),
+        extras: { pattern },
+      })
+        .then((res) => {
+          const data = res?.data || {};
+          setResponse(data.explanation || "");
+          if (data.updatedCode) editorRef.current.setValue(data.updatedCode);
           setLoading(false);
         })
         .catch(() => setLoading(false));
@@ -412,14 +452,24 @@ export default function Home({ id }) {
   const hint = () => {
     if (editorRef.current) {
       setLoading(true);
-      ping({ code: editorRef.current.getValue(), tests: "" }, "hints")
-        .then((data) => {
-          setResponse(data.expalantions_of_hint);
-          editorRef.current.setValue(
-            data.annotated_code +
-              "\n\n" +
-              data.thought_provoking_test_case_to_consider_as_comment_block
-          );
+      // ping({ code: editorRef.current.getValue(), tests: "" }, "hints")
+      agentCall({
+        user_id: user,
+        problem_id: String(details?.id || 1),
+        intent: "hints",
+        code: editorRef.current.getValue(),
+      })
+        .then((res) => {
+          const data = res?.data || {};
+          setResponse(data.expalantions_of_hint || "");
+          const annotated = data.annotated_code || "";
+          const thought =
+            data.thought_provoking_test_case_to_consider_as_comment_block || "";
+          if (annotated || thought) {
+            editorRef.current.setValue(
+              [annotated, thought].filter(Boolean).join("\n\n")
+            );
+          }
           setLoading(false);
         })
         .catch(() => setLoading(false));
@@ -472,7 +522,9 @@ export default function Home({ id }) {
               options={{
                 minimap: { enabled: false },
               }}
-              defaultValue={"def countComponents(n: int, edges: List[List[int]]) -> int:\n\treturn 0"}
+              defaultValue={
+                "def countComponents(n: int, edges: List[List[int]]) -> int:\n\treturn 0"
+              }
             />
             <button
               className="editor-run-button"

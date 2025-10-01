@@ -1,7 +1,8 @@
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, Fragment, useContext } from "react";
 import "./validation.css";
-import { ping } from "@/app/utils/apiUtils";
+import { ping, agentCall } from "@/app/utils/apiUtils";
 import StarGraph from "./StarGraph";
+import { UserContext } from "../../contexts/usercontext";
 
 export default function ValidationContent({
   annotateError,
@@ -20,6 +21,8 @@ export default function ValidationContent({
   const [llmComment, setLLmComment] = useState("");
   const [testSummary, setTestSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { user, setUser } = useContext(UserContext);
 
   const fetchDetails = () => {
     ping({ problem_id: problemID }, "problem_details").then((data) => {
@@ -110,15 +113,27 @@ export default function ValidationContent({
         return;
       }
 
-      const resp = await ping(
-        { problem_id: problemID, code: code },
-        "grade_solution"
-      );
+      const gradeRes = await agentCall({
+        user_id: user,
+        problem_id: String(problemID),
+        intent: "grade",
+        code,
+      });
+      const { tests: t, grade } = gradeRes?.data || {};
+      const test_summary = t
+        ? {
+            total: t.summary?.total ?? 0,
+            passed: t.summary?.passed ?? 0,
+            failed: t.summary?.failed ?? 0,
+            cases: t.results || {},
+          }
+        : { total: 0, passed: 0, failed: 0, cases: {} };
+      const verdict = !!grade?.verdict;
+      const metrics = grade?.metrics || null;
+      const explanations = grade?.explanations || {};
+      const comment = grade?.comment || "";
 
-      const { verdict, metrics, explanations, comment, test_summary } =
-        resp || {};
-
-      const cases = test_summary?.cases || {};
+      const cases = test_summary.cases || {};
       setTests(cases);
       const firstKey = Object.keys(cases)[0] || 0;
       setActiveKey(firstKey);

@@ -1,10 +1,9 @@
-
 export async function ping(data, endpoint) {
   try {
     const res = await fetch(`http://localhost:8000/api/${endpoint}`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
@@ -21,25 +20,39 @@ export async function ping(data, endpoint) {
   }
 }
 
+export async function agentCall(payload) {
+  const res = await fetch(`http://localhost:8000/api/agent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data?.error || `Agent error (${res.status})`;
+    throw new Error(msg);
+  }
+  return data;
+}
 
 export async function get(data, endpoint) {
   try {
     const res = await fetch(`http://localhost:8000/api/${endpoint}`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
 
     if (!res.ok) {
-      return {}; 
+      return {};
     }
 
-    const json = await res.json(); 
+    const json = await res.json();
     return json;
   } catch (error) {
-      console.error("Failed to fetch problem details:", error);
+    console.error("Failed to fetch problem details:", error);
     return {};
   }
 }
