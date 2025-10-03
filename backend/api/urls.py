@@ -26,4 +26,9 @@ urlpatterns = [
     path("logout", logout),
     path("supabase_login", supabase_login),
     path("completion", get_completion, name="completion"),
+
+
+    path("login", login_view, name="login_view"),
+    path("logout", logout_view, name="logout_view"),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

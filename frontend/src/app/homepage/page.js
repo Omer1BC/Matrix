@@ -17,7 +17,7 @@ export default function Homepage() {
   });
 
   return (
-    <div>
+    <div className="background">
       <Header />
       <div className="main-content">
         <Typewriter text="Welcome to Matrix!" delay={100} />

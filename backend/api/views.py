@@ -23,7 +23,7 @@ def get_completion(request):
         user = request.user
         print(user)
         print(user.completion_percentage)
-        return JsonResponse({"percentage": user.completion_percentage}, status=400)
+        return JsonResponse({"percentage": user.completion_percentage}, status=200)
 
 
 @csrf_exempt
