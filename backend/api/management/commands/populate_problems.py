@@ -20,33 +20,6 @@ class Command(BaseCommand):
                 'items': [
                     {
                         "id": "intro-1",
-                        "title": "Linear Vs Non-Linear Graphs",
-                        "description": "Write a program that will compute the sum of all node values in a non-linear graph structure. The graph is represented as an adjacency list where each node has a value and connections to other nodes.",
-                        "difficulty": "Easy",
-                        "is_locked_by_default":False,
-                        'points_reward':1,
-                        "starter_code": "def compute_graph_sum(graph):\n    total_sum = 0\n    for node in graph:\n        total_sum += graph[node]['value']\n    return total_sum\n\n",
-                        "solution": "def compute_graph_sum(graph):\n    total_sum = 0\n    for node in graph:\n        total_sum += graph[node]['value']\n    return total_sum\n\n",
-                        "test_cases": [
-                            {
-                                "input": "{'A': {'value': 5, 'connections': ['B', 'C']}, 'B': {'value': 3, 'connections': ['A', 'D']}, 'C': {'value': 7, 'connections': ['A']}, 'D': {'value': 2, 'connections': ['B']}}",
-                                "expected_output": "17",
-                                "description": "Should return the sum of all node values (5+3+7+2=17)"
-                            },
-                            {
-                                "input": "{'X': {'value': 10, 'connections': []}}",
-                                "expected_output": "10",
-                                "description": "Should handle single node graph"
-                            },
-                            {
-                                "input": "{'A': {'value': 1, 'connections': ['B']}, 'B': {'value': 2, 'connections': ['C']}, 'C': {'value': 3, 'connections': []}}",
-                                "expected_output": "6",
-                                "description": "Should handle linear chain of nodes (1+2+3=6)"
-                            }
-                        ]
-                    },
-                    {
-                        "id": "intro-2",
                         "title": "Recursive Sum of Linked List",
                         "description": "Write a recursive function to compute the sum of all values in a linked list. Each node has a value and a reference to the next node.",
                         "difficulty": "Easy",
@@ -74,6 +47,59 @@ class Command(BaseCommand):
                     },
                 ]
             },
+            'nodesandedges': {
+                'title': "Building Blocks",
+                'icon': "",
+                'items': [
+                    {
+                        'id': "ds-1",
+                        'title': "Nodes, Edges, & Cycles",
+                        'description': "Given a Node class and the head of a linked list, detect if there's a cycle in the linked list.",
+                        'difficulty': "Easy",
+                        "is_locked_by_default":False,
+                        'points_reward':1,
+                        'starter_code': 'class Node:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\ndef has_cycle(head):\n    """\n    Detect if there is a cycle in the linked list.\n    Args:\n        head: Node - head of the linked list\n    Returns:\n        bool: True if cycle exists, False otherwise\n    """\n    # Implement cycle detection using Floyd\'s algorithm\n    pass\n\n',
+                        'solution': 'class Node:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\ndef has_cycle(head):\n    if not head or not head.next:\n        return False\n    \n    slow = head\n    fast = head\n    \n    while fast and fast.next:\n        slow = slow.next\n        fast = fast.next.next\n        \n        if slow == fast:\n            return True\n    \n    return False\n\n',
+                        'test_cases': [
+                            {
+                                'input': 'Linked list with cycle: 1->2->3->2 (cycle)',
+                                'expected_output': 'True',
+                                'description': 'Should detect cycle in linked list'
+                            },
+                            {
+                                'input': 'Linked list without cycle: 1->2->3->None',
+                                'expected_output': 'False',
+                                'description': 'Should return False for list with no cycle'
+                            },
+                            {
+                                'input': 'Empty list',
+                                'expected_output': 'False',
+                                'description': 'Should return False for empty list'
+                            }
+                        ]
+                    },
+                    {
+                        'id': "ds-2", 
+                        'title': "Components", 
+                        'description': "",
+                        'difficulty': "Medium",
+                        "is_locked_by_default":True,
+                        'points_reward':1,
+                        'starter_code': '''def is_tree(edges: List[Tuple[str, str]]) -> bool:
+    return False''',
+                        'solution': 'class Edge:\n    def __init__(self, from_node, to_node, weight=1):\n        self.from_node = from_node\n        self.to_node = to_node\n        self.weight = weight\n    \n    def get_weight(self):\n        return self.weight\n    \n    def get_nodes(self):\n        return (self.from_node, self.to_node)\n\nedge = Edge("A", "B", 5)\nprint(f"Edge from {edge.get_nodes()[0]} to {edge.get_nodes()[1]} with weight {edge.get_weight()}")',
+                        'test_cases': [
+                            {
+                                'input': 'Edge("A", "B", 5)',
+                                'expected_output': 'Edge from A to B with weight 5',
+                                'description': 'Should create edge with weight'
+                            }
+                        ]
+                    },
+                   
+                ]
+            },
+            
             'representation': {
                 'title': "Graph Representation",
                 'icon': "",
@@ -109,7 +135,10 @@ class Command(BaseCommand):
                         'difficulty': "Medium",
                         "is_locked_by_default":True,
                         'points_reward':1,
-                        'starter_code': '# Implement a Graph using Adjacency Matrix\n\nclass GraphMatrix:\n    def __init__(self, num_vertices):\n        # Initialize adjacency matrix with zeros\n        # Create mapping from vertex names to indices\n        pass\n    \n    def add_vertex(self, vertex):\n        # Map vertex name to matrix index\n        pass\n    \n    def add_edge(self, v1, v2, weight=1):\n        # Add edge with optional weight\n        pass\n    \n    def has_edge(self, v1, v2):\n        # Check if edge exists between v1 and v2\n        pass\n    \n    def get_matrix(self):\n        # Return the adjacency matrix\n        pass\n\n',
+                        'starter_code': '''def edges_to_adj_matrix(edges: List[List[int]]) -> List[List[int]]:
+    """Convert edge list to adjacency matrix representation"""
+    # User code will be inserted here
+    pass''',
                         'solution': 'class GraphMatrix:\n    def __init__(self, num_vertices):\n        self.num_vertices = num_vertices\n        self.matrix = [[0 for _ in range(num_vertices)] for _ in range(num_vertices)]\n        self.vertex_map = {}\n        self.vertex_count = 0\n    \n    def add_vertex(self, vertex):\n        if vertex not in self.vertex_map and self.vertex_count < self.num_vertices:\n            self.vertex_map[vertex] = self.vertex_count\n            self.vertex_count += 1\n    \n    def add_edge(self, v1, v2, weight=1):\n        if v1 in self.vertex_map and v2 in self.vertex_map:\n            i, j = self.vertex_map[v1], self.vertex_map[v2]\n            self.matrix[i][j] = weight\n            self.matrix[j][i] = weight  # For undirected graph\n    \n    def has_edge(self, v1, v2):\n        if v1 in self.vertex_map and v2 in self.vertex_map:\n            i, j = self.vertex_map[v1], self.vertex_map[v2]\n            return self.matrix[i][j] != 0\n        return False\n    \n    def get_matrix(self):\n        return self.matrix\n\ng = GraphMatrix(3)\ng.add_vertex("A")\ng.add_vertex("B") \ng.add_vertex("C")\ng.add_edge("A", "B", 5)\ng.add_edge("B", "C", 3)\nprint("Matrix:")\nfor row in g.get_matrix():\n    print(row)',
                         'test_cases': [
                             {
@@ -121,171 +150,48 @@ class Command(BaseCommand):
                     }
                 ]
             },
-            'nodesandedges': {
-                'title': "Nodes & Edges",
-                'icon': "",
-                'items': [
-                    {
-                        'id': "ds-1", 
-                        'title': "Node Representation", 
-                        'description': "",
-                        'difficulty': "Easy",
-                        "is_locked_by_default":False,
-                        'points_reward':1,
-                        'starter_code': '# Create a Node class for graph representation\n\nclass Node:\n    def __init__(self, value):\n        # Initialize node with a value and empty connections list\n        pass\n    \n    def add_connection(self, node):\n        # Add a connection to another node\n        pass\n    \n    def get_connections(self):\n        # Return list of connected nodes\n        pass\n\n',
-                        'solution': 'class Node:\n    def __init__(self, value):\n        self.value = value\n        self.connections = []\n    \n    def add_connection(self, node):\n        if node not in self.connections:\n            self.connections.append(node)\n    \n    def get_connections(self):\n        return self.connections\n\nnode1 = Node("A")\nnode2 = Node("B")\nnode1.add_connection(node2)\nprint(f"Node {node1.value} connects to: {[n.value for n in node1.get_connections()]}")',
-                        'test_cases': [
-                            {
-                                'input': 'Node creation and connection',
-                                'expected_output': 'Node A connects to: [\'B\']',
-                                'description': 'Should create nodes and establish connections'
-                            }
-                        ]
-                    },
-                    {
-                        'id': "ds-2", 
-                        'title': "Edge Representation", 
-                        'description': "",
-                        'difficulty': "Easy",
-                        "is_locked_by_default":True,
-                        'points_reward':1,
-                        'starter_code': '# Create an Edge class for graph connections\n\nclass Edge:\n    def __init__(self, from_node, to_node, weight=1):\n        # Initialize edge with from_node, to_node, and optional weight\n        pass\n    \n    def get_weight(self):\n        # Return the weight of the edge\n        pass\n    \n    def get_nodes(self):\n        # Return tuple of (from_node, to_node)\n        pass\n\n',
-                        'solution': 'class Edge:\n    def __init__(self, from_node, to_node, weight=1):\n        self.from_node = from_node\n        self.to_node = to_node\n        self.weight = weight\n    \n    def get_weight(self):\n        return self.weight\n    \n    def get_nodes(self):\n        return (self.from_node, self.to_node)\n\nedge = Edge("A", "B", 5)\nprint(f"Edge from {edge.get_nodes()[0]} to {edge.get_nodes()[1]} with weight {edge.get_weight()}")',
-                        'test_cases': [
-                            {
-                                'input': 'Edge("A", "B", 5)',
-                                'expected_output': 'Edge from A to B with weight 5',
-                                'description': 'Should create edge with weight'
-                            }
-                        ]
-                    },
-                    {
-                        'id': "ds-3", 
-                        'title': "Cycle Detection", 
-                        'description': "",
-                        'difficulty': "Medium",
-                        "is_locked_by_default":True,
-                        'points_reward':1,
-                        'starter_code': '# Detect cycles in a graph\n\ndef has_cycle(graph):\n    """\n    Detect if there is a cycle in the graph.\n    graph: dictionary where keys are nodes and values are lists of connected nodes\n    Returns: True if cycle exists, False otherwise\n    """\n    # Implement cycle detection algorithm\n    pass\n\n',
-                        'solution': 'def has_cycle(graph):\n    visited = set()\n    rec_stack = set()\n    \n    def dfs(node):\n        if node in rec_stack:\n            return True\n        if node in visited:\n            return False\n            \n        visited.add(node)\n        rec_stack.add(node)\n        \n        for neighbor in graph.get(node, []):\n            if dfs(neighbor):\n                return True\n                \n        rec_stack.remove(node)\n        return False\n    \n    for node in graph:\n        if node not in visited:\n            if dfs(node):\n                return True\n    return False\n\ngraph = {\n    "A": ["B"],\n    "B": ["C"],\n    "C": ["A"]\n}\n\nprint(f"Cycle detected: {has_cycle(graph)}")',
-                        'test_cases': [
-                            {
-                                'input': 'Graph with cycle: A->B->C->A',
-                                'expected_output': 'Cycle detected: True',
-                                'description': 'Should detect cycle in graph'
-                            }
-                        ]
-                    },
-                    {
-                        'id': "ds-4", 
-                        'title': "Valid Components from Edge List", 
-                        'description': "",
-                        'difficulty': "Medium",
-                        "is_locked_by_default":True,
-                        'points_reward':1,
-                        'starter_code': '# Check if edge list forms valid components\n\ndef are_valid_components(edges, num_vertices):\n    """\n    Check if the given edges form valid connected components.\n    Args:\n        edges: list of tuples representing edges [(u, v), ...]\n        num_vertices: total number of vertices expected\n    Returns:\n        bool: True if edges form valid components, False otherwise\n    """\n    # Implement validation logic\n    pass\n\n',
-                        'solution': 'def are_valid_components(edges, num_vertices):\n    if not edges and num_vertices == 0:\n        return True\n    \n    # Check for invalid vertices\n    for u, v in edges:\n        if u < 0 or v < 0 or u >= num_vertices or v >= num_vertices:\n            return False\n        if u == v:  # Self-loop check\n            return False\n    \n    # Check for duplicate edges\n    edge_set = set()\n    for u, v in edges:\n        edge = (min(u, v), max(u, v))  # Normalize edge representation\n        if edge in edge_set:\n            return False  # Duplicate edge\n        edge_set.add(edge)\n    \n    # Build adjacency list to verify connectivity\n    graph = [[] for _ in range(num_vertices)]\n    for u, v in edges:\n        graph[u].append(v)\n        graph[v].append(u)\n    \n    # All edges should form valid connections\n    return True\n\nedges = [(0, 1), (1, 2), (3, 4)]\nnum_vertices = 5\nresult = are_valid_components(edges, num_vertices)\nprint(f"Valid components: {result}")',
-                        'test_cases': [
-                            {
-                                'input': 'edges=[(0,1), (1,2), (3,4)], vertices=5',
-                                'expected_output': 'Valid components: True',
-                                'description': 'Should validate proper edge list'
-                            },
-                            {
-                                'input': 'edges=[(0,1), (0,1)], vertices=2',
-                                'expected_output': 'Valid components: False',
-                                'description': 'Should reject duplicate edges'
-                            }
-                        ]
-                    }
-                ]
-            },
-            'traversal': {
-                'title': "Graph Traversal",
-                'icon': "",
-                'items': [
-                    {
-                        'id': "trav-1", 
-                        'title': "DFS Fibonacci Tree", 
-                        'description': "",
-                        'difficulty': "Medium",
-                        "is_locked_by_default":False,
-                        'points_reward':1,
-                        'starter_code': '# DFS traversal of fibonacci tree\n\nclass TreeNode:\n    def __init__(self, val):\n        self.val = val\n        self.left = None\n        self.right = None\n\ndef build_fib_tree(n):\n    """\n    Build a tree where each node contains fibonacci numbers.\n    Left child: fib(n-1), Right child: fib(n-2)\n    """\n    if n <= 1:\n        return TreeNode(1 if n == 1 else 0)\n    \n    root = TreeNode(fibonacci(n))\n    if n > 1:\n        root.left = build_fib_tree(n-1)\n    if n > 2:\n        root.right = build_fib_tree(n-2)\n    return root\n\ndef fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n-1) + fibonacci(n-2)\n\ndef dfs_fibonacci_tree(root):\n    """\n    Perform DFS traversal on fibonacci tree.\n    Returns list of values in DFS pre-order.\n    """\n    # Implement DFS traversal\n    pass\n\n',
-                        'solution': 'class TreeNode:\n    def __init__(self, val):\n        self.val = val\n        self.left = None\n        self.right = None\n\ndef build_fib_tree(n):\n    if n <= 1:\n        return TreeNode(1 if n == 1 else 0)\n    \n    root = TreeNode(fibonacci(n))\n    if n > 1:\n        root.left = build_fib_tree(n-1)\n    if n > 2:\n        root.right = build_fib_tree(n-2)\n    return root\n\ndef fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n-1) + fibonacci(n-2)\n\ndef dfs_fibonacci_tree(root):\n    if not root:\n        return []\n    \n    result = []\n    stack = [root]\n    \n    while stack:\n        node = stack.pop()\n        result.append(node.val)\n        \n        # Add right child first so left is processed first\n        if node.right:\n            stack.append(node.right)\n        if node.left:\n            stack.append(node.left)\n    \n    return result\n\nfib_tree = build_fib_tree(4)\nresult = dfs_fibonacci_tree(fib_tree)\nprint(f"DFS traversal: {result}")',
-                        'test_cases': [
-                            {
-                                'input': 'fibonacci tree of depth 4',
-                                'expected_output': 'DFS pre-order traversal values',
-                                'description': 'Should return DFS traversal of fib tree'
-                            }
-                        ]
-                    },
-                    {
-                        'id': "trav-2", 
-                        'title': "BFS Layer Sum", 
-                        'description': "",
-                        'difficulty': "Medium",
-                        "is_locked_by_default":True,
-                        'points_reward':1,
-                        'starter_code': '# BFS to calculate sum for each layer\n\nfrom collections import deque\n\nclass GraphNode:\n    def __init__(self, val):\n        self.val = val\n        self.neighbors = []\n\ndef bfs_layer_sums(start_node):\n    """\n    Perform BFS and return sum of values at each layer.\n    Args:\n        start_node: GraphNode - starting node for BFS\n    Returns:\n        list: sum of values at each layer [layer0_sum, layer1_sum, ...]\n    """\n    # Implement BFS with layer sum calculation\n    pass\n\n',
-                        'solution': 'from collections import deque\n\nclass GraphNode:\n    def __init__(self, val):\n        self.val = val\n        self.neighbors = []\n\ndef bfs_layer_sums(start_node):\n    if not start_node:\n        return []\n    \n    layer_sums = []\n    queue = deque([start_node])\n    visited = {start_node}\n    \n    while queue:\n        layer_size = len(queue)\n        layer_sum = 0\n        \n        for _ in range(layer_size):\n            node = queue.popleft()\n            layer_sum += node.val\n            \n            for neighbor in node.neighbors:\n                if neighbor not in visited:\n                    visited.add(neighbor)\n                    queue.append(neighbor)\n        \n        layer_sums.append(layer_sum)\n    \n    return layer_sums\n\n',
-                        'test_cases': [
-                            {
-                                'input': 'Graph with layers: A(5) -> {B(3), C(7)} -> {D(2), E(4)}',
-                                'expected_output': 'Layer sums: [5, 10, 6]',
-                                'description': 'Should return [5, 10, 6] for the three layers'
-                            }
-                        ]
-                    }
-                ]
-            },
-            'pathsandcycles': {
-                'title': "Paths And Cycles",
-                'icon': "",
-                'items': [
-                    {
-                        'id': "path-1", 
-                        'title': "Find Path", 
-                        'description': "",
-                        'difficulty': "Medium",
-                        "is_locked_by_default":True,
-                        'points_reward':1,
-                        'starter_code': '# Find path between two nodes\n\ndef find_path(graph, start, end, path=[]):\n    """\n    Find a path from start to end node in the graph.\n    Returns the path as a list, or None if no path exists.\n    """\n    # Implement path finding algorithm\n    pass\n\n',
-                        'solution': 'def find_path(graph, start, end, path=[]):\n    path = path + [start]\n    if start == end:\n        return path\n    if start not in graph:\n        return None\n    for node in graph[start]:\n        if node not in path:\n            newpath = find_path(graph, node, end, path)\n            if newpath:\n                return newpath\n    return None\n\ngraph = {\n    "A": ["B", "C"],\n    "B": ["D"],\n    "C": ["D"],\n    "D": ["E"],\n    "E": []\n}\n\npath = find_path(graph, "A", "E")\nprint(f"Path from A to E: {path}")',
-                        'test_cases': [
-                            {
-                                'input': 'find_path(graph, "A", "E")',
-                                'expected_output': "Path from A to E: ['A', 'B', 'D', 'E']",
-                                'description': 'Should find path from A to E'
-                            }
-                        ]
-                    }
-                ]
-            },
-            'connectedcomponents': {
-                'title': "Connected Components",
-                'icon': "",
-                'items': [
-                    {
-                        'id': "cc-1", 
-                        'title': "Count Components", 
-                        'description': "",
-                        'difficulty': "Medium",
-                        "is_locked_by_default":True,
-                        'points_reward':1,
-                        'starter_code': '# Count connected components in a graph\n\ndef count_components(graph):\n    """\n    Count the number of connected components in an undirected graph.\n    Returns the number of components.\n    """\n    # Implement connected components counting\n    pass\n\n',
-                        'solution': 'def count_components(graph):\n    visited = set()\n    components = 0\n    \n    def dfs(node):\n        if node in visited:\n            return\n        visited.add(node)\n        for neighbor in graph.get(node, []):\n            dfs(neighbor)\n    \n    for node in graph:\n        if node not in visited:\n            dfs(node)\n            components += 1\n    \n    return components\n\ngraph = {\n    "A": ["B"],\n    "B": ["A"],\n    "C": ["D"],\n    "D": ["C"],\n    "E": []\n}\n\ncomponents = count_components(graph)\nprint(f"Number of connected components: {components}")',
-                        'test_cases': [
-                            {
-                                'input': 'Graph with 3 components: {A-B}, {C-D}, {E}',
-                                'expected_output': 'Number of connected components: 3',
-                                'description': 'Should count 3 separate components'
-                            }
-                        ]
-                    }
-                ]
-            }
+
+            # 'traversal': {
+            #     'title': "Graph Traversal",
+            #     'icon': "",
+            #     'items': [
+            #         {
+            #             'id': "trav-1", 
+            #             'title': "DFS Fibonacci Tree", 
+            #             'description': "",
+            #             'difficulty': "Medium",
+            #             "is_locked_by_default":False,
+            #             'points_reward':1,
+            #             'starter_code': '# DFS traversal of fibonacci tree\n\nclass TreeNode:\n    def __init__(self, val):\n        self.val = val\n        self.left = None\n        self.right = None\n\ndef build_fib_tree(n):\n    """\n    Build a tree where each node contains fibonacci numbers.\n    Left child: fib(n-1), Right child: fib(n-2)\n    """\n    if n <= 1:\n        return TreeNode(1 if n == 1 else 0)\n    \n    root = TreeNode(fibonacci(n))\n    if n > 1:\n        root.left = build_fib_tree(n-1)\n    if n > 2:\n        root.right = build_fib_tree(n-2)\n    return root\n\ndef fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n-1) + fibonacci(n-2)\n\ndef dfs_fibonacci_tree(root):\n    """\n    Perform DFS traversal on fibonacci tree.\n    Returns list of values in DFS pre-order.\n    """\n    # Implement DFS traversal\n    pass\n\n',
+            #             'solution': 'class TreeNode:\n    def __init__(self, val):\n        self.val = val\n        self.left = None\n        self.right = None\n\ndef build_fib_tree(n):\n    if n <= 1:\n        return TreeNode(1 if n == 1 else 0)\n    \n    root = TreeNode(fibonacci(n))\n    if n > 1:\n        root.left = build_fib_tree(n-1)\n    if n > 2:\n        root.right = build_fib_tree(n-2)\n    return root\n\ndef fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n-1) + fibonacci(n-2)\n\ndef dfs_fibonacci_tree(root):\n    if not root:\n        return []\n    \n    result = []\n    stack = [root]\n    \n    while stack:\n        node = stack.pop()\n        result.append(node.val)\n        \n        # Add right child first so left is processed first\n        if node.right:\n            stack.append(node.right)\n        if node.left:\n            stack.append(node.left)\n    \n    return result\n\nfib_tree = build_fib_tree(4)\nresult = dfs_fibonacci_tree(fib_tree)\nprint(f"DFS traversal: {result}")',
+            #             'test_cases': [
+            #                 {
+            #                     'input': 'fibonacci tree of depth 4',
+            #                     'expected_output': 'DFS pre-order traversal values',
+            #                     'description': 'Should return DFS traversal of fib tree'
+            #                 }
+            #             ]
+            #         },
+            #         {
+            #             'id': "trav-2", 
+            #             'title': "BFS Layer Sum", 
+            #             'description': "",
+            #             'difficulty': "Medium",
+            #             "is_locked_by_default":True,
+            #             'points_reward':1,
+            #             'starter_code': '# BFS to calculate sum for each layer\n\nfrom collections import deque\n\nclass GraphNode:\n    def __init__(self, val):\n        self.val = val\n        self.neighbors = []\n\ndef bfs_layer_sums(start_node):\n    """\n    Perform BFS and return sum of values at each layer.\n    Args:\n        start_node: GraphNode - starting node for BFS\n    Returns:\n        list: sum of values at each layer [layer0_sum, layer1_sum, ...]\n    """\n    # Implement BFS with layer sum calculation\n    pass\n\n',
+            #             'solution': 'from collections import deque\n\nclass GraphNode:\n    def __init__(self, val):\n        self.val = val\n        self.neighbors = []\n\ndef bfs_layer_sums(start_node):\n    if not start_node:\n        return []\n    \n    layer_sums = []\n    queue = deque([start_node])\n    visited = {start_node}\n    \n    while queue:\n        layer_size = len(queue)\n        layer_sum = 0\n        \n        for _ in range(layer_size):\n            node = queue.popleft()\n            layer_sum += node.val\n            \n            for neighbor in node.neighbors:\n                if neighbor not in visited:\n                    visited.add(neighbor)\n                    queue.append(neighbor)\n        \n        layer_sums.append(layer_sum)\n    \n    return layer_sums\n\n',
+            #             'test_cases': [
+            #                 {
+            #                     'input': 'Graph with layers: A(5) -> {B(3), C(7)} -> {D(2), E(4)}',
+            #                     'expected_output': 'Layer sums: [5, 10, 6]',
+            #                     'description': 'Should return [5, 10, 6] for the three layers'
+            #                 }
+            #             ]
+            #         }
+            #     ]
+            # },
+
         }
 
         # Create categories and problems
