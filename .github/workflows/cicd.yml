@@ -1,0 +1,107 @@
+name: CICD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend build & tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build --if-present
+
+      - name: Test (undefined)
+        run: |
+          if npm run | grep -q -E "^  test"; then
+            npm test -- --ci
+          else
+            echo "No test script defined -> skipping."
+          fi
+
+  smoke:
+    name: Docker Compose smoke test (backend only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      COMPOSE_PROJECT_NAME: ci-${{ github.run_id }}
+      BACKEND_PORT: 18000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create .env for Compose
+        run: |
+          if [ -f .env ]; then
+            echo ".env already exists in repo; leaving it as-is."
+          else
+            echo "Generating .env from GitHub secrets (if any) or creating blank .env..."
+            {
+              echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
+            } > .env
+            [ -s .env ] || touch .env
+          fi
+
+      - name: Print Docker versions
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Build & start backend
+        run: |
+          docker compose -f docker-compose.yml up -d --build backend
+
+      - name: Wait for backend inside container
+        run: |
+          set -e
+          for i in {1..30}; do
+            if docker compose exec -T backend bash -lc 'exec 3<>/dev/tcp/127.0.0.1/8000'; then
+              echo "Backend is listening on 8000 (inside container)."
+              exit 0
+            fi
+            echo "Waiting for backend in-container... ($i/30)"
+            sleep 2
+          done
+          echo "Backend did not listen on 8000 in time."
+          docker compose logs backend || true
+          exit 1
+
+      - name: Backend tests (placeholder)
+        run: |
+          echo "Backend unit testing not currently implemented."
+          # e.g., docker compose exec -T backend pytest -q
+
+      - name: Compose logs (always)
+        if: always()
+        run: |
+          docker compose -f docker-compose.yml ps
+          echo "---- BACKEND LOGS ----"
+          docker compose -f docker-compose.yml logs --no-color backend || true
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.yml down -v
