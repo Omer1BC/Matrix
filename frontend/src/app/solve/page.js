@@ -101,6 +101,34 @@ export default function Home({ id }) {
   const [showHints, setShowHints] = useState(true);
   const showHintsRef = useRef(true);
 
+  const [showTimer, setShowTimer] = useState(false);
+  const [seconds, setSeconds] = useState(0);
+  const timeRef = useRef(null);
+
+  const startTimer = () => {
+    setShowTimer(true);
+    console.log("Timer started");
+    if (!timeRef.current) {
+      timeRef.current = setInterval(() => {
+        setSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+  };
+  
+  const stopTimer = () => {
+    setShowTimer(false);
+    console.log("Timer stopped");
+    clearInterval(timeRef.current);
+    timeRef.current = null;
+  };
+
+  const restartTimer = () => {
+    setShowTimer(false)
+    clearInterval(timeRef.current);
+    timeRef.current = null;
+    setSeconds(0);
+  }
+
   const [toolsInfo, setToolsInfo] = useState([]);
   const addToolsTab = (tools) => setToolsInfo(tools);
 
@@ -496,6 +524,21 @@ export default function Home({ id }) {
               >
                 Clear Hints
               </button>
+              {
+                showTimer ? (
+                  <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
+                    <button className="editor-clear-hints" style={{cursor: "pointer"}} onClick={stopTimer}>Stop Timer</button>
+                    <button className="editor-clear-hints" style={{cursor: "pointer"}} onClick={restartTimer}>Restart Timer</button>
+                    <p className="editor-clear-hints">Time: {seconds} seconds</p>
+                  </div>
+                ) : (
+                  <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
+                    <button className="editor-clear-hints" style={{cursor: "pointer"}} onClick={startTimer}>Start Timer</button>
+                    <button className="editor-clear-hints" style={{cursor: "pointer"}} onClick={restartTimer}>Restart Timer</button>
+                    <span className="editor-clear-hints">Time: {seconds} seconds</span>
+                  </div>
+                )
+              }
             </div>
           </div>
         ),
@@ -511,7 +554,7 @@ export default function Home({ id }) {
         ),
       },
     }),
-    [showHints, annotate, toolsInfo, addToolCode, askAboutTool, clearHints]
+    [showHints, annotate, toolsInfo, addToolCode, askAboutTool, clearHints, showTimer, startTimer, stopTimer, seconds, restartTimer]
   );
   const [contentTabs, setContentTabs] = useState({
     question: {
@@ -543,8 +586,8 @@ export default function Home({ id }) {
 
   return (
     <>
+      <Header />
       <div className="page">
-        <Header />
         <div className="main">
           <Card className="content" tabs={contentTabs} />
           <Card className="references" tabs={references} />
