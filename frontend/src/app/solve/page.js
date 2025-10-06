@@ -105,7 +105,7 @@ export default function Home({ id }) {
   const [seconds, setSeconds] = useState(0);
   const timeRef = useRef(null);
 
-  const startTimer = () => {
+  const startTimer = useCallback(() => {
     setShowTimer(true);
     console.log("Timer started");
     if (!timeRef.current) {
@@ -113,21 +113,21 @@ export default function Home({ id }) {
         setSeconds((prev) => prev + 1);
       }, 1000);
     }
-  };
+  }, []);
   
-  const stopTimer = () => {
+  const stopTimer = useCallback(() => {
     setShowTimer(false);
     console.log("Timer stopped");
     clearInterval(timeRef.current);
     timeRef.current = null;
-  };
+  }, []);
 
-  const restartTimer = () => {
+  const restartTimer = useCallback(() => {
     setShowTimer(false)
     clearInterval(timeRef.current);
     timeRef.current = null;
     setSeconds(0);
-  }
+  }, []);
 
   const [toolsInfo, setToolsInfo] = useState([]);
   const addToolsTab = (tools) => setToolsInfo(tools);
