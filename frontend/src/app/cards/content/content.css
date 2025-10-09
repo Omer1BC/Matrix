@@ -1,9 +1,7 @@
 .react {
     width: 80%;
 }
-h1, h2, h3 {
-    color: #ffffff;
-}
+
 .button {
   align-self: flex-end;
   background-color: blue;
@@ -16,7 +14,7 @@ h1, h2, h3 {
   opacity: 1;
   transition: opacity 0.2s ease;
 }
-.container {
+.content-container {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -33,31 +31,22 @@ h1, h2, h3 {
     border-radius: .5rem
 }
 
-h1, h2, h3 {
+.title {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     margin: 0;
-}
-
-h1 {
     font-size: 1.625rem;
     font-weight: 600;
     color: var(--gr-2);
 }
 
-h2 {
+.description {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
     font-size: 1.1rem;
     font-weight: 400;
 
     color: var(--gr-2);
 }
-
-h3 {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--gr-2);
-    opacity: 0.9;
-}
-
 
 
 

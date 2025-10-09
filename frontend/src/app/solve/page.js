@@ -11,7 +11,6 @@ import {
   Fragment,
 } from "react";
 import Card from "../templates/card/card";
-import Header from "../templates/header/header";
 import ValidationContent from "../cards/validation/content";
 import { ReferencesContent, Tools } from "../cards/references/content";
 import { patternToTabs } from "../patterns/mappings";
@@ -586,7 +585,6 @@ export default function Home({ id }) {
 
   return (
     <>
-      <Header />
       <div className="page">
         <div className="main">
           <Card className="content" tabs={contentTabs} />

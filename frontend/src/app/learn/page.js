@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import "../templates.css";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Disclosure, Menu } from "@headlessui/react";
 import ReactPlayer from "react-player";
@@ -12,8 +11,6 @@ import Card from "../templates/card/card";
 import ValidationContent from "../cards/validation/content";
 import TestCasesPanel from "./testCasesPanel";
 import ProblemMenu from "./problemMenu";
-import Header from "../templates/header/header";
-import "../templates/header/header.css";
 // Problem Selection Drawer Component
 
 export default function ProblemsPage() {
@@ -148,8 +145,7 @@ export default function ProblemsPage() {
   };
 
   return (
-    <div>
-      <Header />
+    <>
       <div
         className="Page h-screen overflow-hidden"
         style={{ backgroundColor: "var(--dbl-1)" }}
@@ -324,6 +320,6 @@ export default function ProblemsPage() {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

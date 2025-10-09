@@ -832,6 +832,7 @@ def signup(request):
                         "id": response.user.id,
                         "first_name": firstname,
                         "last_name": lastname,
+                        "email": email,
                     }
                 )
                 .execute()
