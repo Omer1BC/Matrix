@@ -148,41 +148,10 @@ export default function Home() {
         <Link href="/blog/hello-world">Blog Post</Link>
       </li>
       <li>
-        <Link href="/homepage">Homepage</Link>
+        <Link href="/home">Homepage</Link>
       </li>
     </ul>
-    {/* <div className="Page">
-        Hello
-        <div className="main">
-          <div className="content">
-              <div className="vid" style= {{display: "flex", justifyContent: "center",height: "100%",width: "100%"}}>
-                  <div className="player-wrapper" >
-                      <ReactPlayer height="100%" width="100%" controls={true} src='videos/proj_vid.mp4' />
-                  </div>
-              </div>
-              
-          </div> 
-
-          <div className="references">
-          </div>  
-
-          <div className="code">
-                  <Editor 
-                  height="80%" 
-                  width="100%" 
-                  language="python"
-                  theme="vs-dark"
-                  onMount={handleEditorDidMount}
-                  />
-                  <button style={{zIndex: 10,backgroundColor: "BLUE",cursor:"pointer"}} onClick={showValue}>Run</button>
-          </div>
-
-          <div className="validation">    
-          </div>          
-        </div>
-
-    </div> */}
-
+    
     </>
 }
 

@@ -1,29 +1,63 @@
 ''''''
 from typing import *
 ''''''
-def compute_graph_sum(graph: Dict[str, Dict]) -> int:
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+def recursive_sum(head: Optional[ListNode]) -> int:
     """
-    Compute the sum of all node values in a graph.
+    Recursively compute the sum of all values in a linked list.
     
     Args:
-        graph: Dictionary representing the graph where keys are node names
-               and values are dictionaries containing 'value' and 'connections'
+        head: ListNode - the head of the linked list
     
     Returns:
-        int: Sum of all node values in the graph
+        int: sum of all values in the list
     """
     # User code will be inserted here
     pass
+
+# Linked List Node class
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+def recursive_sum(head):
+    """
+    Recursively compute the sum of all values in a linked list.
+    Args:
+        head: ListNode - the head of the linked list
+    Returns:
+        int - sum of all values in the list
+    """
+    if not head.next:
+        return self.val
+    else:
+        return recrusive_sum(head.next)+head.val
+
 ''''''
-def run_test(graph, expected):
+def run_test(test_input, expected):
     exception = ""
     result = ""
     try:
-        result = compute_graph_sum(graph)
+        # Create linked list from test_input list
+        if not test_input:
+            head = None
+        else:
+            head = ListNode(test_input[0])
+            current = head
+            for val in test_input[1:]:
+                current.next = ListNode(val)
+                current = current.next
+        
+        result = recursive_sum(head)
     except Exception as e:
         exception = str(e)
     return {
-        "graph": graph, 
+        "input": test_input, 
         "expected": expected,
         "actual": result, 
         "error": exception,
@@ -31,36 +65,10 @@ def run_test(graph, expected):
     }
 
 test_cases = [
-    (
-        {'A': {'value': 5, 'connections': ['B', 'C']}, 
-         'B': {'value': 3, 'connections': ['A', 'D']}, 
-         'C': {'value': 7, 'connections': ['A']}, 
-         'D': {'value': 2, 'connections': ['B']}}, 
-        17
-    ),
-    (
-        {'X': {'value': 10, 'connections': []}}, 
-        10
-    ),
-    (
-        {'A': {'value': 1, 'connections': ['B']}, 
-         'B': {'value': 2, 'connections': ['C']}, 
-         'C': {'value': 3, 'connections': []}}, 
-        6
-    ),
-    (
-        {'P': {'value': -5, 'connections': ['Q']}, 
-         'Q': {'value': 15, 'connections': ['P']}}, 
-        10
-    ),
-    (
-        {}, 
-        0
-    )
+    ([1, 2, 3, 4], 10),
+    ([5], 5),
+    ([10, -5, 3], 8),
+    ([0, 0, 0], 0)
 ]
 
-# Generate results without printing
-results = {f"test_{i}": run_test(graph, expected) for i, (graph, expected) in enumerate(test_cases)}
-
-# Only store results, don't print them
-# The Django endpoint will extract these results from the namespace
+results = {f"test_{i}": run_test(test_input, expected) for i, (test_input, expected) in enumerate(test_cases)}

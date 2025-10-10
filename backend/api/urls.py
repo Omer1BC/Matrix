@@ -16,6 +16,8 @@ urlpatterns = [
     path("ask", ask),
     path("next_thread", next_thread),
     path("grade_solution", grade_solution, name="grade_solution"),
+    # llm agent
+    path("agent", agent, name="agent"),
     # learn page urls
     path("categories", get_all_categories, name="get_all_categories"),
     path("problem-details", problem_details, name="problem_details"),

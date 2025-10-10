@@ -1,54 +1,45 @@
 ''''''
 from typing import *
 ''''''
-class Edge:
-    def __init__(self, from_node: str, to_node: str, weight: int = 1):
-        """Initialize edge with from_node, to_node, and optional weight"""
-        # User code will be inserted here
-        pass
-    
-    def get_weight(self) -> int:
-        """Return the weight of the edge"""
-        # User code will be inserted here
-        pass
-    
-    def get_nodes(self) -> Tuple[str, str]:
-        """Return tuple of (from_node, to_node)"""
-        # User code will be inserted here
-        pass
+def is_tree(edges: List[Tuple[str, str]]) -> bool:
+    return False
+
 ''''''
-def run_test(edge_data, expected):
+def run_test(edges, expected):
     exception = ""
     result = ""
     try:
-        edge = Edge(edge_data["from"], edge_data["to"], edge_data.get("weight", 1))
-        nodes = edge.get_nodes()
-        weight = edge.get_weight()
-        result = {"nodes": nodes, "weight": weight}
-        
+        result = is_tree(edges)
+
     except Exception as e:
         exception = str(e)
     return {
-        "edge_data": edge_data, 
+        "edges": edges,
         "expected": expected,
-        "actual": result, 
+        "actual": result,
         "error": exception,
         "passed": result == expected if not exception else False
     }
 
 test_cases = [
-    (
-        {"from": "A", "to": "B", "weight": 5},
-        {"nodes": ("A", "B"), "weight": 5}
-    ),
-    (
-        {"from": "X", "to": "Y"},
-        {"nodes": ("X", "Y"), "weight": 1}
-    ),
-    (
-        {"from": "P", "to": "Q", "weight": 10},
-        {"nodes": ("P", "Q"), "weight": 10}
-    )
+    # Valid trees
+    ([("A", "B"), ("B", "C"), ("C", "D")], True),  # Linear tree
+    ([("A", "B"), ("A", "C"), ("A", "D")], True),  # Star tree
+    ([("A", "B"), ("B", "C"), ("B", "D"), ("C", "E")], True),  # Branched tree
+    ([], True),  # Empty graph is a tree
+    ([("X", "Y")], True),  # Single edge
+
+    # Invalid trees (cycles)
+    ([("A", "B"), ("B", "C"), ("C", "A")], False),  # Triangle cycle
+    ([("A", "B"), ("B", "C"), ("C", "D"), ("D", "A")], False),  # Square cycle
+    ([("A", "B"), ("B", "C"), ("A", "C"), ("C", "D")], False),  # Tree with cycle
+
+    # Invalid trees (disconnected)
+    ([("A", "B"), ("C", "D")], False),  # Two separate edges
+    ([("A", "B"), ("B", "C"), ("D", "E"), ("E", "F")], False),  # Two separate components
+
+    # Invalid trees (too many edges)
+    ([("A", "B"), ("B", "C"), ("C", "D"), ("D", "E"), ("E", "A"), ("A", "C")], False),  # More edges than needed
 ]
 
 # Generate results without printing

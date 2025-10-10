@@ -251,6 +251,7 @@
   cursor: pointer;
   background-color: var(--dbl-5);
   border-radius: var(--grid-border-radius);
+  color: white;
 }
 
 .editor-clear-hints {
@@ -260,4 +261,5 @@
   cursor: pointer;
   background-color: var(--dbl-5);
   border-radius: var(--grid-border-radius);
+  color: white;
 }

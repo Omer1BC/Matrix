@@ -6,7 +6,7 @@ export function QuestionContent ({title,difficulty,description,handleMouseUp}) {
     return <>
         <div className='questionContainer' onMouseUp={handleMouseUp}>
             <div className="title-bubble">
-                <h1 className='title'> {title}</h1>
+                <p className='title'> {title}</p>
                 <div className="difficulty-meter">
                     <div className="difficulty-bar active"></div>
                     <div className="difficulty-bar active"></div>
@@ -14,7 +14,7 @@ export function QuestionContent ({title,difficulty,description,handleMouseUp}) {
                 </div>
             </div>
             <div className="description-bubble">
-                <h2>{description}</h2>
+                <p className='description'>{description}</p>
             </div>
         </div>
 
@@ -48,7 +48,7 @@ export function AnimationContent () {
 
     return (
         <>
-         <div className='container'>
+         <div className='content-container'>
             <ReactPlayer muted={true} controls={false} playing={true} className="react" onEnded={handleEnded}  src={vid}/>
             <button onClick={handleAnim} className="button">Button</button>
          </div>

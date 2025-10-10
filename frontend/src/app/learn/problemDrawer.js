@@ -1,5 +1,6 @@
 "use client"
-import "../templates.css"
+
+
 import { useRef, useState, useEffect } from 'react';
 
 export default function ProblemDrawer({ isOpen, onClose, onProblemSelect, refreshKey }) {

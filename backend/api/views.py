@@ -3,17 +3,122 @@ from django.shortcuts import render, get_object_or_404
 # Create your views here.
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+import os
 import io
 import sys
+import traceback
 from django.conf import settings
+
 from .models import ProblemCategory, Problem, ProblemCompletion, User, UserProgress
 
-import traceback
-
-import os
 from utils.utils import *
 from utils.agents import *
 from utils.problem_info import *
+from utils.agent.schema import AgentRequest, AgentResponse
+from utils.agent.router import route
+from utils.agent.graph import build_graph
+from utils.agent.tools import (
+    annotate_errors_tool,
+    annotated_hints_tool,
+    grade_via_tests_tool,
+    hints_tool,
+    run_tests_tool,
+    tool_hints_tool,
+)
+from langchain_core.messages import HumanMessage, AIMessage
+
+GRAPH = build_graph()
+
+
+@csrf_exempt
+def agent(request):
+    if request.method != "POST" or "application/json" not in (
+        request.content_type or ""
+    ):
+        return JsonResponse({"error": "Malformed Request"}, status=400)
+    try:
+        body = json.loads(request.body)
+        # auth optional
+        user = request.user if request.user.is_authenticated else None
+        user_id = str(getattr(user, "id", body.get("user_id", "anon")))
+        problem_id = str(body.get("problem_id", "global"))
+
+        req = AgentRequest(
+            **{
+                "user_id": user_id,
+                "problem_id": problem_id,
+                "message": body.get("message", body.get("input", "")) or "",
+                "code": body.get("code", "") or "",
+                "question": body.get("question", "") or "",
+                "intent": body.get("intent", None),
+                "extras": body.get("extras", {}),
+            }
+        )
+
+        task, params = route(req)
+        thread_id = f"{req.user_id}:{req.problem_id}"
+
+        if task == "tests":
+            res = run_tests_tool.invoke(
+                {"problem_id": req.problem_id, "code": req.code}
+            )
+            return JsonResponse(AgentResponse(kind="tests", data=res).model_dump())
+        if task == "grade":
+            res = grade_via_tests_tool.invoke(
+                {"problem_id": req.problem_id, "code": req.code}
+            )
+            return JsonResponse(AgentResponse(kind="grade", data=res).model_dump())
+        if task == "tool_hints":
+            pat = params.get("pattern", req.extras.get("pattern", ""))
+            if not pat:
+                return JsonResponse(
+                    AgentResponse(
+                        kind="tool_hints", data={"error": "pattern required"}
+                    ).model_dump()
+                )
+            res = tool_hints_tool.invoke({"code": req.code, "pattern": pat})
+            return JsonResponse(AgentResponse(kind="tool_hints", data=res).model_dump())
+        if task == "annotate_errors":
+            err = params.get("error", req.extras.get("error", req.message))
+            res = annotate_errors_tool.invoke(
+                {"problem_id": req.problem_id, "error": err, "code": req.code}
+            )
+            return JsonResponse(
+                AgentResponse(kind="annotate_errors", data=res).model_dump()
+            )
+        if task == "hints":
+            res = hints_tool.invoke({"problem_id": req.problem_id, "code": req.code})
+            return JsonResponse(AgentResponse(kind="hints", data=res).model_dump())
+        if task == "annotated_hints":
+            res = annotated_hints_tool.invoke(
+                {"problem_id": req.problem_id, "code": req.code}
+            )
+            return JsonResponse(
+                AgentResponse(kind="annotated_hints", data=res).model_dump()
+            )
+
+        # Otherwise: go through the LLM node with memory (chat/general, or future tasks)
+        result = GRAPH.invoke(
+            {
+                "messages": [HumanMessage(content=req.message)],
+                "question": req.question,
+                "code": req.code,
+                "task": task,
+                "params": params,
+            },
+            config={"configurable": {"thread_id": thread_id}},
+        )
+        # pluck latest AI message
+        msgs = result["messages"]
+        content = next(
+            (m.content for m in reversed(msgs) if isinstance(m, AIMessage)), ""
+        )
+        return JsonResponse(
+            AgentResponse(kind="chat", data={"text": content}).model_dump()
+        )
+    except Exception as e:
+        traceback.print_exc()
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 # backend functions whose urls are mapped in /api/urls.py
@@ -832,6 +937,7 @@ def signup(request):
                         "id": response.user.id,
                         "first_name": firstname,
                         "last_name": lastname,
+                        "email": email,
                     }
                 )
                 .execute()

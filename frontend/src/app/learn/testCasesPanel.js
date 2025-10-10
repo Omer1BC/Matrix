@@ -1,5 +1,6 @@
 "use client";
-import "../templates.css"
+
+
 import { useRef, useState, useEffect } from 'react';
 
 export default function TestCasesPanel ({ problemId, editorRef, onAllTestsPassed }) {
@@ -140,7 +141,7 @@ export default function TestCasesPanel ({ problemId, editorRef, onAllTestsPassed
               <div className="mb-2">
                 <span className="text-xs font-semibold" style={{color: 'var(--gr-2)'}}>EXPECTED:</span>
                 <pre className="text-xs p-2 rounded mt-1 font-mono" style={{backgroundColor: 'var(--dbl-4)', color: 'var(--gr-2)'}}>
-                  {typeof result.expected === 'object' ? JSON.stringify(result.expected) : result.expected}
+                  {typeof result.expected === 'object' ? JSON.stringify(result.expected) :String(result.expected)}
                 </pre>
               </div>
 
@@ -148,7 +149,7 @@ export default function TestCasesPanel ({ problemId, editorRef, onAllTestsPassed
               <div className="mb-2">
                 <span className="text-xs font-semibold" style={{color: 'var(--gr-2)'}}>ACTUAL:</span>
                 <pre className="text-xs p-2 rounded mt-1 font-mono" style={{backgroundColor: 'var(--dbl-4)', color: 'var(--gr-2)'}}>
-                  {typeof result.actual === 'object' ? JSON.stringify(result.actual) : result.actual}
+                  {typeof result.actual === 'object' ? JSON.stringify(result.actual) :String(result.actual)}
                 </pre>
               </div>
 
