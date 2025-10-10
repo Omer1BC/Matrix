@@ -1,5 +1,6 @@
 "use client";
-import "../templates.css"
+
+
 import { useRef, useState, useEffect } from 'react';
 
 export default function TestCasesPanel ({ problemId, editorRef, onAllTestsPassed }) {
@@ -167,7 +168,7 @@ export default function TestCasesPanel ({ problemId, editorRef, onAllTestsPassed
 
         {testResults.length === 0 && !runningTests && (
           <div className="text-center py-8">
-            <p style={{color: 'var(--gr-2)'}}>Click "Run Tests" to see your results</p>
+            <p style={{color: 'var(--gr-2)'}}>Click &quot;Run Tests&quot; to see your results</p>
           </div>
         )}
       </div>
