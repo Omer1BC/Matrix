@@ -35,39 +35,14 @@ export default function ProblemsPage() {
     toggleRefresh();
   }
 
-  //   useEffect(()=>{
-  //     pingPercentage()
-  //   },[])
-  // useEffect(() => {
-  //   pingPercentage();
-  // }, [refreshKey]);
-
-  // function pingPercentage() {
-  //   fetch("http://localhost:8000/api/completion", {
-  //     method: "GET",
-
-  //     credentials: "include",
-  //   })
-  //     .then((response) => response.json())
-  //     .then((data) => {
-  //       setCompletionPercentage(data.percentage);
-  //       console.log(completionPercentage);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error fetching completion percentage:", error);
-  //     });
-  // }
-
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
-    // Set initial code based on current problem
     editor.setValue('# Write your solution here\nprint("Hello, World!")');
   }
 
   const handleProblemSelect = async (problem) => {
     setCurrentProblem(problem);
 
-    // Fetch detailed problem information from the API
     try {
       const response = await fetch(
         "http://localhost:8000/api/problem-details",
@@ -84,7 +59,6 @@ export default function ProblemsPage() {
         const details = await response.json();
         setProblemDetails(details);
 
-        // Parse test cases from JSON string
         let parsedTestCases = [];
         try {
           parsedTestCases =
@@ -97,13 +71,11 @@ export default function ProblemsPage() {
         }
         setTestCases(parsedTestCases);
 
-        // Update editor with the starter code from the API
         if (editorRef.current && details.method_stub) {
           editorRef.current.setValue(details.method_stub);
         }
       } else {
         console.error("Failed to fetch problem details");
-        // Fallback to default starter code
         if (editorRef.current) {
           const starterCode = getStarterCode(problem.id);
           editorRef.current.setValue(starterCode);
@@ -112,7 +84,6 @@ export default function ProblemsPage() {
       }
     } catch (error) {
       console.error("Error fetching problem details:", error);
-      // Fallback to default starter code
       if (editorRef.current) {
         const starterCode = getStarterCode(problem.id);
         editorRef.current.setValue(starterCode);
@@ -120,7 +91,7 @@ export default function ProblemsPage() {
       setTestCases([]);
     }
 
-    setOutput(""); // Clear previous output
+    setOutput("");
   };
 
   const getStarterCode = (problemId) => {
@@ -163,26 +134,10 @@ export default function ProblemsPage() {
               </h2>
             </div>
 
-            {/* Problem Menu with Progress Bar */}
             <div
               className="relative p-4 overflow-y-auto flex flex-1"
               style={{ backgroundColor: "var(--dbl-2)" }}
             >
-              {/* Progress Bar Container */}
-              {/* <div
-                className="relative w-2 mr-4 rounded-full"
-                style={{ backgroundColor: "var(--dbl-4)" }}
-              >
-                <div
-                  className="rounded-full w-full absolute left-0 transition-all duration-300"
-                  style={{
-                    height: `${completionPercentage}%`,
-                    backgroundColor: "var(--gr-2)",
-                  }}
-                />
-              </div> */}
-
-              {/* Actual Problem Menu content */}
               <div
                 className="flex-1"
                 style={{ backgroundColor: "var(--dbl-2)" }}
@@ -195,11 +150,8 @@ export default function ProblemsPage() {
             </div>
           </div>
 
-          {/* Column 2: Video, Exercise & Editor */}
           <div className="flex flex-col gap-4 overflow-y-auto">
-            {/* Video Player */}
             <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0">
-              {/* Video Title Section */}
               <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
                 <h3
                   className="text-lg font-semibold"
@@ -208,7 +160,6 @@ export default function ProblemsPage() {
                   {problemDetails?.title || currentProblem.title}
                 </h3>
               </div>
-              {/* Video Content Section */}
               <div className="" style={{ backgroundColor: "var(--dbl-5)" }}>
                 <div className="max-h-78 flex justify-center items-center">
                   <ReactPlayer
