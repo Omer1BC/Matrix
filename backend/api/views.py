@@ -210,13 +210,11 @@ def run_learn_tests(request):
                 code = body.get("code", "")
                 problem_id = body.get("problem_id", "1_2sum")
 
-                # Make sure the user is logged in
-                if not request.user.is_authenticated:
-                    return JsonResponse(
-                        {"error": "Authentication required"}, status=403
-                    )
-
-                user = request.user
+                user = (
+                    request.user
+                    if getattr(request.user, "is_authenticated", False)
+                    else None
+                )
 
                 # Find the problem
                 try:
@@ -267,17 +265,55 @@ def run_learn_tests(request):
 
                     passed_tests = sum(1 for r in formatted_results if r["passed"])
                     total_tests = len(formatted_results)
+
+                    if user is None:
+                        if not formatted_results:
+                            formatted_results = [
+                                {
+                                    "test_name": "auth_required",
+                                    "description": "Authentication required",
+                                    "passed": False,
+                                    "expected": None,
+                                    "actual": None,
+                                    "error": "Login required to run and pass tests.",
+                                    "input": "",
+                                }
+                            ]
+                        else:
+                            for r in formatted_results:
+                                r["passed"] = False
+                                r["error"] = (
+                                    r.get("error")
+                                    or "Login required to run and pass tests."
+                                )
+
+                        return JsonResponse(
+                            {
+                                "success": True,
+                                "message": "Anonymous runs are not allowed to pass. Please log in.",
+                                "test_results": formatted_results,
+                                "total_tests": len(formatted_results),
+                                "passed_tests": 0,
+                                "next_problem": None,
+                            }
+                        )
+
                     if total_tests > 0 and passed_tests == total_tests:
                         completion, created = ProblemCompletion.objects.get_or_create(
                             user=user, problem=problem
                         )
-                        completion.mark_as_completed(user_solution=code)
 
-                        # Update user progress
+                        completion.mark_as_completed(user_solution=code)
 
                         if not hasattr(user, "progress"):
                             UserProgress.objects.create(user=user)
                         user.progress.update_progress()
+
+                        next_pid = (
+                            user.progress.current_problem.problem_id
+                            if user.progress and user.progress.current_problem
+                            else None
+                        )
 
                         return JsonResponse(
                             {
@@ -288,13 +324,12 @@ def run_learn_tests(request):
                                 "passed_tests": passed_tests,
                                 "next_problem": (
                                     user.progress.current_problem.problem_id
-                                    if user.progress.current_problem
+                                    if (user.progress and user.progress.current_problem)
                                     else None
                                 ),
                             }
                         )
 
-                    # If some tests failed → just return results
                     return JsonResponse(
                         {
                             "success": True,
