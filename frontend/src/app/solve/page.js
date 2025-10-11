@@ -17,7 +17,7 @@ import { ReferencesContent, Tools } from "../cards/references/content";
 import { patternToTabs } from "../patterns/mappings";
 import { ping, agentCall } from "../utils/apiUtils";
 import { QuestionContent } from "../cards/content/content";
-import { UserContext } from "../contexts/usercontext";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Home({ id }) {
   //defines an annotation div
@@ -115,7 +115,7 @@ export default function Home({ id }) {
       }, 1000);
     }
   }, []);
-  
+
   const stopTimer = useCallback(() => {
     setShowTimer(false);
     console.log("Timer stopped");
@@ -124,7 +124,7 @@ export default function Home({ id }) {
   }, []);
 
   const restartTimer = useCallback(() => {
-    setShowTimer(false)
+    setShowTimer(false);
     clearInterval(timeRef.current);
     timeRef.current = null;
     setSeconds(0);
@@ -133,7 +133,7 @@ export default function Home({ id }) {
   const [toolsInfo, setToolsInfo] = useState([]);
   const addToolsTab = (tools) => setToolsInfo(tools);
 
-  const { user, setUser } = useContext(UserContext);
+  const { user } = useAuth();
 
   useEffect(() => {
     showHintsRef.current = showHints;
@@ -575,21 +575,49 @@ export default function Home({ id }) {
               >
                 Clear Hints
               </button>
-              {
-                showTimer ? (
-                  <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
-                    <button className="editor-clear-hints" style={{cursor: "pointer"}} onClick={stopTimer}>Stop Timer</button>
-                    <button className="editor-clear-hints" style={{cursor: "pointer"}} onClick={restartTimer}>Restart Timer</button>
-                    <p className="editor-clear-hints">Time: {seconds} seconds</p>
-                  </div>
-                ) : (
-                  <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
-                    <button className="editor-clear-hints" style={{cursor: "pointer"}} onClick={startTimer}>Start Timer</button>
-                    <button className="editor-clear-hints" style={{cursor: "pointer"}} onClick={restartTimer}>Restart Timer</button>
-                    <span className="editor-clear-hints">Time: {seconds} seconds</span>
-                  </div>
-                )
-              }
+              {showTimer ? (
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "10px" }}
+                >
+                  <button
+                    className="editor-clear-hints"
+                    style={{ cursor: "pointer" }}
+                    onClick={stopTimer}
+                  >
+                    Stop Timer
+                  </button>
+                  <button
+                    className="editor-clear-hints"
+                    style={{ cursor: "pointer" }}
+                    onClick={restartTimer}
+                  >
+                    Restart Timer
+                  </button>
+                  <p className="editor-clear-hints">Time: {seconds} seconds</p>
+                </div>
+              ) : (
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "10px" }}
+                >
+                  <button
+                    className="editor-clear-hints"
+                    style={{ cursor: "pointer" }}
+                    onClick={startTimer}
+                  >
+                    Start Timer
+                  </button>
+                  <button
+                    className="editor-clear-hints"
+                    style={{ cursor: "pointer" }}
+                    onClick={restartTimer}
+                  >
+                    Restart Timer
+                  </button>
+                  <span className="editor-clear-hints">
+                    Time: {seconds} seconds
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         ),
@@ -605,7 +633,19 @@ export default function Home({ id }) {
         ),
       },
     }),
-    [showHints, annotate, toolsInfo, addToolCode, askAboutTool, clearHints, showTimer, startTimer, stopTimer, seconds, restartTimer]
+    [
+      showHints,
+      annotate,
+      toolsInfo,
+      addToolCode,
+      askAboutTool,
+      clearHints,
+      showTimer,
+      startTimer,
+      stopTimer,
+      seconds,
+      restartTimer,
+    ]
   );
   const [contentTabs, setContentTabs] = useState({
     question: {

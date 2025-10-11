@@ -1,16 +1,12 @@
-from django.shortcuts import render, get_object_or_404
-
-# Create your views here.
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import os
 import io
 import sys
+import json
 import traceback
 from django.conf import settings
-
-from .models import ProblemCategory, Problem, ProblemCompletion, User, UserProgress
-
+from .models import ProblemCategory, Problem, ProblemCompletion, UserProgress
 from utils.utils import *
 from utils.agents import *
 from utils.problem_info import *
@@ -28,6 +24,15 @@ from utils.agent.tools import (
 from langchain_core.messages import HumanMessage, AIMessage
 
 GRAPH = build_graph()
+
+
+@csrf_exempt
+def get_completion(request):
+    if request.method == "GET":
+        user = request.user
+        print(user)
+        print(user.completion_percentage)
+        return JsonResponse({"percentage": user.completion_percentage}, status=200)
 
 
 @csrf_exempt
@@ -119,16 +124,6 @@ def agent(request):
     except Exception as e:
         traceback.print_exc()
         return JsonResponse({"error": str(e)}, status=500)
-
-
-# backend functions whose urls are mapped in /api/urls.py
-@csrf_exempt
-def get_completion(request):
-    if request.method == "GET":
-        user = request.user
-        print(user)
-        print(user.completion_percentage)
-        return JsonResponse({"percentage": user.completion_percentage}, status=200)
 
 
 @csrf_exempt
@@ -683,7 +678,9 @@ def get_all_categories(request):
     if request.method == "GET":
         categories = ProblemCategory.objects.prefetch_related("problems").all()
         result = {}
-        user = request.user
+        user = (
+            request.user if getattr(request.user, "is_authenticated", False) else None
+        )
         print(request.user)
         for category in categories:
             result[category.key] = {
@@ -695,12 +692,10 @@ def get_all_categories(request):
                         "title": problem.title,
                         "description": problem.description,
                         "difficulty": problem.difficulty,
-                        "unlocked": not (problem.is_locked_by_default)
+                        "unlocked": (not problem.is_locked_by_default)
                         or problem.is_unlocked_for_user(user),
                     }
-                    for problem in category.problems.order_by(
-                        "order"
-                    )  # ignore # Removed is_active filter since your model might not have it
+                    for problem in category.problems.order_by("order")
                 ],
             }
 
@@ -875,119 +870,3 @@ def run_test_case(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Method not allowed"}, status=405)
-
-
-from django.contrib.auth import authenticate, login, logout
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-
-
-@csrf_exempt  # for testing — better to configure CSRF properly
-def login_view(request):
-    if request.method == "POST":
-        data = json.loads(request.body.decode("utf-8"))
-        username = data.get("username")
-        password = data.get("password")
-
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return JsonResponse({"success": True, "message": "Logged in"})
-        else:
-            return JsonResponse(
-                {"success": False, "message": "Invalid credentials"}, status=400
-            )
-    return JsonResponse({"success": False, "message": "Only POST allowed"}, status=405)
-
-
-@csrf_exempt
-def logout_view(request):
-    logout(request)
-    return JsonResponse({"success": True, "message": "Logged out"})
-
-
-# ---------- Supabase implementation functionality -------#
-
-import json
-from supabase import create_client
-
-SUPABASE_URL = "https://lskkeazcckgvxtvvyqbw.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxza2tlYXpjY2tndnh0dnZ5cWJ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Nzk4OTE3NSwiZXhwIjoyMDczNTY1MTc1fQ.njTAUkwk_9W1qoUxB_Ga_pvcEMhWlsXffEUwTTCEy5U"
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-
-@csrf_exempt
-def signup(request):
-    if request.method == "POST":
-        body = json.loads(request.body)
-        email = body.get("email")
-        password = body.get("password")
-        firstname = body.get("firstname")
-        lastname = body.get("lastname")
-
-        response = supabase.auth.sign_up({"email": email, "password": password})
-
-        if response.user:
-            response2 = (
-                supabase.table("profiles")
-                .insert(
-                    {
-                        "id": response.user.id,
-                        "first_name": firstname,
-                        "last_name": lastname,
-                        "email": email,
-                    }
-                )
-                .execute()
-            )
-            if response2:
-                return JsonResponse({"success": True, "user": response2.data})
-        else:
-            return JsonResponse({"success": False, "error": response.error}, status=400)
-
-
-@csrf_exempt
-def logout(request):
-    try:
-        supabase.auth.sign_out()
-        return JsonResponse(
-            {"success": True, "message": "Logged out successfully"}, status=200
-        )
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
-
-
-@csrf_exempt
-def supabase_login(request):
-    if request.method == "POST":
-        body = json.loads(request.body)
-        email = body.get("email")
-        password = body.get("password")
-
-        response = supabase.auth.sign_in_with_password(
-            {
-                "email": email,
-                "password": password,
-            }
-        )
-        if response.user:
-            user_id = response.user.id
-            response2 = (
-                supabase.table("profiles").select("*").eq("id", user_id).execute()
-            )
-            if response2.data:
-                return JsonResponse({"success": True, "user": response2.data})
-        else:
-            return JsonResponse(
-                {"success": False, "message": "Could not retrieve from profiles"},
-                status=400,
-            )
-    else:
-        return JsonResponse(
-            {"success": False, "message": "Incorrect method"}, status=405
-        )
-
-
-# --------------#

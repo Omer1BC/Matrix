@@ -11,7 +11,6 @@ import Card from "../templates/card/card";
 import ValidationContent from "../cards/validation/content";
 import TestCasesPanel from "./testCasesPanel";
 import ProblemMenu from "./problemMenu";
-// Problem Selection Drawer Component
 
 export default function ProblemsPage() {
   const [output, setOutput] = useState("");
@@ -39,25 +38,25 @@ export default function ProblemsPage() {
   //   useEffect(()=>{
   //     pingPercentage()
   //   },[])
-  useEffect(() => {
-    pingPercentage();
-  }, [refreshKey]);
+  // useEffect(() => {
+  //   pingPercentage();
+  // }, [refreshKey]);
 
-  function pingPercentage() {
-    fetch("http://localhost:8000/api/completion", {
-      method: "GET",
+  // function pingPercentage() {
+  //   fetch("http://localhost:8000/api/completion", {
+  //     method: "GET",
 
-      credentials: "include",
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setCompletionPercentage(data.percentage);
-        console.log(completionPercentage);
-      })
-      .catch((error) => {
-        console.error("Error fetching completion percentage:", error);
-      });
-  }
+  //     credentials: "include",
+  //   })
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       setCompletionPercentage(data.percentage);
+  //       console.log(completionPercentage);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error fetching completion percentage:", error);
+  //     });
+  // }
 
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
@@ -170,11 +169,10 @@ export default function ProblemsPage() {
               style={{ backgroundColor: "var(--dbl-2)" }}
             >
               {/* Progress Bar Container */}
-              <div
+              {/* <div
                 className="relative w-2 mr-4 rounded-full"
                 style={{ backgroundColor: "var(--dbl-4)" }}
               >
-                {/* Filled part */}
                 <div
                   className="rounded-full w-full absolute left-0 transition-all duration-300"
                   style={{
@@ -182,7 +180,7 @@ export default function ProblemsPage() {
                     backgroundColor: "var(--gr-2)",
                   }}
                 />
-              </div>
+              </div> */}
 
               {/* Actual Problem Menu content */}
               <div

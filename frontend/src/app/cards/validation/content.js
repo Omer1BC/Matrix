@@ -2,7 +2,7 @@ import { useState, useEffect, Fragment, useContext } from "react";
 import "./validation.css";
 import { ping, agentCall } from "@/app/utils/apiUtils";
 import StarGraph from "./StarGraph";
-import { UserContext } from "../../contexts/usercontext";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 export default function ValidationContent({
   annotateError,
@@ -22,7 +22,7 @@ export default function ValidationContent({
   const [testSummary, setTestSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { user, setUser } = useContext(UserContext);
+  const { user } = useAuth();
 
   const fetchDetails = () => {
     ping({ problem_id: problemID }, "problem_details").then((data) => {

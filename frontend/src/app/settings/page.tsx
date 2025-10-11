@@ -1,37 +1,108 @@
 "use client";
 
-import { useState, useContext, useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Save, User, Mail, Lock, BookOpen } from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  User as UserIcon,
+  Mail,
+  Lock,
+  BookOpen,
+} from "lucide-react";
 import Link from "next/link";
-import { UserContext } from "../contexts/usercontext";
+import { useAuth } from "@/app/contexts/AuthContext";
+import {
+  updateUserProfile,
+  updatePassword,
+  getUserProfile,
+} from "@/lib/supabase/auth";
+import { PasswordState, ProfileState, ProfileUpdate } from "@/lib/types";
 
 export default function SettingsPage() {
-  const { user, loading } = useContext(UserContext);
+  const { user, authLoading } = useAuth();
 
-  const [profile, setProfile] = useState({
+  const [profileState, setProfileState] = useState<ProfileState>({
     firstName: "",
     lastName: "",
+    learningStyle: "",
     email: "",
   });
 
-  const [password, setPassword] = useState({
+  const [password, setPassword] = useState<PasswordState>({
     current: "",
     new: "",
     confirm: "",
   });
 
-  const [learningPreferences, setLearningPreferences] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [initializing, setInitializing] = useState(true);
 
-  const handleSave = () => {
-    // This would typically save to your backend/database
-    console.log("Saving settings:", { profile, password, learningPreferences });
-    // Show success message or handle save logic
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!user) {
+        setInitializing(false);
+        return;
+      }
+      try {
+        const user = await getUserProfile();
+        if (!alive) return;
+
+        setProfileState({
+          firstName: user?.first_name ?? "",
+          lastName: user?.last_name ?? "",
+          learningStyle: user?.learning_style ?? "",
+          email: user?.email ?? "",
+        });
+      } catch (e) {}
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [user]);
+
+  const disabledSave = useMemo(
+    () => saving || authLoading || initializing,
+    [saving, authLoading, initializing]
+  );
+
+  if (authLoading || initializing) return null;
+  if (!user) return null;
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+
+      const patch: ProfileUpdate = {
+        firstName: profileState.firstName || null,
+        lastName: profileState.lastName || null,
+        learningStyle: profileState.learningStyle || null,
+      };
+
+      await updateUserProfile(patch);
+
+      if (password.new || password.confirm) {
+        if (password.new !== password.confirm) {
+          alert("New password and confirmation must match.");
+        } else {
+          await updatePassword(password.new);
+          setPassword({ current: "", new: "", confirm: "" });
+        }
+      }
+
+      alert("Changes to profile saved.");
+    } catch (e: any) {
+      console.error(e);
+      alert(e?.message ?? "Failed to save settings.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -72,7 +143,7 @@ export default function SettingsPage() {
               <Card className="matrix-border bg-card/40 p-6 backdrop-blur-sm">
                 <div className="space-y-6">
                   <div className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-primary" />
+                    <UserIcon className="h-5 w-5 text-primary" />
                     <Label className="text-lg font-semibold text-foreground">
                       Personal Details
                     </Label>
@@ -88,12 +159,16 @@ export default function SettingsPage() {
                       </Label>
                       <Input
                         id="firstName"
-                        value={user.first_name}
-                        onChange={(e) =>
-                          setProfile({ ...profile, firstName: e.target.value })
+                        value={profileState.firstName}
+                        onChange={(e: any) =>
+                          setProfileState({
+                            ...profileState,
+                            firstName: e.target.value,
+                          })
                         }
                         className="border-primary/30 bg-input text-foreground placeholder:text-primary/40 focus:border-primary focus:ring-primary/20"
                         placeholder="Enter first name"
+                        type={undefined}
                       />
                     </div>
 
@@ -106,12 +181,16 @@ export default function SettingsPage() {
                       </Label>
                       <Input
                         id="lastName"
-                        value={user.last_name}
-                        onChange={(e) =>
-                          setProfile({ ...profile, lastName: e.target.value })
+                        value={profileState.lastName}
+                        onChange={(e: any) =>
+                          setProfileState({
+                            ...profileState,
+                            lastName: e.target.value,
+                          })
                         }
                         className="border-primary/30 bg-input text-foreground placeholder:text-primary/40 focus:border-primary focus:ring-primary/20"
                         placeholder="Enter last name"
+                        type={undefined}
                       />
                     </div>
                   </div>
@@ -129,13 +208,14 @@ export default function SettingsPage() {
                     <Input
                       id="email"
                       type="email"
-                      value={user.email}
-                      onChange={(e) =>
-                        setProfile({ ...profile, email: e.target.value })
-                      }
-                      className="border-primary/30 bg-input text-foreground placeholder:text-primary/40 focus:border-primary focus:ring-primary/20"
+                      value={profileState.email}
+                      disabled
+                      className="border-primary/30 bg-input text-foreground placeholder:text-primary/40 focus:border-primary focus:ring-primary/20 opacity-80"
                       placeholder="your.email@example.com"
                     />
+                    <p className="text-xs text-primary/60">
+                      Email can’t be changed here.
+                    </p>
                   </div>
                 </div>
               </Card>
@@ -162,7 +242,7 @@ export default function SettingsPage() {
                         id="currentPassword"
                         type="password"
                         value={password.current}
-                        onChange={(e) =>
+                        onChange={(e: any) =>
                           setPassword({ ...password, current: e.target.value })
                         }
                         className="border-primary/30 bg-input text-foreground placeholder:text-primary/40 focus:border-primary focus:ring-primary/20"
@@ -182,7 +262,7 @@ export default function SettingsPage() {
                           id="newPassword"
                           type="password"
                           value={password.new}
-                          onChange={(e) =>
+                          onChange={(e: any) =>
                             setPassword({ ...password, new: e.target.value })
                           }
                           className="border-primary/30 bg-input text-foreground placeholder:text-primary/40 focus:border-primary focus:ring-primary/20"
@@ -201,7 +281,7 @@ export default function SettingsPage() {
                           id="confirmPassword"
                           type="password"
                           value={password.confirm}
-                          onChange={(e) =>
+                          onChange={(e: any) =>
                             setPassword({
                               ...password,
                               confirm: e.target.value,
@@ -248,13 +328,18 @@ export default function SettingsPage() {
                   <div className="space-y-2">
                     <Textarea
                       id="learningPreferences"
-                      value={learningPreferences}
-                      onChange={(e) => setLearningPreferences(e.target.value)}
+                      value={profileState.learningStyle}
+                      onChange={(e: any) =>
+                        setProfileState({
+                          ...profileState,
+                          learningStyle: e.target.value,
+                        })
+                      }
                       placeholder="Example: I'm a visual learner who prefers to see diagrams and flowcharts. I like to understand the theory behind algorithms before diving into code. I learn best with step-by-step explanations and multiple examples. I prefer hints over direct solutions so I can figure things out myself..."
                       className="min-h-[200px] resize-y border-primary/30 bg-input text-foreground placeholder:text-primary/30 focus:border-primary focus:ring-primary/20"
                     />
                     <p className="text-xs text-primary/50">
-                      Be as detailed as you&aposd like. Include your preferred
+                      Be as detailed as you&apos;d like. Include your preferred
                       learning methods, what helps you understand concepts best,
                       and any specific approaches that work well for you.
                     </p>
@@ -266,10 +351,13 @@ export default function SettingsPage() {
               <div className="flex justify-end">
                 <Button
                   onClick={handleSave}
+                  disabled={disabledSave}
+                  size="default"
                   className="glow-text border-2 border-primary bg-primary font-mono text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-[0_0_20px_rgba(102,255,102,0.5)]"
+                  variant={undefined}
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  Save Preferences
+                  {saving ? "Saving..." : "Save Preferences"}
                 </Button>
               </div>
             </div>
