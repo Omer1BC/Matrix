@@ -2,7 +2,7 @@
 
 "use client";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 export default function ProblemMenu({ onProblemSelect, refreshKey }) {
   const [expandedCategory, setExpandedCategory] = useState(null);

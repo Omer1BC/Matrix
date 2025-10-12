@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import "./templates.css"
+// import "./templates.css"
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Disclosure, Menu } from '@headlessui/react'
 import ReactPlayer from 'react-player'

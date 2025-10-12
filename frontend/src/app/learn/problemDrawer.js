@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 export default function ProblemDrawer({
   isOpen,

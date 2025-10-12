@@ -1,62 +1,74 @@
-import { useState, useEffect, Fragment, useContext } from "react";
-import "./validation.css";
-import { ping, agentCall } from "@/lib/utils/apiUtils";
+"use client";
+import React, { Fragment, useEffect, useState } from "react";
 import StarGraph from "./StarGraph";
+import { agentCall, ping } from "@/lib/utils/apiUtils";
 import { useAuth } from "@/lib/contexts/AuthContext";
+
+type ValidationContentProps = {
+  annotateError?: (err: any) => void;
+  problemId: number;
+  editorRef: React.RefObject<any>;
+};
+
+type TestsMap = Record<string, any>;
 
 export default function ValidationContent({
   annotateError,
   problemId,
   editorRef,
-}) {
-  const [details, setDetails] = useState([]);
-  const [activeTest, setActiveTest] = useState({});
-  const [tests, setTests] = useState({});
-  const [activeKey, setActiveKey] = useState(0);
+}: ValidationContentProps) {
+  const [details, setDetails] = useState<any>([]);
+  const [activeTest, setActiveTest] = useState<any>({});
+  const [tests, setTests] = useState<TestsMap>({});
+  const [activeKey, setActiveKey] = useState<string | number>(0);
 
   const [showVictoryModal, setShowVictoryModal] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [llmMetrics, setLLmMetrics] = useState(null);
-  const [llmExplanations, setLLmExplanations] = useState({});
+  const [llmMetrics, setLLmMetrics] = useState<any>(null);
+  const [llmExplanations, setLLmExplanations] = useState<
+    Record<string, string>
+  >({});
   const [llmComment, setLLmComment] = useState("");
-  const [testSummary, setTestSummary] = useState(null);
+  const [testSummary, setTestSummary] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const { user } = useAuth();
 
-  const fetchDetails = () => {
-    ping({ problem_id: problemId }, "problem_details").then((data) => {
-      if (editorRef.current) {
-        editorRef.current.setValue(data.method_stub);
-      }
-      setDetails(data);
-      try {
-        const orig = data.tests;
-        if (orig) {
-          const fixedStr = orig.replace(/'/g, '"');
-          const json = JSON.parse(fixedStr);
-          console.log(json);
-          setTests(json);
-          setActiveTest(Object.values(json)[0]);
-          setActiveKey(Object.keys(json)[0]);
-        } else {
+  useEffect(() => {
+    const fetchDetails = () => {
+      ping({ problem_id: problemId }, "problem_details").then((data) => {
+        if (editorRef.current) {
+          editorRef.current.setValue(data.method_stub);
+        }
+        setDetails(data);
+
+        try {
+          const orig = data.tests;
+          if (orig) {
+            const fixedStr = String(orig).replace(/'/g, '"');
+            const json = JSON.parse(fixedStr);
+            setTests(json);
+            const firstK = Object.keys(json)[0];
+            setActiveTest(json[firstK]);
+            setActiveKey(firstK);
+          } else {
+            setTests({});
+            setActiveTest({});
+            setActiveKey(0);
+          }
+        } catch {
           setTests({});
           setActiveTest({});
           setActiveKey(0);
         }
-      } catch {
-        setTests({});
-        setActiveTest({});
-        setActiveKey(0);
-      }
-    });
-  };
+      });
+    };
 
-  useEffect(() => fetchDetails, [editorRef]);
+    fetchDetails();
+  }, [editorRef, problemId]);
 
-  const test = async () => {
+  const runTests = async () => {
     setHasError(false);
-
     const code = editorRef.current?.getValue() || "";
 
     if (!code.trim()) {
@@ -79,7 +91,6 @@ export default function ValidationContent({
 
       if (testsResp?.error) {
         const r = testsResp.result;
-
         if (
           r &&
           typeof r === "object" &&
@@ -99,7 +110,6 @@ export default function ValidationContent({
         } else {
           alert(String(r ?? "Unknown error while running tests."));
         }
-
         setIsLoading(false);
         setHasError(true);
         setShowVictoryModal(false);
@@ -128,6 +138,7 @@ export default function ValidationContent({
             cases: t.results || {},
           }
         : { total: 0, passed: 0, failed: 0, cases: {} };
+
       const verdict = !!grade?.verdict;
       const metrics = grade?.metrics || null;
       const explanations = grade?.explanations || {};
@@ -154,57 +165,60 @@ export default function ValidationContent({
     }
   };
 
-  const isPassed = (val) =>
+  const isPassed = (val: any) =>
     JSON.stringify(val?.actual) === JSON.stringify(val?.expected);
 
   return (
-    <div className="validation-content">
-      <div className="test-cases">
+    <div className="flex h-full w-full flex-row gap-2 p-2">
+      <div className="flex w-1/5 flex-col gap-2 bg-[var(--dbl-4)] p-3">
         {Object.entries(tests).map(([ky, val]) => (
           <button
             key={ky}
-            className={`test-case ${activeKey === ky ? "active" : ""}`}
             onClick={() => {
               setActiveTest(val);
               setActiveKey(ky);
             }}
+            className={[
+              "flex items-center justify-between rounded-lg bg-[var(--dbl-2)] px-2 py-2 text-[var(--gr-2)]",
+              String(activeKey) === String(ky) && "bg-[var(--dbl-3)]",
+            ].join(" ")}
           >
-            Test Case {ky}
+            <span>Test Case {ky}</span>
             <span
-              className={`circle ${
-                JSON.stringify(val.actual) !== JSON.stringify(val.expected)
-                  ? "failure"
-                  : "success"
-              }`}
-            ></span>
+              className={[
+                "inline-block h-3 w-3 rounded-full",
+                isPassed(val)
+                  ? "bg-[var(--success-color)]"
+                  : "bg-[var(--failure-color)]",
+              ].join(" ")}
+            />
           </button>
         ))}
-        <div style={{ paddingBottom: "10px" }}></div>
+
         <button
-          id="test-button"
-          onClick={test}
-          type="button"
+          onClick={runTests}
           disabled={isLoading}
-          className="focus:outline-none text-white font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
-          style={{
-            backgroundColor: isLoading
-              ? "var(--muted, #6b7280)"
+          className={[
+            "mt-2 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none",
+            isLoading
+              ? "cursor-not-allowed bg-[var(--muted,#6b7280)] text-[var(--dbl-1)]"
               : hasError
-              ? "var(--failure-color)"
-              : "var(--gr-2)",
-            color: "var(--dbl-1)",
-            cursor: isLoading ? "not-allowed" : "pointer",
-          }}
+              ? "bg-[var(--failure-color)] text-[var(--dbl-1)]"
+              : "bg-[var(--gr-2)] text-[var(--dbl-1)] hover:bg-[var(--gr-1)]",
+          ].join(" ")}
         >
           {isLoading ? "Running…" : "Test"}
         </button>
       </div>
-      <div className="output">
-        <div className="output-content">
+
+      <div className="flex w-4/5 flex-col overflow-hidden bg-[var(--dbl-4)] p-4">
+        <div className="max-h-64 overflow-auto break-words font-sans text-[var(--gr-2)]">
           {Object.entries(activeTest).map(([key, val]) => (
             <Fragment key={key}>
-              <div>{key}</div>
-              <div className="test-output-value">{JSON.stringify(val)}</div>
+              <div className="text-sm">{key}</div>
+              <div className="mb-2 rounded-md bg-[var(--dbl-3)] px-4 py-2 font-mono text-sm text-[var(--gr-2)]">
+                {JSON.stringify(val)}
+              </div>
             </Fragment>
           ))}
         </div>
@@ -212,21 +226,26 @@ export default function ValidationContent({
 
       {showVictoryModal && (
         <div
-          className="victory-modal-overlay"
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50"
           onClick={() => setShowVictoryModal(false)}
         >
-          <div className="victory-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="victory-content">
-              <h2>🎉 Results</h2>
+          <div
+            className="relative w-[90%] max-w-[650px] rounded-2xl bg-[var(--dbl-2)] p-8 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <h2 className="mb-4 text-2xl font-semibold text-emerald-500">
+                🎉 Results
+              </h2>
+
               {testSummary && (
-                <p>
+                <p className="mb-6 text-[var(--gr-2)]">
                   Passed {testSummary.passed}/{testSummary.total} tests
                   {testSummary.failed ? `, ${testSummary.failed} failed` : ""}.
                 </p>
               )}
 
-              {/* Star Graph with dynamic metrics */}
-              <div className="metrics-container">
+              <div className="my-6">
                 <StarGraph
                   metrics={
                     llmMetrics || {
@@ -245,10 +264,12 @@ export default function ValidationContent({
                 />
               </div>
 
-              {llmComment && <p style={{ marginTop: 8 }}>{llmComment}</p>}
+              {llmComment && (
+                <p className="mt-2 text-[var(--gr-2)]">{llmComment}</p>
+              )}
 
               <button
-                className="victory-close-btn"
+                className="mt-6 rounded-lg bg-[var(--gr-2)] px-4 py-2 text-[var(--dbl-1)] hover:bg-[var(--gr-1)]"
                 onClick={() => setShowVictoryModal(false)}
               >
                 Close

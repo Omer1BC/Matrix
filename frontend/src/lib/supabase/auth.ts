@@ -115,3 +115,18 @@ export async function updateUserProfile(profile: ProfileUpdate) {
   if (error) throw error;
   return data;
 }
+
+export async function isAdmin(): Promise<boolean> {
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError || !auth.user) return false;
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", auth.user.id)
+    .maybeSingle();
+
+  if (error) return false;
+
+  return !!data?.is_admin;
+}

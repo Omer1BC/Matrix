@@ -16,7 +16,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import Link from "next/link";
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   updateUserProfile,
   updatePassword,

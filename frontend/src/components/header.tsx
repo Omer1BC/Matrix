@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/app/contexts/AuthContext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { signIn, signUp, signOut } from "@/lib/supabase/auth";
 import { LogOut, LogIn, UserPlus } from "lucide-react";
 import { FormEvent, useState } from "react";
@@ -60,11 +60,94 @@ export default function Header() {
     }
   };
 
-  if (authLoading) return null;
-
   return (
     <>
-      {/* Login Popup */}
+      <header className="flex flex-row justify-between w-full relative z-10 border-b border-border/20 backdrop-blur-sm bg-background/80">
+        <div className="px-4 py-4 flex flex-1 items-center justify-between">
+          <Link
+            href="/home"
+            className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+          >
+            <Image
+              src="/matrix_logo.png"
+              alt="Matrix Logo"
+              className="w-10 h-10"
+              width={10}
+              height={10}
+            />
+            <span className="text-xl font-bold glow-text">Matrix</span>
+          </Link>
+
+          {authLoading ? (
+            <div className="flex items-center gap-4">
+              <span className="invisible text-lg">Hello placeholder</span>
+              <div className="invisible">
+                <Button
+                  variant="outline"
+                  size={undefined}
+                  className="matrix-border bg-transparent hover:bg-primary/10"
+                >
+                  Log out
+                </Button>
+              </div>
+              <div className="invisible">
+                <Image src="/userPhoto.png" alt="" width={50} height={50} />
+              </div>
+            </div>
+          ) : user ? (
+            <div className="flex items-center gap-4">
+              <span className="text-lg text-primary glow-text">
+                Hello {user.user_metadata?.first_name || user.email}!
+              </span>
+              <Button
+                variant="outline"
+                className="matrix-border bg-transparent hover:bg-primary/10"
+                onClick={handleLogout}
+                style={{ cursor: "pointer" }}
+                size={undefined}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </Button>
+              <button
+                onClick={() => (window.location.href = "/settings")}
+                style={{ cursor: "pointer" }}
+              >
+                <Image
+                  src="/userPhoto.png"
+                  alt="user photo"
+                  width={50}
+                  height={50}
+                />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                className="matrix-border bg-transparent hover:bg-primary/10"
+                onClick={() => setShowLogin(true)}
+                style={{ cursor: "pointer" }}
+                size={undefined}
+              >
+                <LogIn className="mr-2 h-4 w-4" />
+                Log in
+              </Button>
+              <Button
+                className="glow-text"
+                onClick={() => setShowSignup(true)}
+                style={{ cursor: "pointer" }}
+                variant={undefined}
+                size={undefined}
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Sign up
+              </Button>
+            </div>
+          )}
+        </div>
+      </header>
+
       {showLogin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="bg-card border-2 matrix-border rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl shadow-primary/20">
@@ -115,7 +198,6 @@ export default function Header() {
         </div>
       )}
 
-      {/* Signup Popup */}
       {showSignup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="bg-card border-2 matrix-border rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl shadow-primary/20">
@@ -189,77 +271,6 @@ export default function Header() {
           </div>
         </div>
       )}
-
-      {/* Header */}
-      <header className="relative z-10 border-b border-border/20 backdrop-blur-sm bg-background/80">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link
-            href="/home"
-            className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-          >
-            <Image
-              src="/matrix_logo.png"
-              alt="Matrix Logo"
-              className="w-10 h-10"
-              width={10}
-              height={10}
-            />
-            <span className="text-xl font-bold glow-text">Matrix</span>
-          </Link>
-
-          {user ? (
-            <div className="flex items-center gap-4">
-              <span className="text-lg text-primary glow-text">
-                Hello {user.user_metadata?.first_name || user.email}!
-              </span>
-              <Button
-                variant="outline"
-                className="matrix-border bg-transparent hover:bg-primary/10"
-                onClick={handleLogout}
-                style={{ cursor: "pointer" }}
-                size={undefined}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
-              </Button>
-              <button
-                onClick={() => (window.location.href = "/settings")}
-                style={{ cursor: "pointer" }}
-              >
-                <Image
-                  src="/userPhoto.png"
-                  alt="user photo"
-                  width={50}
-                  height={50}
-                />
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                className="matrix-border bg-transparent hover:bg-primary/10"
-                onClick={() => setShowLogin(true)}
-                style={{ cursor: "pointer" }}
-                size={undefined}
-              >
-                <LogIn className="mr-2 h-4 w-4" />
-                Log in
-              </Button>
-              <Button
-                className="glow-text"
-                onClick={() => setShowSignup(true)}
-                style={{ cursor: "pointer" }}
-                variant={undefined}
-                size={undefined}
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Sign up
-              </Button>
-            </div>
-          )}
-        </div>
-      </header>
     </>
   );
 }
