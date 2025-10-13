@@ -114,7 +114,7 @@ export default function SettingsPage() {
   );
 
   if (!loading && !initializing && !user) {
-    redirect("/home");
+    redirect("/");
   }
 
   return (

@@ -8,28 +8,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  ArrowRight,
-  Zap,
-  Target,
-  Trophy,
-  Brain,
-  LogOut,
-  LogIn,
-  UserPlus,
-} from "lucide-react";
+import { ArrowRight, Zap, Target, Trophy, Brain } from "lucide-react";
 import Link from "next/link";
 
-export default function MatrixLanding() {
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
-      {/* Matrix Rain Background */}
+    <div className="flex-1 min-h-0 bg-background text-foreground">
       <div className="matrix-rain" />
-
-      {/* Hero Section */}
       <section className="relative z-10 py-20 px-4">
         <div className="container mx-auto text-center">
-          <Badge className="mb-6 bg-primary/10 text-primary border-primary/20">
+          <Badge
+            className="mb-6 bg-primary/10 text-primary border-primary/20"
+            variant={undefined}
+          >
             The Future of Coding Practice
           </Badge>
           <h1 className="text-4xl md:text-6xl font-bold mb-6 glow-text text-balance">
@@ -49,6 +40,7 @@ export default function MatrixLanding() {
                 style={{ cursor: "pointer" }}
                 size="lg"
                 className="text-lg px-8 py-6 glow-text"
+                variant={undefined}
               >
                 Watch Demo <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -58,6 +50,7 @@ export default function MatrixLanding() {
                 style={{ cursor: "pointer" }}
                 size="lg"
                 className="text-lg px-8 py-6 glow-text"
+                variant={undefined}
               >
                 Start Learning <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -66,21 +59,12 @@ export default function MatrixLanding() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section
         id="features"
         className="relative z-10 py-20 px-4 bg-secondary/20"
       >
         <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 glow-text">
-              Why Choose Matrix?
-            </h2>
-            <p className="text-xl max-w-2xl mx-auto text-pretty text-primary">
-              Experience coding practice like never before with our
-              revolutionary platform features.
-            </p>
-          </div>
+          
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             <Card className="bg-card/50 backdrop-blur-sm matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 aspect-square flex flex-col h-full">
@@ -91,7 +75,7 @@ export default function MatrixLanding() {
                 <CardTitle className="text-primary mb-2">
                   AI-Powered Learning
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className={undefined}>
                   Advanced AI analyzes your coding patterns and creates
                   personalized learning paths.
                 </CardDescription>
@@ -106,7 +90,7 @@ export default function MatrixLanding() {
                 <CardTitle className="text-primary mb-2">
                   Real-time Feedback
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className={undefined}>
                   Get instant feedback on your code quality, performance, and
                   best practices as you type.
                 </CardDescription>
@@ -119,7 +103,7 @@ export default function MatrixLanding() {
                   <Target className="h-6 w-6 text-primary" />
                 </div>
                 <CardTitle className="text-primary mb-2">Lesson Plan</CardTitle>
-                <CardDescription>
+                <CardDescription className={undefined}>
                   Follow our custom exercises to learn all of the skills you
                   need to succeed in coding questions.
                 </CardDescription>
@@ -134,7 +118,7 @@ export default function MatrixLanding() {
                 <CardTitle className="text-primary mb-2">
                   Interview Prep
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className={undefined}>
                   Simulate real technical interviews with AI interviewers and
                   get detailed performance analytics.
                 </CardDescription>
@@ -144,7 +128,6 @@ export default function MatrixLanding() {
         </div>
       </section>
 
-      {/* Stats Section */}
       <section className="relative z-10 py-20 px-4">
         <div className="container mx-auto">
           <div className="grid md:grid-cols-4 gap-8 text-center">
