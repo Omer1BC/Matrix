@@ -1,6 +1,5 @@
 "use client";
 import NeoIcon from "@/components/NeoIcon";
-import { memo } from "react";
 
 type TimerControls = {
   running: boolean;
@@ -11,7 +10,7 @@ type TimerControls = {
 };
 
 type EditorUtilitiesProps = {
-  onAnnotate: () => void;
+  onAnnotate: () => void | Promise<void>;
   showHints: boolean;
   setShowHints: (b: boolean) => void;
   clearHints: () => void;
@@ -111,7 +110,9 @@ export default function EditorUtilities({
 
       <button
         type="button"
-        onClick={onAnnotate}
+        onClick={async () => {
+          await onAnnotate();
+        }}
         title="AI Hint"
         className="absolute top-1 right-5 z-50 rounded-full p-2  hover:shadow-[0_8px_20px_rgba(0,0,0,0.45)] transition-shadow"
       >

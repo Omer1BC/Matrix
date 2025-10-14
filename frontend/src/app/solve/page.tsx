@@ -8,6 +8,7 @@ import Tools from "@/components/Tools";
 import ValidationPanel from "@/components/ValidationPanel";
 import { useSolve } from "@/lib/hooks/useSolve";
 import { useCallback, useMemo, useState } from "react";
+import { AnnotationsProvider } from "@/lib/contexts/AnnotationsContext";
 
 export default function SolvePage() {
   const {
@@ -56,24 +57,6 @@ export default function SolvePage() {
     }
   }, [askSelection]);
 
-  const onAnnotateError = useCallback(
-    async (codeErr: any) => {
-      const editor = editorRef.current;
-      const monaco = monacoRef.current;
-      if (!editor || !monaco) return;
-      const model = editor.getModel();
-      let code = "";
-      for (let i = 1; i <= model.getLineCount(); i++) {
-        code += `${i} | ${model.getLineContent(i)}\n`;
-      }
-      await annotateErrors(
-        code,
-        typeof codeErr === "string" ? codeErr : JSON.stringify(codeErr)
-      );
-    },
-    [annotateErrors, editorRef, monacoRef]
-  );
-
   const questionTabs = useMemo(
     () => ({
       question: {
@@ -102,7 +85,6 @@ export default function SolvePage() {
             showHints={showHints}
             setShowHints={setShowHints}
             onAnnotate={async (code) => annotate(code)}
-            onAnnotateError={onAnnotateError}
           />
         ),
       },
@@ -125,7 +107,6 @@ export default function SolvePage() {
       details,
       editorRef,
       monacoRef,
-      onAnnotateError,
       showHints,
       tools,
     ]
@@ -179,24 +160,27 @@ export default function SolvePage() {
         label: "Tests",
         content: (
           <ValidationPanel
-            annotateError={onAnnotateError}
-            editorRef={editorRef}
             problemId={1}
+            editorRef={editorRef}
+            monacoRef={monacoRef}
+            annotateErrors={annotateErrors}
           />
         ),
       },
     }),
-    [editorRef, onAnnotateError]
+    [annotateErrors, editorRef, monacoRef]
   );
 
   return (
-    <main className="flex flex-1 flex-col min-h-0 overflow-hidden">
-      <div className="grid flex-1 min-h-0 gap-2 p-2 grid-cols-[4fr_5fr] grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
-        <TabPanel tabs={questionTabs} />
-        <TabPanel tabs={codeTabs} />
-        <TabPanel tabs={referencesTabs} />
-        <TabPanel tabs={validationTabs} />
-      </div>
-    </main>
+    <AnnotationsProvider>
+      <main className="flex flex-1 flex-col min-h-0 overflow-hidden">
+        <div className="grid flex-1 min-h-0 gap-2 p-2 grid-cols-[4fr_5fr] grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
+          <TabPanel tabs={questionTabs} />
+          <TabPanel tabs={codeTabs} />
+          <TabPanel tabs={referencesTabs} />
+          <TabPanel tabs={validationTabs} />
+        </div>
+      </main>
+    </AnnotationsProvider>
   );
 }

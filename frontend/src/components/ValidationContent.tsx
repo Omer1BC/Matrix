@@ -3,20 +3,26 @@ import React, { Fragment, useEffect, useState } from "react";
 import StarGraph from "./StarGraph";
 import { agentCall, ping } from "@/lib/utils/apiUtils";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useAnnotationsContext } from "@/lib/contexts/AnnotationsContext";
 
 type ValidationContentProps = {
-  annotateError?: (err: any) => void;
   problemId: number;
   editorRef: React.RefObject<any>;
+  monacoRef: React.RefObject<any>;
+  annotateErrors: (codeWithLines: string, error: any) => Promise<any>;
 };
 
 type TestsMap = Record<string, any>;
 
 export default function ValidationContent({
-  annotateError,
   problemId,
   editorRef,
+  monacoRef,
+  annotateErrors,
 }: ValidationContentProps) {
+  const { applyErrors } = useAnnotationsContext();
+  const { user } = useAuth();
+
   const [details, setDetails] = useState<any>([]);
   const [activeTest, setActiveTest] = useState<any>({});
   const [tests, setTests] = useState<TestsMap>({});
@@ -32,14 +38,9 @@ export default function ValidationContent({
   const [testSummary, setTestSummary] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { user } = useAuth();
-
   useEffect(() => {
     const fetchDetails = () => {
       ping({ problem_id: problemId }, "problem_details").then((data) => {
-        if (editorRef.current) {
-          editorRef.current.setValue(data.method_stub);
-        }
         setDetails(data);
 
         try {
@@ -66,6 +67,45 @@ export default function ValidationContent({
 
     fetchDetails();
   }, [editorRef, problemId]);
+
+  const buildNumberedCode = () => {
+    const editor = editorRef.current;
+    if (!editor) return "";
+    const model = editor.getModel();
+    let code = "";
+    for (let i = 1; i <= model.getLineCount(); i++) {
+      code += `${i} | ${model.getLineContent(i)}\n`;
+    }
+    return code;
+  };
+
+  const formatSyntaxErrForServer = (e: any) => {
+    if (typeof e === "string") return e;
+    const msg = e?.message ?? "Syntax error";
+    const ln = e?.line != null ? `line ${e.line}` : "";
+    const col = e?.column != null ? `, column ${e.column}` : "";
+    const src = e?.sourceLine ? `\n${e.sourceLine}` : "";
+    return `${msg}${ln || col ? ` at ${ln}${col}` : ""}${src}`;
+  };
+
+  const annotateSyntaxToEditor = async (syntaxErrObj: any) => {
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+    if (!editor || !monaco) return;
+
+    const codeWithLines = buildNumberedCode();
+    const payload = formatSyntaxErrForServer(syntaxErrObj);
+    const res = await annotateErrors(codeWithLines, payload);
+    const map =
+      res?.line_number_to_replacement ??
+      res?.line_number_to_comment ??
+      res?.data?.line_number_to_replacement ??
+      res?.data?.line_number_to_comment ??
+      {};
+    if (map && Object.keys(map).length) {
+      applyErrors(editor, monaco, map);
+    }
+  };
 
   const runTests = async () => {
     setHasError(false);
@@ -97,13 +137,12 @@ export default function ValidationContent({
           (r.type === "SyntaxError" || r.type === "EntrypointError")
         ) {
           if (r.type === "SyntaxError") {
-            annotateError?.({
+            await annotateSyntaxToEditor({
               message: r.msg,
               line: r.lineno,
               column: r.offset,
               sourceLine: r.line || "",
             });
-            alert(`${r.msg} at line ${r.lineno}, column ${r.offset}`);
           } else {
             alert(r.msg);
           }
