@@ -60,9 +60,19 @@ export async function signIn(email: string, password: string) {
     email,
     password,
   });
+
   if (error) throw error;
 
-  return data.user;
+  const { data: userProfile, error: profileError } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("id", data.user?.id)
+  .single();
+
+  if (profileError) throw profileError;
+
+  return userProfile;
+
 }
 
 export async function signOut() {

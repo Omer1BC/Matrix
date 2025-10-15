@@ -1,16 +1,19 @@
 "use client";
 
 import Image from "next/image";
+import "../templates.css";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Disclosure, Menu } from "@headlessui/react";
+import { Disclosure, Menu, Textarea } from "@headlessui/react";
 import ReactPlayer from "react-player";
 import { Editor } from "@monaco-editor/react";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Card from "../templates/card/card";
 import ValidationContent from "../cards/validation/content";
 import TestCasesPanel from "./testCasesPanel";
 import ProblemMenu from "./problemMenu";
+import {NotesCard} from './NotesCard';
+// Problem Selection Drawer Component
 
 export default function ProblemsPage() {
   const [output, setOutput] = useState("");
@@ -35,14 +38,38 @@ export default function ProblemsPage() {
     toggleRefresh();
   }
 
+  const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    pingPercentage();
+  }, [refreshKey]);
+
+  function pingPercentage() {
+    fetch("http://localhost:8000/api/completion", {
+      method: "GET",
+
+      credentials: "include",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setCompletionPercentage(data.percentage);
+        console.log(completionPercentage);
+      })
+      .catch((error) => {
+        console.error("Error fetching completion percentage:", error);
+      });
+  }
+
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
+    // Set initial code based on current problem
     editor.setValue('# Write your solution here\nprint("Hello, World!")');
   }
 
   const handleProblemSelect = async (problem) => {
     setCurrentProblem(problem);
 
+    // Fetch detailed problem information from the API
     try {
       const response = await fetch(
         "http://localhost:8000/api/problem-details",
@@ -59,6 +86,7 @@ export default function ProblemsPage() {
         const details = await response.json();
         setProblemDetails(details);
 
+        // Parse test cases from JSON string
         let parsedTestCases = [];
         try {
           parsedTestCases =
@@ -71,11 +99,13 @@ export default function ProblemsPage() {
         }
         setTestCases(parsedTestCases);
 
+        // Update editor with the starter code from the API
         if (editorRef.current && details.method_stub) {
           editorRef.current.setValue(details.method_stub);
         }
       } else {
         console.error("Failed to fetch problem details");
+        // Fallback to default starter code
         if (editorRef.current) {
           const starterCode = getStarterCode(problem.id);
           editorRef.current.setValue(starterCode);
@@ -84,6 +114,7 @@ export default function ProblemsPage() {
       }
     } catch (error) {
       console.error("Error fetching problem details:", error);
+      // Fallback to default starter code
       if (editorRef.current) {
         const starterCode = getStarterCode(problem.id);
         editorRef.current.setValue(starterCode);
@@ -91,7 +122,7 @@ export default function ProblemsPage() {
       setTestCases([]);
     }
 
-    setOutput("");
+    setOutput(""); // Clear previous output
   };
 
   const getStarterCode = (problemId) => {
@@ -114,6 +145,65 @@ export default function ProblemsPage() {
     setIdx(1);
   };
 
+  const codeTabs = useMemo(
+      () => ({
+        editor: {
+          label: "Editor",
+          content: (
+            <div className="flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
+              
+              <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
+                <div className="mb-2">
+                  <h2
+                    className="text-xl font-bold"
+                    style={{ color: "var(--gr-2)" }}
+                  >
+                    Exercise {currentProblem.id}:{" "}
+                    {problemDetails?.title || currentProblem.title}
+                  </h2>
+                </div>
+                <div
+                  className="text-sm whitespace-pre-wrap"
+                  style={{ color: "var(--gr-2)" }}
+                >
+                  {problemDetails?.description || currentProblem.description}
+                </div>
+              </div>
+             
+              <div className="flex-1 min-h-[300px]">
+                <Editor
+                  height="100%"
+                  width="100%"
+                  language="python"
+                  theme="vs-dark"
+                  onMount={handleEditorDidMount}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    lineNumbers: "on",
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                  }}
+                />
+              </div>
+            </div>
+          ),
+        },
+        notes: {
+          label: "Notes",
+          content: (
+            <NotesCard 
+            notes={notes}
+            onChange={(value) =>
+            setNotes(value)
+          }
+          />
+          )
+        },
+      }),
+      [currentProblem, problemDetails, notes, setNotes]
+    );
+
   return (
     <>
       <div
@@ -134,10 +224,27 @@ export default function ProblemsPage() {
               </h2>
             </div>
 
+            {/* Problem Menu with Progress Bar */}
             <div
               className="relative p-4 overflow-y-auto flex flex-1"
               style={{ backgroundColor: "var(--dbl-2)" }}
             >
+              {/* Progress Bar Container */}
+              <div
+                className="relative w-2 mr-4 rounded-full"
+                style={{ backgroundColor: "var(--dbl-4)" }}
+              >
+                {/* Filled part */}
+                <div
+                  className="rounded-full w-full absolute left-0 transition-all duration-300"
+                  style={{
+                    height: `${completionPercentage}%`,
+                    backgroundColor: "var(--gr-2)",
+                  }}
+                />
+              </div>
+
+              {/* Actual Problem Menu content */}
               <div
                 className="flex-1"
                 style={{ backgroundColor: "var(--dbl-2)" }}
@@ -150,8 +257,11 @@ export default function ProblemsPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 overflow-y-auto">
+          {/* Column 2: Video, Exercise & Editor */}
+          <div className="flex flex-col gap-4 flex-1 min-h-0">
+            {/* Video Player */}
             <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0">
+              {/* Video Title Section */}
               <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
                 <h3
                   className="text-lg font-semibold"
@@ -160,8 +270,9 @@ export default function ProblemsPage() {
                   {problemDetails?.title || currentProblem.title}
                 </h3>
               </div>
+              {/* Video Content Section */}
               <div className="" style={{ backgroundColor: "var(--dbl-5)" }}>
-                <div className="max-h-78 flex justify-center items-center">
+                <div className="flex justify-center items-center">
                   <ReactPlayer
                     muted={false}
                     playing={false}
@@ -174,45 +285,8 @@ export default function ProblemsPage() {
                 </div>
               </div>
             </div>
-
             {/* Exercise & Code Editor Combined */}
-            <div className="rounded-lg shadow-lg overflow-hidden flex-1 flex flex-col">
-              {/* Exercise Header */}
-              <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
-                <div className="mb-2">
-                  <h2
-                    className="text-xl font-bold"
-                    style={{ color: "var(--gr-2)" }}
-                  >
-                    Exercise {currentProblem.id}:{" "}
-                    {problemDetails?.title || currentProblem.title}
-                  </h2>
-                </div>
-                <div
-                  className="text-sm whitespace-pre-wrap"
-                  style={{ color: "var(--gr-2)" }}
-                >
-                  {problemDetails?.description || currentProblem.description}
-                </div>
-              </div>
-              {/* Code Editor */}
-              <div className="flex-1">
-                <Editor
-                  height="100%"
-                  width="100%"
-                  language="python"
-                  theme="vs-dark"
-                  onMount={handleEditorDidMount}
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: 14,
-                    lineNumbers: "on",
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                  }}
-                />
-              </div>
-            </div>
+            <Card className="exercise/editor" tabs={codeTabs}/>
           </div>
 
           {/* Column 3: Test Cases and Output */}

@@ -3,7 +3,7 @@
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { signIn, signUp, signOut } from "@/lib/supabase/auth";
 import { LogOut, LogIn, UserPlus } from "lucide-react";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -97,7 +97,7 @@ export default function Header() {
           ) : user ? (
             <div className="flex items-center gap-4">
               <span className="text-lg text-primary glow-text">
-                Hello {user.user_metadata?.first_name || user.email}!
+                Hello {user.user_metadata?.first_name || user.user_metadata?.email}!
               </span>
               <Button
                 variant="outline"
