@@ -1,7 +1,8 @@
 // New: components/ProblemMenu.jsx
 
-"use client"
-import { useState, useEffect } from 'react';
+"use client";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 export default function ProblemMenu({ onProblemSelect, refreshKey }) {
   const [expandedCategory, setExpandedCategory] = useState(null);
@@ -9,44 +10,27 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const { user } = useAuth();
+
   useEffect(() => {
-    const login = async () => {
+    const fetchCategories = async () => {
       try {
-        await fetch("http://localhost:8000/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        setLoading(true);
+        const res = await fetch("http://localhost:8000/api/categories", {
           credentials: "include",
-          body: JSON.stringify({ username: "admin", password: "password" }),
         });
-      } catch (error) {
-        console.error("Login error:", error);
+        const data = await res.json();
+        setProblemCategories(data);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load problems.");
+      } finally {
+        setLoading(false);
       }
     };
 
-    login();
-  }, []);
-
-
-    useEffect(() => {
-      const fetchCategories = async () => {
-        try {
-          setLoading(true);
-          const res = await fetch("http://localhost:8000/api/categories", {
-            credentials: "include",
-          });
-          const data = await res.json();
-          setProblemCategories(data);
-        } catch (err) {
-          console.error(err);
-          setError("Failed to load problems.");
-        } finally {
-          setLoading(false);
-        }
-      };
-  
-      fetchCategories();
-    }, [refreshKey]);
-  
+    fetchCategories();
+  }, [refreshKey]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -69,15 +53,19 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
   }, []);
 
   const toggleCategory = (key) => {
-    setExpandedCategory(prev => (prev === key ? null : key));
+    setExpandedCategory((prev) => (prev === key ? null : key));
   };
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
-      case 'Easy': return 'text-green-500';
-      case 'Medium': return 'text-yellow-500';
-      case 'Hard': return 'text-red-500';
-      default: return 'text-gray-400';
+      case "Easy":
+        return "text-green-500";
+      case "Medium":
+        return "text-yellow-500";
+      case "Hard":
+        return "text-red-500";
+      default:
+        return "text-gray-400";
     }
   };
 
@@ -85,15 +73,17 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
-    <div className="w-full" style={{backgroundColor: 'var(--dbl-2)'}}>
-      <h2 className="text-xl font-bold mb-4" style={{color: 'var(--gr-2)'}}>Graphs</h2>
+    <div className="w-full" style={{ backgroundColor: "var(--dbl-2)" }}>
+      <h2 className="text-xl font-bold mb-4" style={{ color: "var(--gr-2)" }}>
+        Graphs
+      </h2>
 
       {Object.entries(problemCategories).map(([key, section]) => (
         <div key={key} className="mb-4">
           <button
             onClick={() => toggleCategory(key)}
             className="w-full text-left font-semibold flex items-center gap-2"
-            style={{color: 'var(--gr-2)'}}
+            style={{ color: "var(--gr-2)" }}
           >
             <span>{expandedCategory === key ? "▼" : "▶"}</span>
             <span className="text-2xl">{section.icon}</span>
@@ -102,7 +92,7 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
 
           {expandedCategory === key && (
             <div className="mt-2 ml-6 space-y-2">
-              {section.items.map(problem => {
+              {section.items.map((problem) => {
                 const isLocked = !problem.unlocked;
                 return (
                   <button
@@ -110,22 +100,28 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
                     disabled={isLocked}
                     className={`w-full text-left p-2 rounded-md ${
                       isLocked
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'hover:opacity-80'
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "hover:opacity-80"
                     }`}
                     style={{
-                      backgroundColor: 'var(--dbl-3)',
-                      color: isLocked ? undefined : 'var(--gr-2)'
+                      backgroundColor: "var(--dbl-3)",
+                      color: isLocked ? undefined : "var(--gr-2)",
                     }}
                     onClick={() => !isLocked && onProblemSelect(problem)}
                   >
                     <div className="flex items-center justify-between w-full">
                       <span className="font-medium">{problem.title}</span>
-                      <div 
+                      <div
                         className="w-4 h-4 rounded-full border-2"
                         style={{
-                          backgroundColor: problem.completed ? 'var(--success-color)' : 'transparent',
-                          borderColor: isLocked ? 'var(--dbl-1)' : (problem.completed ? 'var(--success-color)' : 'var(--gr-2)')
+                          backgroundColor: problem.completed
+                            ? "var(--success-color)"
+                            : "transparent",
+                          borderColor: isLocked
+                            ? "var(--dbl-1)"
+                            : problem.completed
+                            ? "var(--success-color)"
+                            : "var(--gr-2)",
                         }}
                       />
                     </div>

@@ -23,14 +23,5 @@ urlpatterns = [
     path("problem-details", problem_details, name="problem_details"),
     path("run-test", run_test_case, name="run_test_case"),
     path("run-learn-tests", run_learn_tests, name="run_learn_tests"),
-    # user accounts
-    path("signup", signup),
-    path("logout", logout),
-    path("supabase_login", supabase_login),
     path("completion", get_completion, name="completion"),
-
-
-    path("login", login_view, name="login_view"),
-    path("logout", logout_view, name="logout_view"),
-
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
