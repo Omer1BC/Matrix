@@ -105,6 +105,7 @@ export default function Home({ id }) {
   const [showTimer, setShowTimer] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const timeRef = useRef(null);
+  const interval = 10;
 
   const startTimer = useCallback(() => {
     setShowTimer(true);
@@ -113,8 +114,16 @@ export default function Home({ id }) {
       timeRef.current = setInterval(() => {
         setSeconds((prev) => prev + 1);
       }, 1000);
+
+
     }
   }, []);
+
+  useEffect (() => {
+        if (seconds % 30 == 0) {
+          ping({user_id: "user",timestamp:seconds, code:"blah"},"log-editor-history")
+        }
+  },[seconds])
   
   const stopTimer = useCallback(() => {
     setShowTimer(false);

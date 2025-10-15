@@ -8,6 +8,7 @@ import io
 import sys
 import traceback
 from django.conf import settings
+import json
 
 from .models import ProblemCategory, Problem, ProblemCompletion, User, UserProgress
 
@@ -991,3 +992,43 @@ def supabase_login(request):
 
 
 # --------------#
+@csrf_exempt
+def log_editor_history(request):
+    if request.method == "POST" and request.content_type == "application/json":
+
+        try:
+            body = json.loads(request.body)
+            user_id = body.get("user_id", "")
+            code = body.get("code", "")
+            timestamp = body.get("timestamp", "")
+
+            append_time_stamp(f"{user_id}_code_history.txt",timestamp,code)
+
+
+            return JsonResponse({"success": True, "message": "Log saved successfully"})
+
+        except Exception as e:
+            return JsonResponse({"Error Occured": str(e)}, status=400)
+    return JsonResponse({"error": "Malformed Request"}, status=400)
+
+def append_time_stamp(file_name,timestamp,code):
+    path = f"{settings.MEDIA_ROOT}/user_logs/{file_name}"
+    data = {}
+    try:
+        with open(path,"r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = {}
+    
+    data[timestamp] = code 
+    with open(path,"w") as f:
+        json.dump(data,f,indent=2)
+    
+    
+    
+    
+        
+
+
+    
+    
