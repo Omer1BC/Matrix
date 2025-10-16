@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { signIn, signUp, signOut } from "@/lib/supabase/auth";
+import { signIn, signUp, signOut, getProblemCompletions } from "@/lib/supabase/auth";
 import { LogOut, LogIn, UserPlus } from "lucide-react";
 import { FormEvent, useState, useEffect } from "react";
 import Link from "next/link";
@@ -24,7 +24,7 @@ export default function Header() {
     e.preventDefault();
     setLoading(true);
     try {
-      await signUp(email, password, username, firstname, lastname);
+      console.log(await signUp(email, password, username, firstname, lastname));
       alert(
         "Signup successful! Please check your email to verify your account."
       );

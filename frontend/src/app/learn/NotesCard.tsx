@@ -10,9 +10,10 @@ import { useEffect } from "react";
 type Props = {
   notes: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
 };
 
-export function NotesCard({ notes, onChange }: Props) {
+export function NotesCard({ notes, onChange, onBlur }: Props) {
   return (
     <>
       <Card className="matrix-border bg-card/40 p-6 backdrop-blur-sm">
@@ -24,6 +25,7 @@ export function NotesCard({ notes, onChange }: Props) {
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                 onChange(e.target.value)
               }
+              onBlur={onBlur}
               placeholder="Here you can take some notes"
               className="w-full h-70 border-primary/30 bg-input text-foreground placeholder:text-primary/30 focus:border-primary focus:ring-primary/20 resize-none overflow-auto"
             />

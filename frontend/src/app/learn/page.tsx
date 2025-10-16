@@ -12,20 +12,79 @@ import Card from "../templates/card/card";
 import ValidationContent from "../cards/validation/content";
 import TestCasesPanel from "./testCasesPanel";
 import ProblemMenu from "./problemMenu";
-import {NotesCard} from './NotesCard';
+import { NotesCard } from './NotesCard';
+
+import { Problem, ProblemCompletion } from "@/lib/types";
+import { editor as MonacoEditor } from "monaco-editor";
+import { getProblemById, getUserProblemById, updateNotes } from "@/lib/supabase/problems";
 // Problem Selection Drawer Component
 
 export default function ProblemsPage() {
   const [output, setOutput] = useState("");
-  const editorRef = useRef(null);
+  const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const [drawerToggle, setDrawerToggle] = useState(false);
-  const [currentProblem, setCurrentProblem] = useState({
-    id: "intro-1",
+  const [currentProblem, setCurrentProblem] = useState<Problem>({
+    id: 1,
+    category_id: 0,
+    problem_id: "intro-1",
     title: "Hello World",
     description: "Write a program that prints 'Hello, World!' to the console.",
-    difficulty: "Easy",
+    difficulty: "easy",
+    order: 1,
+    is_locked_by_default: false,
+    points_reward: 0,
+    method_stub: 'print("Hello, World!")',
+    solution: null,
+    test_cases: [],
+    input_args: [],
+    tools: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   });
-  const [problemDetails, setProblemDetails] = useState(null);
+
+
+  const [problemDetails, setProblemDetails] = useState<Problem>({
+    id: 1,
+    category_id: 0,
+    problem_id: "intro-1",
+    title: "Hello World",
+    description: "Write a program that prints 'Hello, World!' to the console.",
+    difficulty: "easy",
+    order: 1,
+    is_locked_by_default: false,
+    points_reward: 0,
+    method_stub: 'print("Hello, World!")',
+    solution: null,
+    test_cases: [],
+    input_args: [],
+    tools: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+
+  const [currProblemCompletion, setCurrentProblemCompletion] = useState<ProblemCompletion>({
+    id: 0,
+    user_id: "",
+    problem_id: "",
+    title: "",
+    category_id: "",
+    is_unlocked: false,
+    is_completed: false,
+    is_attempted: false,
+    completion_date: "",
+    first_attempt_date: "",
+    notes: "",
+    user_solution: "",
+    attempts_count: 0,
+    hints_used: 0,
+    time_spent_seconds: 0,
+    test_cases_passed: 0,
+    total_test_cases: 0,
+    points_earned: 0,
+    efficiency_score: 0,
+    created_at: "",
+    updated_at: "",
+  });
   const [testCases, setTestCases] = useState([]);
   const [refreshKey, setRefreshKey] = useState(false);
   const [completionPercentage, setCompletionPercentage] = useState(0);
@@ -40,25 +99,25 @@ export default function ProblemsPage() {
 
   const [notes, setNotes] = useState("");
 
-  useEffect(() => {
-    pingPercentage();
-  }, [refreshKey]);
+  // useEffect(() => {
+  //   pingPercentage();
+  // }, [refreshKey]);
 
-  function pingPercentage() {
-    fetch("http://localhost:8000/api/completion", {
-      method: "GET",
+  // function pingPercentage() {
+  //   fetch("http://localhost:8000/api/completion", {
+  //     method: "GET",
 
-      credentials: "include",
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setCompletionPercentage(data.percentage);
-        console.log(completionPercentage);
-      })
-      .catch((error) => {
-        console.error("Error fetching completion percentage:", error);
-      });
-  }
+  //     credentials: "include",
+  //   })
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       setCompletionPercentage(data.percentage);
+  //       console.log(completionPercentage);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error fetching completion percentage:", error);
+  //     });
+  // }
 
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
@@ -69,41 +128,16 @@ export default function ProblemsPage() {
   const handleProblemSelect = async (problem) => {
     setCurrentProblem(problem);
 
-    // Fetch detailed problem information from the API
     try {
-      const response = await fetch(
-        "http://localhost:8000/api/problem-details",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ problem_id: problem.id }),
-        }
-      );
+      const data = await getProblemById(problem.problem_id);
+      setProblemDetails(data);
 
-      if (response.ok) {
-        const details = await response.json();
-        setProblemDetails(details);
-
-        // Parse test cases from JSON string
-        let parsedTestCases = [];
-        try {
-          parsedTestCases =
-            typeof details.test_cases === "string"
-              ? JSON.parse(details.test_cases)
-              : details.test_cases || [];
-        } catch (e) {
-          console.error("Error parsing test cases:", e);
-          parsedTestCases = [];
-        }
-        setTestCases(parsedTestCases);
-
-        // Update editor with the starter code from the API
-        if (editorRef.current && details.method_stub) {
-          editorRef.current.setValue(details.method_stub);
-        }
-      } else {
+      const user_data = await getUserProblemById(problem.problem_id);
+      setCurrentProblemCompletion(user_data);
+      if (editorRef.current && data.method_stub) {
+        editorRef.current.setValue(formatCodeForEditor(data.method_stub));
+      }
+      else {
         console.error("Failed to fetch problem details");
         // Fallback to default starter code
         if (editorRef.current) {
@@ -112,8 +146,58 @@ export default function ProblemsPage() {
         }
         setTestCases([]);
       }
+
+      let parsedTestCases = [];
+      try {
+        parsedTestCases =
+          typeof data.test_cases === "string"
+            ? JSON.parse(data.test_cases)
+            : data.test_cases || [];
+      } catch (e) {
+        console.error("Error parsing test cases:", e);
+        parsedTestCases = [];
+      }
+      setTestCases(parsedTestCases);
+
     } catch (error) {
-      console.error("Error fetching problem details:", error);
+      console.err(error);
+    }
+    // Fetch detailed problem information from the API
+    // try {
+    //   const response = await fetch(
+    //     "http://localhost:8000/api/problem-details",
+    //     {
+    //       method: "POST",
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //       },
+    //       body: JSON.stringify({ problem_id: problem.id }),
+    //     }
+    //   );
+
+    //   if (response.ok) {
+    //     const details = await response.json();
+    //     setProblemDetails(details);
+
+    //     // Parse test cases from JSON string
+    // let parsedTestCases = [];
+    // try {
+    //   parsedTestCases =
+    //     typeof details.test_cases === "string"
+    //       ? JSON.parse(details.test_cases)
+    //       : details.test_cases || [];
+    // } catch (e) {
+    //   console.error("Error parsing test cases:", e);
+    //   parsedTestCases = [];
+    // }
+    // setTestCases(parsedTestCases);
+
+    // Update editor with the starter code from the API
+    if (editorRef.current && problemDetails.method_stub) {
+      editorRef.current.setValue(formatCodeForEditor(problemDetails.method_stub));
+    }
+    else {
+      console.error("Failed to fetch problem details");
       // Fallback to default starter code
       if (editorRef.current) {
         const starterCode = getStarterCode(problem.id);
@@ -121,9 +205,32 @@ export default function ProblemsPage() {
       }
       setTestCases([]);
     }
+    // } catch (error) {
+    //   console.error("Error fetching problem details:", error);
+    //   // Fallback to default starter code
+    //   if (editorRef.current) {
+    //     const starterCode = getStarterCode(problem.id);
+    //     editorRef.current.setValue(starterCode);
+    //   }
+    //   setTestCases([]);
+    // }
 
     setOutput(""); // Clear previous output
   };
+
+  // useEffect(() => {
+  //   if (problemDetails && editorRef.current) {
+  //     editorRef.current.setValue(formatCodeForEditor(problemDetails.method_stub));
+  //   }
+  // }, [problemDetails]);
+
+  function formatCodeForEditor(code: string) {
+    return code
+      .replace(/\\n/g, "\n")   // convert \n to actual newlines
+      .replace(/\\t/g, "\t")   // convert \t to actual tabs
+      .replace(/\\"/g, '"')    // convert \" to actual double quotes
+      .replace(/\\'/g, "'");   // convert \' to actual single quotes
+  }
 
   const getStarterCode = (problemId) => {
     const starterCodes = {
@@ -146,63 +253,71 @@ export default function ProblemsPage() {
   };
 
   const codeTabs = useMemo(
-      () => ({
-        editor: {
-          label: "Editor",
-          content: (
-            <div className="flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
-              
-              <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
-                <div className="mb-2">
-                  <h2
-                    className="text-xl font-bold"
-                    style={{ color: "var(--gr-2)" }}
-                  >
-                    Exercise {currentProblem.id}:{" "}
-                    {problemDetails?.title || currentProblem.title}
-                  </h2>
-                </div>
-                <div
-                  className="text-sm whitespace-pre-wrap"
+    () => ({
+      editor: {
+        label: "Editor",
+        content: (
+          <div className="flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
+
+            <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
+              <div className="mb-2">
+                <h2
+                  className="text-xl font-bold"
                   style={{ color: "var(--gr-2)" }}
                 >
-                  {problemDetails?.description || currentProblem.description}
-                </div>
+                  Exercise {currentProblem.id}:{" "}
+                  {problemDetails?.title || currentProblem.title}
+                </h2>
               </div>
-             
-              <div className="flex-1 min-h-[300px]">
-                <Editor
-                  height="100%"
-                  width="100%"
-                  language="python"
-                  theme="vs-dark"
-                  onMount={handleEditorDidMount}
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: 14,
-                    lineNumbers: "on",
-                    scrollBeyondLastLine: false,
-                    automaticLayout: true,
-                  }}
-                />
+              <div
+                className="text-sm whitespace-pre-wrap"
+                style={{ color: "var(--gr-2)" }}
+              >
+                {problemDetails?.description || currentProblem.description}
               </div>
             </div>
-          ),
-        },
-        notes: {
-          label: "Notes",
-          content: (
-            <NotesCard 
-            notes={notes}
+
+            <div className="flex-1 min-h-[300px]">
+              <Editor
+                height="100%"
+                width="100%"
+                language="python"
+                theme="vs-dark"
+                onMount={handleEditorDidMount}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  lineNumbers: "on",
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                }}
+              />
+            </div>
+          </div>
+        ),
+      },
+      notes: {
+        label: "Notes",
+        content: (
+          <NotesCard
+            notes={currProblemCompletion.notes}
             onChange={(value) =>
-            setNotes(value)
-          }
+              setCurrentProblemCompletion(prev => ({
+                ...prev,
+                notes: value
+              }))
+            }
+            onBlur={async () => {
+              if (currProblemCompletion.problem_id) {
+                await updateNotes(currProblemCompletion.problem_id, currProblemCompletion.notes);
+              }
+            }}
           />
-          )
-        },
-      }),
-      [currentProblem, problemDetails, notes, setNotes]
-    );
+        )
+      },
+    }),
+    [currentProblem, problemDetails, currProblemCompletion]
+  );
 
   return (
     <>
@@ -280,13 +395,13 @@ export default function ProblemsPage() {
                     playbackRate={2}
                     src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
                     width="auto"
-                    height="312px"
+                    height="250px"
                   />
                 </div>
               </div>
             </div>
             {/* Exercise & Code Editor Combined */}
-            <Card className="exercise/editor" tabs={codeTabs}/>
+            <Card className="exercise/editor" tabs={codeTabs} />
           </div>
 
           {/* Column 3: Test Cases and Output */}
