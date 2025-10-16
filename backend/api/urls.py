@@ -23,10 +23,6 @@ urlpatterns = [
     path("problem-details", problem_details, name="problem_details"),
     path("run-test", run_test_case, name="run_test_case"),
     path("run-learn-tests", run_learn_tests, name="run_learn_tests"),
-    # user accounts
-    path("signup", signup),
-    path("logout", logout),
-    path("supabase_login", supabase_login),
     path("completion", get_completion, name="completion"),
 
 

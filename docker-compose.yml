@@ -1,9 +1,9 @@
 services: 
 
   backend:
-    build: 
+    build:
       context: backend
-    ports: 
+    ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend:/app
@@ -13,11 +13,11 @@ services:
         python manage.py populate_problems &&
         python manage.py runserver 0.0.0.0:8000"
     env_file:
-      - ./backend/utils/.env
-      
+      - .env
+
   frontend:
     build:
-      context: frontend 
+      context: frontend
     ports:
       - "3000:3000"
     volumes:

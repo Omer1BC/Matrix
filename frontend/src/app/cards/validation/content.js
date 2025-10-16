@@ -1,12 +1,12 @@
 import { useState, useEffect, Fragment, useContext } from "react";
 import "./validation.css";
-import { ping, agentCall } from "@/app/utils/apiUtils";
+import { ping, agentCall } from "@/lib/utils/apiUtils";
 import StarGraph from "./StarGraph";
-import { UserContext } from "../../contexts/usercontext";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 export default function ValidationContent({
   annotateError,
-  problemID,
+  problemId,
   editorRef,
 }) {
   const [details, setDetails] = useState([]);
@@ -22,10 +22,10 @@ export default function ValidationContent({
   const [testSummary, setTestSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { user, setUser } = useContext(UserContext);
+  const { user } = useAuth();
 
   const fetchDetails = () => {
-    ping({ problem_id: problemID }, "problem_details").then((data) => {
+    ping({ problem_id: problemId }, "problem_details").then((data) => {
       if (editorRef.current) {
         editorRef.current.setValue(data.method_stub);
       }
@@ -75,7 +75,7 @@ export default function ValidationContent({
 
     setIsLoading(true);
     try {
-      const testsResp = await ping({ problem_id: problemID, code }, "tests");
+      const testsResp = await ping({ problem_id: problemId, code }, "tests");
 
       if (testsResp?.error) {
         const r = testsResp.result;
@@ -115,7 +115,7 @@ export default function ValidationContent({
 
       const gradeRes = await agentCall({
         user_id: user,
-        problem_id: String(problemID),
+        problem_id: String(problemId),
         intent: "grade",
         code,
       });

@@ -1,17 +1,13 @@
-from django.shortcuts import render, get_object_or_404
-
-# Create your views here.
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import os
 import io
 import sys
+import json
 import traceback
 from django.conf import settings
 import json
-
-from .models import ProblemCategory, Problem, ProblemCompletion, User, UserProgress
-
+from .models import ProblemCategory, Problem, ProblemCompletion, UserProgress
 from utils.utils import *
 from utils.agents import *
 from utils.problem_info import *
@@ -29,6 +25,15 @@ from utils.agent.tools import (
 from langchain_core.messages import HumanMessage, AIMessage
 
 GRAPH = build_graph()
+
+
+@csrf_exempt
+def get_completion(request):
+    if request.method == "GET":
+        user = request.user
+        print(user)
+        print(user.completion_percentage)
+        return JsonResponse({"percentage": user.completion_percentage}, status=200)
 
 
 @csrf_exempt
@@ -122,16 +127,6 @@ def agent(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-# backend functions whose urls are mapped in /api/urls.py
-@csrf_exempt
-def get_completion(request):
-    if request.method == "GET":
-        user = request.user
-        print(user)
-        print(user.completion_percentage)
-        return JsonResponse({"percentage": user.completion_percentage}, status=200)
-
-
 @csrf_exempt
 def run_python(request):
     media_path = settings.MEDIA_ROOT  # Absolute path to media folder
@@ -216,13 +211,11 @@ def run_learn_tests(request):
                 code = body.get("code", "")
                 problem_id = body.get("problem_id", "1_2sum")
 
-                # Make sure the user is logged in
-                if not request.user.is_authenticated:
-                    return JsonResponse(
-                        {"error": "Authentication required"}, status=403
-                    )
-
-                user = request.user
+                user = (
+                    request.user
+                    if getattr(request.user, "is_authenticated", False)
+                    else None
+                )
 
                 # Find the problem
                 try:
@@ -273,17 +266,55 @@ def run_learn_tests(request):
 
                     passed_tests = sum(1 for r in formatted_results if r["passed"])
                     total_tests = len(formatted_results)
+
+                    if user is None:
+                        if not formatted_results:
+                            formatted_results = [
+                                {
+                                    "test_name": "auth_required",
+                                    "description": "Authentication required",
+                                    "passed": False,
+                                    "expected": None,
+                                    "actual": None,
+                                    "error": "Login required to run and pass tests.",
+                                    "input": "",
+                                }
+                            ]
+                        else:
+                            for r in formatted_results:
+                                r["passed"] = False
+                                r["error"] = (
+                                    r.get("error")
+                                    or "Login required to run and pass tests."
+                                )
+
+                        return JsonResponse(
+                            {
+                                "success": True,
+                                "message": "Anonymous runs are not allowed to pass. Please log in.",
+                                "test_results": formatted_results,
+                                "total_tests": len(formatted_results),
+                                "passed_tests": 0,
+                                "next_problem": None,
+                            }
+                        )
+
                     if total_tests > 0 and passed_tests == total_tests:
                         completion, created = ProblemCompletion.objects.get_or_create(
                             user=user, problem=problem
                         )
-                        completion.mark_as_completed(user_solution=code)
 
-                        # Update user progress
+                        completion.mark_as_completed(user_solution=code)
 
                         if not hasattr(user, "progress"):
                             UserProgress.objects.create(user=user)
                         user.progress.update_progress()
+
+                        next_pid = (
+                            user.progress.current_problem.problem_id
+                            if user.progress and user.progress.current_problem
+                            else None
+                        )
 
                         return JsonResponse(
                             {
@@ -294,13 +325,12 @@ def run_learn_tests(request):
                                 "passed_tests": passed_tests,
                                 "next_problem": (
                                     user.progress.current_problem.problem_id
-                                    if user.progress.current_problem
+                                    if (user.progress and user.progress.current_problem)
                                     else None
                                 ),
                             }
                         )
 
-                    # If some tests failed → just return results
                     return JsonResponse(
                         {
                             "success": True,
@@ -684,7 +714,9 @@ def get_all_categories(request):
     if request.method == "GET":
         categories = ProblemCategory.objects.prefetch_related("problems").all()
         result = {}
-        user = request.user
+        user = (
+            request.user if getattr(request.user, "is_authenticated", False) else None
+        )
         print(request.user)
         for category in categories:
             result[category.key] = {
@@ -696,12 +728,10 @@ def get_all_categories(request):
                         "title": problem.title,
                         "description": problem.description,
                         "difficulty": problem.difficulty,
-                        "unlocked": not (problem.is_locked_by_default)
+                        "unlocked": (not problem.is_locked_by_default)
                         or problem.is_unlocked_for_user(user),
                     }
-                    for problem in category.problems.order_by(
-                        "order"
-                    )  # ignore # Removed is_active filter since your model might not have it
+                    for problem in category.problems.order_by("order")
                 ],
             }
 
