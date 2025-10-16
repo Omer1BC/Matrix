@@ -1,18 +1,49 @@
 "use client";
 
+import { requestAnimationFromAgent } from "@/lib/api";
 import { useState } from "react";
+
+type ToolsProps = {
+  tools: { name: string; description?: string; code?: string }[];
+  details?: unknown;
+  addToolCode: (code?: string) => void;
+  askAboutTool: (name: string, details?: unknown) => void;
+  onOpenAnimation: (toolName: string) => void;
+  onCustomAnimate: (
+    url: string | null,
+    phase?: "start" | "done" | "error"
+  ) => void;
+};
 
 export default function Tools({
   tools,
   details,
   addToolCode,
   askAboutTool,
-}: {
-  tools: { name: string; description?: string; code?: string }[];
-  details?: unknown;
-  addToolCode: (code?: string) => void;
-  askAboutTool: (name: string, details?: unknown) => void;
-}) {
+  onOpenAnimation,
+  onCustomAnimate,
+}: ToolsProps) {
+  const [animPrompt, setAnimPrompt] = useState("");
+  const [animLoading, setAnimLoading] = useState(false);
+  const [animError, setAnimError] = useState<string | null>(null);
+
+  async function handleGenerate() {
+    if (!animPrompt.trim()) return;
+    setAnimLoading(true);
+    setAnimError(null);
+    onCustomAnimate?.(null, "start");
+    try {
+      const url = await requestAnimationFromAgent(animPrompt.trim());
+      if (!url) throw new Error("No video returned");
+      onCustomAnimate?.(url, "done");
+    } catch (e: any) {
+      onCustomAnimate?.(null, "error");
+      setAnimError(e?.message || "Failed to generate animation");
+    } finally {
+      setAnimLoading(false);
+    }
+  }
+
   return (
     <div className="flex h-full max-h-full w-full flex-col p-2">
       <div className="flex-1 min-h-0 overflow-y-auto custom-scroll pr-2 space-y-2">
@@ -25,8 +56,47 @@ export default function Tools({
             details={details}
             addToolCode={addToolCode}
             askAboutTool={askAboutTool}
+            onOpenAnimation={onOpenAnimation}
           />
         ))}
+      </div>
+      <div className="mt-3 rounded-xl border border-slate-700 bg-[var(--dbl-4)] p-2">
+        <label
+          htmlFor="animPrompt"
+          className="block text-sm text-[var(--gr-2)] mb-1"
+        >
+          Generate custom animation
+        </label>
+        <div className="flex gap-2">
+          <input
+            id="animPrompt"
+            type="text"
+            value={animPrompt}
+            onChange={(e) => setAnimPrompt(e.target.value)}
+            placeholder='e.g. "Stack starting with 5,10,15; push 20; peek; pop twice; clear."'
+            className="flex-1 rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-slate-400"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !animLoading) handleGenerate();
+            }}
+            disabled={animLoading}
+          />
+          <button
+            onClick={handleGenerate}
+            disabled={animLoading || !animPrompt.trim()}
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-[var(--gr-2)] px-3 py-2 text-sm font-medium text-black hover:bg-[var(--gr-1)] disabled:opacity-60"
+            title="Generate animation"
+          >
+            {animLoading ? "Generating…" : "Generate"}
+          </button>
+        </div>
+        {animError && (
+          <div className="mt-2 text-xs text-red-300">{animError}</div>
+        )}
+        {!animError && animLoading && (
+          <div className="mt-2 text-xs text-slate-300 opacity-80">
+            Rendering with Manim…
+          </div>
+        )}
       </div>
     </div>
   );
@@ -39,6 +109,7 @@ type ToolPillProps = {
   details?: unknown;
   addToolCode: (code?: string) => void;
   askAboutTool: (name: string, details?: unknown) => void;
+  onOpenAnimation: (toolName: string) => void;
 };
 
 export function ToolPill({
@@ -48,6 +119,7 @@ export function ToolPill({
   details,
   addToolCode,
   askAboutTool,
+  onOpenAnimation,
 }: ToolPillProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -78,6 +150,14 @@ export function ToolPill({
             onClick={() => askAboutTool(name, details)}
           >
             ?
+          </button>
+
+          <button
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-[var(--gr-2)] text-black hover:bg-[var(--gr-1)]"
+            title="Play animation for this tool"
+            onClick={() => onOpenAnimation(name)}
+          >
+            ▶
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { agentCall, ping } from "@/lib/utils/apiUtils";
+import { agentCall, ping } from "@/lib/api";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
 type ToolInfo = { name: string; description?: string; code?: string };

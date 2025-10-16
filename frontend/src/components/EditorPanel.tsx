@@ -2,7 +2,7 @@
 import { Editor } from "@monaco-editor/react";
 import { useCallback, useEffect, useRef } from "react";
 import { useTimer } from "@/lib/hooks/useTimer";
-import { injectMonacoDecorationStyles } from "@/lib/utils/utils";
+import { injectMonacoDecorationStyles } from "@/lib/utils";
 import EditorUtilities from "./EditorUtilities";
 import { useAnnotationsContext } from "@/lib/contexts/AnnotationsContext";
 

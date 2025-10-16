@@ -4,13 +4,13 @@ from langchain.tools import tool
 from utils.utils import (
     run,
     parse_results_str,
-    get_solution_grade,
     get_ai_hints,
     get_annotated_ai_hints,
     get_tool_hints,
     get_error_details,
 )
 from api.models import Problem
+from .utils import generate_animation_from_prompt, get_solution_grade
 
 
 @tool(
@@ -121,3 +121,21 @@ def tool_hints_tool(code: str, pattern: str) -> Dict[str, Any]:
 )
 def annotate_errors_tool(problem_id: str, error: str, code: str) -> Dict[str, Any]:
     return get_error_details(problem_id=problem_id, error=error, code=code)
+
+
+@tool(
+    "generate_animation",
+    return_direct=False,
+    description="Generate a data-structure animation from a natural-language prompt. Input: prompt (str). Returns {'ok': bool, 'plan': {...}, 'video_abs': str, 'video': str, 'stdout': str, 'stderr': str, 'cmd': str}. 'video' is a relative path suitable for serving via http://<host>/{video}.",
+)
+def generate_animation_tool(prompt: str) -> Dict[str, Any]:
+    res = generate_animation_from_prompt(prompt)
+    return {
+        "ok": bool(res.get("ok")),
+        "plan": res.get("plan", {}),
+        "video_rel": res.get("video_rel", ""),
+        "video_path": res.get("video_path", ""),
+        "stdout": res.get("stdout", ""),
+        "stderr": res.get("stderr", ""),
+        "cmd": res.get("cmd", ""),
+    }

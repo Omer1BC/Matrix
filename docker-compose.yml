@@ -1,11 +1,4 @@
 services:
-  manim:
-    build:
-      context: anim
-    volumes:
-      - ./anim/src:/app
-    command: manim -ql 2_Array.py Array
-
   backend:
     build:
       context: backend
@@ -13,6 +6,7 @@ services:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend:/app
+      - ./Animations:/Animations
     command: >
       sh -c "
         python manage.py migrate &&

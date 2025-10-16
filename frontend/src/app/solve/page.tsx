@@ -9,8 +9,11 @@ import ValidationPanel from "@/components/ValidationPanel";
 import { useSolve } from "@/lib/hooks/useSolve";
 import { useCallback, useMemo, useState } from "react";
 import { AnnotationsProvider } from "@/lib/contexts/AnnotationsContext";
+import { getAnimationUrl } from "@/lib/api";
+import AnimationPlayer from "@/components/AnimationPlayer";
+import AnimationInput from "@/components/AnimationInput";
 
-export default function SolvePage() {
+export default function SolvePage({ problemId }: { problemId: number }) {
   const {
     editorRef,
     monacoRef,
@@ -22,10 +25,22 @@ export default function SolvePage() {
     annotate,
     annotateErrors,
     askSelection,
-  } = useSolve(1); // passing in 1 as the problem id. pass down problemId prop from SolvePage props into this hook
+  } = useSolve(problemId | 1);
 
-  const [showHints, setShowHints] = useState(true);
   const [output] = useState("");
+  const [showHints, setShowHints] = useState(true);
+
+  const [animUrl, setAnimUrl] = useState<string | null>(null);
+  const [animToolName, setAnimToolName] = useState<string | null>(null);
+  const [animLoading, setAnimLoading] = useState(false);
+  const [animArgs, setAnimArgs] = useState<Record<string, unknown> | null>(
+    null
+  );
+
+  const questionDefaultKey = animToolName ? "animation" : "question";
+  const validationDefaultKey = animToolName ? "animation-args" : "test";
+  const [questionPanelKey, setQuestionPanelKey] = useState(0);
+  const [validationPanelKey, setValidationPanelKey] = useState(0);
 
   const addToolCode = useCallback(
     (snippet?: string) => {
@@ -50,6 +65,60 @@ export default function SolvePage() {
     [askSelection, editorRef]
   );
 
+  const openAnimationForTool = useCallback(
+    async (name: string) => {
+      setAnimToolName(name);
+      setAnimLoading(true);
+
+      const schema = (details as any)?.tools?.[name]?.args ?? {};
+      const defaults = Object.fromEntries(
+        Object.entries(schema).map(([k, v]: any) => [k, v?.default_value ?? ""])
+      );
+      setAnimArgs(defaults);
+
+      try {
+        const url = await getAnimationUrl({ name, args: defaults });
+        setAnimUrl(url);
+      } finally {
+        setAnimLoading(false);
+      }
+
+      setQuestionPanelKey((k) => k + 1);
+      setValidationPanelKey((k) => k + 1);
+    },
+    [details]
+  );
+
+  const handleCustomAnimate = useCallback(
+    (url: string | null, phase?: "start" | "done" | "error") => {
+      if (phase === "start") {
+        setAnimToolName("Prompt");
+        setAnimLoading(true);
+        setAnimUrl(null);
+        setQuestionPanelKey((k) => k + 1);
+        setValidationPanelKey((k) => k + 1);
+        return;
+      }
+      if (phase === "error") {
+        setAnimLoading(false);
+        return;
+      }
+      // done
+      setAnimUrl(url);
+      setAnimLoading(false);
+    },
+    []
+  );
+
+  const closeAnimationTab = useCallback(() => {
+    setAnimToolName(null);
+    setAnimUrl(null);
+    setAnimArgs(null);
+    setAnimLoading(false);
+    setQuestionPanelKey((k) => k + 1);
+    setValidationPanelKey((k) => k + 1);
+  }, []);
+
   const handleMouseUp = useCallback(() => {
     const sel = window.getSelection();
     if (sel && sel.toString().length > 0) {
@@ -70,8 +139,42 @@ export default function SolvePage() {
           />
         ),
       },
+      ...(animToolName && {
+        animation: {
+          label: `Animation: ${animToolName}`,
+          content: (
+            <div className="flex h-full w-full flex-col">
+              <div className="mb-3 flex items-center justify-between">
+                <button
+                  onClick={closeAnimationTab}
+                  className="rounded bg-[var(--gr-2)] px-3 py-1 text-[var(--dbl-1)] hover:bg-[var(--gr-1)]"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="rounded-lg overflow-hidden bg-black min-h-0 flex-1">
+                {animLoading ? (
+                  <div className="flex h-full items-center justify-center text-[var(--gr-2)]">
+                    Loading animation…
+                  </div>
+                ) : (
+                  <AnimationPlayer url={animUrl} />
+                )}
+              </div>
+            </div>
+          ),
+        },
+      }),
     }),
-    [details, handleMouseUp]
+    [
+      details,
+      handleMouseUp,
+      animToolName,
+      animLoading,
+      animUrl,
+      closeAnimationTab,
+    ]
   );
 
   const codeTabs = useMemo(
@@ -96,6 +199,8 @@ export default function SolvePage() {
             details={details}
             addToolCode={addToolCode}
             askAboutTool={askAboutTool}
+            onOpenAnimation={openAnimationForTool}
+            onCustomAnimate={handleCustomAnimate}
           />
         ),
       },
@@ -107,6 +212,8 @@ export default function SolvePage() {
       details,
       editorRef,
       monacoRef,
+      openAnimationForTool,
+      handleCustomAnimate,
       showHints,
       tools,
     ]
@@ -167,18 +274,57 @@ export default function SolvePage() {
           />
         ),
       },
+      ...(animToolName && {
+        "animation-args": {
+          label: `Animation Input: ${animToolName}`,
+          content: (
+            <div className="flex h-full w-full flex-col">
+              <div className="mb-3 flex items-center justify-between">
+                <button
+                  onClick={closeAnimationTab}
+                  className="rounded bg-[var(--gr-2)] px-3 py-1 text-[var(--dbl-1)] hover:bg-[var(--gr-1)]"
+                >
+                  Close
+                </button>
+              </div>
+              <div className="min-h-0 overflow-auto">
+                <AnimationInput
+                  name={animToolName}
+                  args={(details as any)?.tools?.[animToolName]?.args ?? {}}
+                  onUrl={(url) => setAnimUrl(url)}
+                />
+              </div>
+            </div>
+          ),
+        },
+      }),
     }),
-    [annotateErrors, editorRef, monacoRef]
+    [
+      annotateErrors,
+      editorRef,
+      monacoRef,
+      details,
+      animToolName,
+      closeAnimationTab,
+    ]
   );
 
   return (
     <AnnotationsProvider>
       <main className="flex flex-1 flex-col min-h-0 overflow-hidden">
         <div className="grid flex-1 min-h-0 gap-2 p-2 grid-cols-[4fr_5fr] grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
-          <TabPanel tabs={questionTabs} />
+          <TabPanel
+            key={`q-${questionPanelKey}`}
+            tabs={questionTabs}
+            defaultActiveKey={questionDefaultKey}
+          />
           <TabPanel tabs={codeTabs} />
           <TabPanel tabs={referencesTabs} />
-          <TabPanel tabs={validationTabs} />
+          <TabPanel
+            key={`v-${validationPanelKey}`}
+            tabs={validationTabs}
+            defaultActiveKey={validationDefaultKey}
+          />
         </div>
       </main>
     </AnnotationsProvider>

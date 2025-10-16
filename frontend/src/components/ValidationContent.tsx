@@ -1,7 +1,7 @@
 "use client";
 import React, { Fragment, useEffect, useState } from "react";
 import StarGraph from "./StarGraph";
-import { agentCall, ping } from "@/lib/utils/apiUtils";
+import { agentCall, ping } from "@/lib/api";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useAnnotationsContext } from "@/lib/contexts/AnnotationsContext";
 
@@ -66,7 +66,7 @@ export default function ValidationContent({
     };
 
     fetchDetails();
-  }, [editorRef, problemId]);
+  }, [problemId]);
 
   const buildNumberedCode = () => {
     const editor = editorRef.current;
