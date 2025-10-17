@@ -2,6 +2,7 @@
 
 import { requestAnimationFromAgent } from "@/lib/api";
 import { useState } from "react";
+import { Input } from "./ui/input";
 
 type ToolsProps = {
   tools: { name: string; description?: string; code?: string }[];
@@ -27,18 +28,20 @@ export default function Tools({
   const [animLoading, setAnimLoading] = useState(false);
   const [animError, setAnimError] = useState<string | null>(null);
 
-  async function handleGenerate() {
-    if (!animPrompt.trim()) return;
+  async function submit() {
+    const prompt = animPrompt.trim();
+    if (!prompt || animLoading) return;
     setAnimLoading(true);
     setAnimError(null);
     onCustomAnimate?.(null, "start");
+    setAnimPrompt("");
     try {
-      const url = await requestAnimationFromAgent(animPrompt.trim());
+      const url = await requestAnimationFromAgent(prompt);
       if (!url) throw new Error("No video returned");
       onCustomAnimate?.(url, "done");
     } catch (e: any) {
-      onCustomAnimate?.(null, "error");
       setAnimError(e?.message || "Failed to generate animation");
+      onCustomAnimate?.(null, "error");
     } finally {
       setAnimLoading(false);
     }
@@ -61,27 +64,21 @@ export default function Tools({
         ))}
       </div>
       <div className="mt-3 rounded-xl border border-slate-700 bg-[var(--dbl-4)] p-2">
-        <label
-          htmlFor="animPrompt"
-          className="block text-sm text-[var(--gr-2)] mb-1"
-        >
-          Generate custom animation
-        </label>
-        <div className="flex gap-2">
-          <input
-            id="animPrompt"
+        <div className="flex items-center gap-2">
+          <Input
             type="text"
             value={animPrompt}
-            onChange={(e) => setAnimPrompt(e.target.value)}
+            onChange={(e: any) => setAnimPrompt(e.target.value)}
+            onKeyDown={(e: any) => e.key === "Enter" && submit()}
             placeholder='e.g. "Stack starting with 5,10,15; push 20; peek; pop twice; clear."'
-            className="flex-1 rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-slate-400"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !animLoading) handleGenerate();
-            }}
+            className="w-[90%] rounded-lg border border-[var(--gr-2)] bg-[var(--dbl-4)] p-2.5 text-sm text-[var(--gr-2)] outline-none transition
+                       focus:scale-[1.02] focus:border-[var(--gr-2)]
+                       focus:shadow-[0_0_8px_rgba(125,255,125,0.6),0_0_16px_rgba(125,255,125,0.3)]
+                       focus:bg-[var(--dbl-3)]"
             disabled={animLoading}
           />
           <button
-            onClick={handleGenerate}
+            onClick={submit}
             disabled={animLoading || !animPrompt.trim()}
             className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-[var(--gr-2)] px-3 py-2 text-sm font-medium text-black hover:bg-[var(--gr-1)] disabled:opacity-60"
             title="Generate animation"
@@ -89,12 +86,13 @@ export default function Tools({
             {animLoading ? "Generating…" : "Generate"}
           </button>
         </div>
+
         {animError && (
           <div className="mt-2 text-xs text-red-300">{animError}</div>
         )}
         {!animError && animLoading && (
           <div className="mt-2 text-xs text-slate-300 opacity-80">
-            Rendering with Manim…
+            Rendering with Manim… (low-quality preview)
           </div>
         )}
       </div>
