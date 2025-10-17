@@ -1,6 +1,6 @@
 # utils/agent/router.py
 import re
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Tuple
 from .schema import AgentRequest, Intent
 
 
@@ -25,4 +25,11 @@ def route(req: AgentRequest) -> Tuple[Intent, Dict[str, Any]]:
         return "annotated_hints", {}
     if "hint" in msg:
         return "hints", {}
+    if "animate" in msg or "animation" in msg:
+        return "generate_animation", {
+            "structure": req.extras.get("structure", ""),
+            "request": req.extras.get("request", msg),
+            "steps": req.extras.get("steps", []),
+        }
+
     return "chat", {}

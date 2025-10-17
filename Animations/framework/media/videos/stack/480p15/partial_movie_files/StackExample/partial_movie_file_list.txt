@@ -1,0 +1,8 @@
+# This file is used internally by FFMPEG.
+file 'file:/Users/nikoparas/Developer/Matrix/Animations/framework/media/videos/stack/480p15/partial_movie_files/StackExample/1185818338_711614718_2358810818.mp4'
+file 'file:/Users/nikoparas/Developer/Matrix/Animations/framework/media/videos/stack/480p15/partial_movie_files/StackExample/624642324_383559764_781133055.mp4'
+file 'file:/Users/nikoparas/Developer/Matrix/Animations/framework/media/videos/stack/480p15/partial_movie_files/StackExample/624642324_661555309_1730369540.mp4'
+file 'file:/Users/nikoparas/Developer/Matrix/Animations/framework/media/videos/stack/480p15/partial_movie_files/StackExample/624642324_2211931586_2248875196.mp4'
+file 'file:/Users/nikoparas/Developer/Matrix/Animations/framework/media/videos/stack/480p15/partial_movie_files/StackExample/624642324_3362299846_2664895607.mp4'
+file 'file:/Users/nikoparas/Developer/Matrix/Animations/framework/media/videos/stack/480p15/partial_movie_files/StackExample/624642324_2700633073_1448396259.mp4'
+file 'file:/Users/nikoparas/Developer/Matrix/Animations/framework/media/videos/stack/480p15/partial_movie_files/StackExample/624642324_1839128356_2334673488.mp4'
