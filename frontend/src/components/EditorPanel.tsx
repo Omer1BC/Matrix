@@ -128,6 +128,7 @@ export default function EditorPanel({
         setShowHints={setShowHints}
         clearHints={() => editorRef.current && clearAll(editorRef.current)}
         timer={{ running, seconds, start, stop, reset }}
+        editorRef={editorRef}
       />
     </div>
   );

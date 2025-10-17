@@ -1,6 +1,11 @@
 "use client";
 import NeoIcon from "@/components/NeoIcon";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import {ping} from "@/lib/utils/apiUtils";
 
+import { useEffect } from "react";
+import type * as monaco from "monaco-editor";
+import { TimerReset } from "lucide-react";
 type TimerControls = {
   running: boolean;
   seconds: number;
@@ -16,6 +21,7 @@ type EditorUtilitiesProps = {
   clearHints: () => void;
   timer: TimerControls;
   className?: string;
+  editorRef : React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
 };
 
 export default function EditorUtilities({
@@ -25,8 +31,30 @@ export default function EditorUtilities({
   clearHints,
   timer,
   className = "",
+  editorRef
 }: EditorUtilitiesProps) {
   const { running, seconds, start, stop, reset } = timer;
+  const INTERVAL = 10; // seconds
+  const { user, loading: authLoading } = useAuth();
+  
+
+  //Takes a snapshot of user's code every INTERVAL seconds if the timer is running
+  useEffect(() => {
+    if (running && seconds % INTERVAL == 0 && editorRef.current) {
+      // console.log("seconds are ",seconds,editorRef.current.getModel()?.getValue())
+      const code = editorRef.current.getModel()?.getValue() || "";
+      const userInfo = user ? user : { id: "guest"}
+      ping({user_id: userInfo.id, code: code,timestamp:seconds},"log-editor-history")
+      .then((res) => {  
+        console.log("response from logging editor history ",res)
+      })
+
+      
+    
+    }
+    }
+  ,[seconds])
+
 
   return (
     <>
