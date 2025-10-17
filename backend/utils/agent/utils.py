@@ -479,9 +479,6 @@ def generate_animation(
 
         if ok:
             try:
-                # take the segment under the local "media/" produced by manim
-                # e.g., ".../tmp/media/videos/stack_example/480p15/StackExample.mp4"
-                # -> under_media = "videos/stack_example/480p15/StackExample.mp4"
                 p_norm = video_path.replace("\\", "/")
                 parts = p_norm.split("/media/", 1)
                 under_media = (
@@ -490,17 +487,13 @@ def generate_animation(
                     else f"videos/{os.path.basename(p_norm)}"
                 )
 
-                # destination inside Django's MEDIA_ROOT
                 final_abs = os.path.join(settings.MEDIA_ROOT, under_media)
                 os.makedirs(os.path.dirname(final_abs), exist_ok=True)
                 shutil.copy2(video_path, final_abs)
 
-                # build a rel URL path the frontend can GET via http://host/{rel}
-                # ensure no duplicate slashes and no leading slash
                 media_prefix = (settings.MEDIA_URL or "/media/").strip("/")
                 final_rel = f"{media_prefix}/{under_media}"
             except Exception:
-                # if copy fails, fall back to tmp-relative path (dev-only)
                 final_abs = video_path
                 final_rel = video_rel_tmp
 
