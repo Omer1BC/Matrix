@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import FileResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import os
 import io
@@ -7,9 +7,9 @@ import json
 import traceback
 from django.conf import settings
 import json
+from utils.agent.utils import generate_animation, get_solution_grade
 from .models import ProblemCategory, Problem, ProblemCompletion, UserProgress
 from utils.utils import *
-from utils.agents import *
 from utils.problem_info import *
 from utils.agent.schema import AgentRequest, AgentResponse
 from utils.agent.router import route
@@ -17,6 +17,7 @@ from utils.agent.graph import build_graph
 from utils.agent.tools import (
     annotate_errors_tool,
     annotated_hints_tool,
+    generate_animation_tool,
     grade_via_tests_tool,
     hints_tool,
     run_tests_tool,
@@ -25,6 +26,59 @@ from utils.agent.tools import (
 from langchain_core.messages import HumanMessage, AIMessage
 
 GRAPH = build_graph()
+
+
+@csrf_exempt
+def generate_animation_view(request):
+    if request.method != "POST" or "application/json" not in (
+        request.content_type or ""
+    ):
+        return JsonResponse({"error": "Malformed Request"}, status=400)
+
+    try:
+        payload = json.loads(request.body)
+    except Exception:
+        return JsonResponse({"error": "Invalid JSON"}, status=500)
+
+    data_structure = payload.get("data_structure")
+    initial_state = payload.get("initial_state", [])
+    operations = payload.get("operations", [])
+
+    if (
+        not data_structure
+        or not isinstance(initial_state, list)
+        or not isinstance(operations, list)
+    ):
+        return JsonResponse(
+            {"error": "Required: data_structure, initial_state[], operations[]"},
+            status=500,
+        )
+    res = generate_animation(
+        data_structure=data_structure,
+        initial_state=initial_state,
+        operations=operations,
+    )
+
+    if not res.get("ok") or not res.get("video_path"):
+        return JsonResponse(
+            {
+                "ok": False,
+                "stderr": res.get("stderr", ""),
+                "stdout": res.get("stdout", ""),
+                "cmd": res.get("cmd", ""),
+            },
+            status=400,
+        )
+
+    f = open(res["video_path"], "rb")
+    resp = FileResponse(f, content_type="video/mp4")
+    resp["Content-Disposition"] = (
+        'inline; filename="%s.mp4"'
+        % os.path.splitext(os.path.basename(res["video_path"]))[0]
+    )
+    resp["X-Scene-Name"] = res.get("scene_name", "")
+    resp["X-Gen-Cmd"] = res.get("cmd", "")
+    return resp
 
 
 @csrf_exempt
@@ -44,7 +98,6 @@ def agent(request):
         return JsonResponse({"error": "Malformed Request"}, status=400)
     try:
         body = json.loads(request.body)
-        # auth optional
         user = request.user if request.user.is_authenticated else None
         user_id = str(getattr(user, "id", body.get("user_id", "anon")))
         problem_id = str(body.get("problem_id", "global"))
@@ -101,6 +154,23 @@ def agent(request):
             )
             return JsonResponse(
                 AgentResponse(kind="annotated_hints", data=res).model_dump()
+            )
+        if task == "generate_animation":
+            prompt = (
+                params.get("request", "")
+                or req.extras.get("request", "")
+                or req.message
+            )
+            if not prompt:
+                payload = {"ok": False, "error": "prompt required"}
+                return JsonResponse(
+                    AgentResponse(kind="generate_animation", data=payload).model_dump(),
+                    status=400,
+                )
+            res = generate_animation_tool.invoke({"prompt": prompt})
+            return JsonResponse(
+                AgentResponse(kind="generate_animation", data=res).model_dump(),
+                status=200 if res.get("ok") else 400,
             )
 
         # Otherwise: go through the LLM node with memory (chat/general, or future tasks)
@@ -538,23 +608,6 @@ def ask(request):
             print(question, text)
             resp = ask_ai(question, text)
             print("response is resp", resp)
-            return JsonResponse(resp)
-        except Exception as e:
-            return JsonResponse({"Error Occured": str(e)}, status=400)
-    return JsonResponse({"error": "Malformed Request"}, status=400)
-
-
-@csrf_exempt
-def next_thread(request):
-    if request.method == "POST" and request.content_type == "application/json":
-        import json
-
-        try:
-            body = json.loads(request.body)
-            ask = body.get("ask", "")
-            question = body.get("question", "")
-            code = body.get("code", "")
-            resp = get_next_conversation(ask, code, question)
             return JsonResponse(resp)
         except Exception as e:
             return JsonResponse({"Error Occured": str(e)}, status=400)
