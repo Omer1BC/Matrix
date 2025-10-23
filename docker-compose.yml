@@ -27,5 +27,7 @@ services:
     command: npm run dev
     environment:
       - WATCHPACK_POLLING=true
+    env_file:
+      - ./frontend/.env    
 
 

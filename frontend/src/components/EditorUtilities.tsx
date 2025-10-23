@@ -34,7 +34,7 @@ export default function EditorUtilities({
   editorRef
 }: EditorUtilitiesProps) {
   const { running, seconds, start, stop, reset } = timer;
-  const INTERVAL = 10; // seconds
+  const INTERVAL = 5; // seconds
   const { user, loading: authLoading } = useAuth();
   
 
