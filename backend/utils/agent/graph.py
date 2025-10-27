@@ -6,6 +6,7 @@ from langchain_core.messages import SystemMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import ToolNode
 from langgraph.checkpoint.memory import MemorySaver
+from .utils import snippet
 
 from .tools import (
     generate_animation_tool,
@@ -51,7 +52,7 @@ def llm_node(state: State):
     if state.get("code"):
         msgs.append(
             SystemMessage(
-                content=f"User code snapshot:\n```python\n{state['code']}\n```"
+                content=f"User code snapshot:\n```python\n{snippet(state['code'])}\n```"
             )
         )
 

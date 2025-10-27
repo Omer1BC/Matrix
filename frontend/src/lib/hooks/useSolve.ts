@@ -34,12 +34,16 @@ export function useSolve(problemId: number = 1) {
     async (text: string) => {
       setLoading(true);
       try {
+        const code =
+          editorRef.current?.getValue?.() ?? details?.method_stub ?? "";
+
         const res = await agentCall({
           user_id: user,
           problem_id: String(details?.id || problemId),
           intent: "chat",
           message: text,
           question: `${details?.title ?? ""}\n${details?.description ?? ""}`,
+          code: code,
         });
         setResponse(res?.data?.text ?? res?.data?.response ?? "");
       } finally {
