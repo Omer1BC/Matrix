@@ -5,7 +5,7 @@ import ast
 import json
 import re
 from typing import Dict, List, Any
-from langchain.tools import Tool
+from langchain_core.tools import Tool
 from datetime import datetime
 from django.conf import settings
 import subprocess
