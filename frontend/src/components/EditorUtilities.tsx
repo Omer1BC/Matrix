@@ -1,7 +1,7 @@
 "use client";
 import NeoIcon from "@/components/NeoIcon";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import {ping} from "@/lib/utils/apiUtils";
+import {ping} from "@/lib/api";
 
 import { useEffect } from "react";
 import type * as monaco from "monaco-editor";
