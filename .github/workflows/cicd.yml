@@ -32,8 +32,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build --if-present
+      - name: Build (Dev Mode)
+        run: npm run dev --if-present
 
       - name: Test (undefined)
         run: |
