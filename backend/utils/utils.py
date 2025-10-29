@@ -5,26 +5,21 @@ import ast
 import json
 import re
 from typing import Dict, List, Any
-from langchain.tools import Tool
+from langchain_core.tools import Tool
 from datetime import datetime
 from django.conf import settings
 import subprocess
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 
-# from tools import save_tool
-
 
 def save_to_txt(data: str, filename: str = "research_output.txt"):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     formatted_text = f"--- Research Output ---\nTimestamp: {timestamp}\n\n{data}\n\n"
-
-    # with open(filename, "a", encoding="utf-8") as f:
-    #     f.write(formatted_text)
 
     return f"Data successfully saved to {filename}"
 
@@ -481,13 +476,7 @@ def file_from_pattern(pattern):
 
 
 def pattern_to_video(name, data):
-    # script_path,video_link = file_from_pattern(pattern)
-    # subprocess.run(["manim", script_path,"Array","-ql"],check=True)
-    # return {"data": video_link }
     path = pattern_to_file(name)
-    # edges_code = f'     {data}\n'
-    # subprocess.run(["manim", path,input["name"],"-ql"],check=True)
-    # Read the source file
     with open(path, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
@@ -503,8 +492,6 @@ def pattern_to_video(name, data):
     for input in data:
         print("input")
         lines.insert(insert_index, f"        {input}\n")
-    # if edges_code not in lines:
-    #     lines.insert(insert_index, edges_code)
 
     # Write the modified file back
     path_no_mime = path[:-3]
@@ -589,115 +576,3 @@ def parse_results_str(s: str) -> Dict[str, Any]:
         return json.loads(s.replace("'", '"'))
     except Exception:
         return {}
-
-
-# --- LLM Grader ---
-
-GRADING_PROMPT = """
-You are a strict but fair code reviewer for algorithmic interview solutions.
-
-Evaluate the user's solution using **only** the categories below on a 0.0–5.0 scale (one decimal is fine):
-
-- readability: variable naming, structure, clarity, comments, and idiomatic style
-- efficiency: time/space complexity relative to a typical optimal approach for this problem
-- robustness: handling of edge cases, input validation (where appropriate), and defensive coding
-
-Context:
-- Problem: {problem_title} ({difficulty})
-- Description: {problem_description}
-- User code:
-```python
-{code}
-
-Reference solution (may be empty):
-
-python
-Copy code
-{reference_solution}
-Test summary: {test_passed}/{test_total} passed
-
-Failing examples (up to 3):
-{fail_examples}
-
-Instructions:
-
-Be concise and specific in explanations for each category (what is good, what to improve).
-
-If all tests pass, it’s okay to give higher robustness; if tests fail, explain likely missed edges.
-
-Output must strictly match the schema.
-
-{format_instructions}
-"""
-
-
-class GradeSchema(BaseModel):
-    metrics: Dict[str, float]  # keys: readability, efficiency, robustness (0..5)
-    explanations: Dict[str, str]  # same keys with short explanations
-    verdict: bool  # LLM's guess, but server will override with actual tests
-    comment: str  # a short overall summary
-
-
-def get_solution_grade(
-    code: str,
-    problem_title: str,
-    problem_description: str,
-    reference_solution: str,
-    difficulty: str,
-    test_passed: int,
-    test_total: int,
-    fail_examples: List[Dict[str, Any]],
-) -> Dict[str, Any]:
-    """
-    Call the LLM to grade the solution. Returns a dict with keys:
-    metrics, explanations, verdict, comment
-    """
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0)
-    parser = PydanticOutputParser(pydantic_object=GradeSchema)
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", GRADING_PROMPT),
-        ]
-    ).partial(
-        format_instructions=parser.get_format_instructions(),
-        problem_title=problem_title,
-        difficulty=difficulty,
-        problem_description=problem_description,
-        code=code,
-        reference_solution=reference_solution or "(not provided)",
-        test_passed=str(test_passed),
-        test_total=str(test_total),
-        fail_examples=json.dumps(fail_examples, ensure_ascii=False, indent=2),
-    )
-
-    try:
-        res = llm.invoke(prompt.format_prompt().to_messages())
-        parsed = parser.parse(res.content)
-        m = parsed.metrics or {}
-        metrics = {
-            "readability": float(m.get("readability", 0.0) or 0.0),
-            "efficiency": float(m.get("efficiency", 0.0) or 0.0),
-            "robustness": float(m.get("robustness", 0.0) or 0.0),
-        }
-        explanations = {
-            "readability": (parsed.explanations or {}).get("readability", ""),
-            "efficiency": (parsed.explanations or {}).get("efficiency", ""),
-            "robustness": (parsed.explanations or {}).get("robustness", ""),
-        }
-        return {
-            "metrics": metrics,
-            "explanations": explanations,
-            "verdict": bool(parsed.verdict),
-            "comment": parsed.comment or "",
-        }
-    except Exception as e:
-        return {
-            "metrics": {"readability": 0.0, "efficiency": 0.0, "robustness": 0.0},
-            "explanations": {
-                "readability": "Unable to grade due to an internal error.",
-                "efficiency": "Unable to grade due to an internal error.",
-                "robustness": "Unable to grade due to an internal error.",
-            },
-            "verdict": False,
-            "comment": f"Grader error: {e}",
-        }

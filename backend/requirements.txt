@@ -1,10 +1,12 @@
 django
 django-cors-headers
-langchain 
+langchain==0.2.15
+langchain-community>=0.2,<0.3
+langchain-core>=0.2,<0.3
+pydantic>=2,<3
 langchain-openai
 langgraph
 python-dotenv
-pydantic
 manim
 manimgl
 supabase

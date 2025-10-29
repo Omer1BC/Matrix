@@ -14,7 +14,7 @@ urlpatterns = [
     path("annotate", annotate),
     path("annotate_errors", annotate_errors),
     path("ask", ask),
-    path("next_thread", next_thread),
+    # path("next_thread", next_thread),
     path("grade_solution", grade_solution, name="grade_solution"),
     # llm agent
     path("agent", agent, name="agent"),
@@ -24,4 +24,12 @@ urlpatterns = [
     path("run-test", run_test_case, name="run_test_case"),
     path("run-learn-tests", run_learn_tests, name="run_learn_tests"),
     path("completion", get_completion, name="completion"),
+
+
+    path("login", login_view, name="login_view"),
+    path("logout", logout_view, name="logout_view"),
+
+    # autonmous hints
+    path("log-editor-history",log_editor_history, name="log_editor_history"),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

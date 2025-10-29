@@ -1,11 +1,12 @@
-import { clsx } from "clsx";
+import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-export function cn(...inputs) {
+export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
 
 export function injectMonacoDecorationStyles() {
+  if (document.head.querySelector('[data-monaco-deco-styles="true"]')) return;
   const style = document.createElement("style");
   style.setAttribute("data-monaco-deco-styles", "true");
   style.textContent = `
@@ -19,7 +20,10 @@ export function injectMonacoDecorationStyles() {
   background-color: rgba(255, 0, 0, 0.40);
   outline: 1px solid rgba(255, 0, 0, 0.55);
 }
-/* optional: hide when hints toggled off if your editor root carries .hints-off */
+/* widget stacking */
+.monaco-hint-widget.is-hint { z-index: 50; }
+.monaco-hint-widget.is-error { z-index: 60; }  /* errors on top */
+/* optional: hide when hints toggled off */
 .hints-off .monaco-editor .monaco-hint-line,
 .hints-off .monaco-editor .monaco-error-line {
   background: transparent !important;

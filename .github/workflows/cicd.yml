@@ -61,7 +61,10 @@ jobs:
           else
             echo "Generating .env from GitHub secrets (if any) or creating blank .env..."
             {
-              echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
+              printf 'OPENAI_API_KEY=%s\n' '${{ secrets.OPENAI_API_KEY }}'
+              printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n' '${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}'
+              printf 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY=%s\n' '${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY }}'
+              printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}'
             } > .env
             [ -s .env ] || touch .env
           fi

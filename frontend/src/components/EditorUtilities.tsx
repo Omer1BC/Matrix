@@ -1,7 +1,11 @@
 "use client";
 import NeoIcon from "@/components/NeoIcon";
-import { memo } from "react";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import {ping} from "@/lib/api";
 
+import { useEffect } from "react";
+import type * as monaco from "monaco-editor";
+import { TimerReset } from "lucide-react";
 type TimerControls = {
   running: boolean;
   seconds: number;
@@ -11,12 +15,13 @@ type TimerControls = {
 };
 
 type EditorUtilitiesProps = {
-  onAnnotate: () => void;
+  onAnnotate: () => void | Promise<void>;
   showHints: boolean;
   setShowHints: (b: boolean) => void;
   clearHints: () => void;
   timer: TimerControls;
   className?: string;
+  editorRef : React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
 };
 
 export default function EditorUtilities({
@@ -26,8 +31,30 @@ export default function EditorUtilities({
   clearHints,
   timer,
   className = "",
+  editorRef
 }: EditorUtilitiesProps) {
   const { running, seconds, start, stop, reset } = timer;
+  const INTERVAL = 5; // seconds
+  const { user, loading: authLoading } = useAuth();
+  
+
+  //Takes a snapshot of user's code every INTERVAL seconds if the timer is running
+  useEffect(() => {
+    if (running && seconds % INTERVAL == 0 && editorRef.current) {
+      // console.log("seconds are ",seconds,editorRef.current.getModel()?.getValue())
+      const code = editorRef.current.getModel()?.getValue() || "";
+      const userInfo = user ? user : { id: "guest"}
+      ping({user_id: userInfo.id, code: code,timestamp:seconds},"log-editor-history")
+      .then((res) => {  
+        console.log("response from logging editor history ",res)
+      })
+
+      
+    
+    }
+    }
+  ,[seconds])
+
 
   return (
     <>
@@ -111,7 +138,9 @@ export default function EditorUtilities({
 
       <button
         type="button"
-        onClick={onAnnotate}
+        onClick={async () => {
+          await onAnnotate();
+        }}
         title="AI Hint"
         className="absolute top-1 right-5 z-50 rounded-full p-2  hover:shadow-[0_8px_20px_rgba(0,0,0,0.45)] transition-shadow"
       >

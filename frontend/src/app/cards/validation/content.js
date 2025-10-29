@@ -1,6 +1,6 @@
 import { useState, useEffect, Fragment, useContext } from "react";
 import "./validation.css";
-import { ping, agentCall } from "@/lib/utils/apiUtils";
+import { ping, agentCall } from "@/lib/api";
 import StarGraph from "./StarGraph";
 import { useAuth } from "@/lib/contexts/AuthContext";
 

@@ -1,10 +1,4 @@
-services:
-  manim:
-    build:
-      context: anim
-    volumes:
-      - ./anim/src:/app
-    command: manim -ql 2_Array.py Array
+services: 
 
   backend:
     build:
@@ -13,6 +7,7 @@ services:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend:/app
+      - ./Animations:/Animations
     command: >
       sh -c "
         python manage.py migrate &&
@@ -26,3 +21,14 @@ services:
       context: frontend
     ports:
       - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+    environment:
+      - WATCHPACK_POLLING=true
+    env_file:
+      - ./frontend/.env    
+
+

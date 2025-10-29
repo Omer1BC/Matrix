@@ -3,23 +3,26 @@ import { Fragment } from "react";
 import ValidationContent from "./ValidationContent";
 
 type ValidationPanelProps = {
-  annotateError: (err: string) => void;
-  editorRef: React.RefObject<any>;
   problemId: number;
+  editorRef: React.RefObject<any>;
+  monacoRef: React.RefObject<any>;
+  annotateErrors: (codeWithLines: string, error: any) => Promise<any>;
   //   output: string;
 };
 
 export default function ValidationPanel({
-  annotateError,
-  editorRef,
   problemId,
+  editorRef,
+  monacoRef,
+  annotateErrors,
 }: ValidationPanelProps) {
   return (
     <Fragment>
       <ValidationContent
-        annotateError={annotateError}
-        editorRef={editorRef}
         problemId={problemId}
+        editorRef={editorRef}
+        monacoRef={monacoRef}
+        annotateErrors={annotateErrors}
       />
     </Fragment>
   );

@@ -2,12 +2,13 @@
 from typing import TypedDict, Annotated, Dict, Any
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import SystemMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import ToolNode
 from langgraph.checkpoint.memory import MemorySaver
 
 from .tools import (
+    generate_animation_tool,
     run_tests_tool,
     grade_via_tests_tool,
     hints_tool,
@@ -40,6 +41,7 @@ def llm_node(state: State):
             annotated_hints_tool,
             tool_hints_tool,
             annotate_errors_tool,
+            generate_animation_tool,
         ]
     )
 
