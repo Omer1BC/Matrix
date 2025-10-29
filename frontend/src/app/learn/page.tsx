@@ -16,7 +16,7 @@ import { NotesCard } from './NotesCard';
 
 import { Problem, ProblemCompletion } from "@/lib/types";
 import { editor as MonacoEditor } from "monaco-editor";
-import { getProblemById, getUserProblemById, updateNotes } from "@/lib/supabase/problems";
+import { getProblemById, getUserProblemById, updateNotes, updateUserProblemCompletion } from "@/lib/supabase/problems";
 // Problem Selection Drawer Component
 
 export default function ProblemsPage() {
@@ -92,10 +92,12 @@ export default function ProblemsPage() {
   function toggleRefresh() {
     setRefreshKey(!refreshKey);
   }
-  function handleAllTestsPassed() {
+  
+  async function handleAllTestsPassed() {
     setShowVictoryModal(true);
+    await updateUserProblemCompletion(currentProblem.problem_id, testCases.length, editorRef.current?.getValue());
     toggleRefresh();
-  }
+  };
 
   const [notes, setNotes] = useState("");
 
@@ -245,6 +247,10 @@ export default function ProblemsPage() {
     };
     return starterCodes[problemId] || "# Write your solution here\n";
   };
+
+  useEffect(() => {
+    console.log("testcasess", testCases);
+  }, [testCases])
 
   const urls = ["/vid.mp4", "/vid2.mp4"];
   const [idx, setIdx] = useState(0);
@@ -424,7 +430,7 @@ export default function ProblemsPage() {
             {/* Test Cases Panel */}
             <div className="flex-1 min-h-0">
               <TestCasesPanel
-                problemId={currentProblem.id}
+                problemId={currentProblem.problem_id}
                 editorRef={editorRef}
                 onAllTestsPassed={handleAllTestsPassed}
               />

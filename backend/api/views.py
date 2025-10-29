@@ -24,7 +24,12 @@ from utils.agent.tools import (
 from langchain_core.messages import HumanMessage, AIMessage
 
 GRAPH = build_graph()
+from supabase import create_client, Client
 
+SUPABASE_URL = "https://lskkeazcckgvxtvvyqbw.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxza2tlYXpjY2tndnh0dnZ5cWJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5ODkxNzUsImV4cCI6MjA3MzU2NTE3NX0.28SI3IdZGZ9e_87wfk2J8Ceybl1H65mK_E7lM69U5gY"
+
+supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 @csrf_exempt
 def get_completion(request):
@@ -201,169 +206,300 @@ def run_python(request):
 def run_learn_tests(request):
     media_path = settings.MEDIA_ROOT
 
-    if request.method == "POST":
-        content_type = request.content_type or ""
+    if request.method != "POST":
+        return JsonResponse({"error": f"Expected POST, got {request.method}"}, status=405)
 
-        if "application/json" in content_type:
-            try:
-                body = json.loads(request.body)
-                code = body.get("code", "")
-                problem_id = body.get("problem_id", "1_2sum")
+    if "application/json" not in (request.content_type or ""):
+        return JsonResponse({"error": "Expected application/json"}, status=400)
 
-                user = (
-                    request.user
-                    if getattr(request.user, "is_authenticated", False)
-                    else None
-                )
-
-                # Find the problem
-                try:
-                    problem = Problem.objects.get(problem_id=problem_id)
-                except Problem.DoesNotExist:
-                    return JsonResponse(
-                        {"error": f"Problem {problem_id} not found"}, status=404
-                    )
-
-                # Insert user code into test file (your existing logic)
-                file_name = f"{problem_id}.py"
-                file_path = os.path.join(media_path, file_name)
-
-                if not os.path.exists(file_path):
-                    return JsonResponse(
-                        {"error": f"Problem file {file_name} not found"}, status=404
-                    )
-
-                res = insert_user_code(file_path, code)
-
-                # Capture stdout
-                old_stdout = sys.stdout
-                sys.stdout = mystdout = io.StringIO()
-                namespace = {}
-
-                try:
-                    exec(res, namespace)
-                    test_results = namespace.get("results", {})
-                    formatted_results = []
-                    for test_name, result in test_results.items():
-                        formatted_results.append(
-                            {
-                                "test_name": test_name,
-                                "passed": result.get("passed", False),
-                                "expected": result.get("expected"),
-                                "actual": result.get("actual"),
-                                "error": result.get("error", ""),
-                                "input": result.get("graph")
-                                or result.get("nums")
-                                or result.get("input", ""),
-                                "description": (
-                                    f"Test case {test_name.split('_')[-1]}"
-                                    if "_" in test_name
-                                    else test_name
-                                ),
-                            }
-                        )
-
-                    passed_tests = sum(1 for r in formatted_results if r["passed"])
-                    total_tests = len(formatted_results)
-
-                    if user is None:
-                        if not formatted_results:
-                            formatted_results = [
-                                {
-                                    "test_name": "auth_required",
-                                    "description": "Authentication required",
-                                    "passed": False,
-                                    "expected": None,
-                                    "actual": None,
-                                    "error": "Login required to run and pass tests.",
-                                    "input": "",
-                                }
-                            ]
-                        else:
-                            for r in formatted_results:
-                                r["passed"] = False
-                                r["error"] = (
-                                    r.get("error")
-                                    or "Login required to run and pass tests."
-                                )
-
-                        return JsonResponse(
-                            {
-                                "success": True,
-                                "message": "Anonymous runs are not allowed to pass. Please log in.",
-                                "test_results": formatted_results,
-                                "total_tests": len(formatted_results),
-                                "passed_tests": 0,
-                                "next_problem": None,
-                            }
-                        )
-
-                    if total_tests > 0 and passed_tests == total_tests:
-                        completion, created = ProblemCompletion.objects.get_or_create(
-                            user=user, problem=problem
-                        )
-
-                        completion.mark_as_completed(user_solution=code)
-
-                        if not hasattr(user, "progress"):
-                            UserProgress.objects.create(user=user)
-                        user.progress.update_progress()
-
-                        next_pid = (
-                            user.progress.current_problem.problem_id
-                            if user.progress and user.progress.current_problem
-                            else None
-                        )
-
-                        return JsonResponse(
-                            {
-                                "success": True,
-                                "message": "All tests passed! Problem marked as completed.",
-                                "test_results": formatted_results,
-                                "total_tests": total_tests,
-                                "passed_tests": passed_tests,
-                                "next_problem": (
-                                    user.progress.current_problem.problem_id
-                                    if (user.progress and user.progress.current_problem)
-                                    else None
-                                ),
-                            }
-                        )
-
-                    return JsonResponse(
-                        {
-                            "success": True,
-                            "test_results": formatted_results,
-                            "total_tests": total_tests,
-                            "passed_tests": passed_tests,
-                        }
-                    )
-
-                except Exception as e:
-                    error_msg = str(e)
-                    traceback.print_exc()
-                    return JsonResponse(
-                        {"success": False, "error": error_msg, "test_results": []}
-                    )
-                finally:
-                    sys.stdout = old_stdout
-
-            except json.JSONDecodeError as e:
-                return JsonResponse(
-                    {"error": f"JSON decode error: {str(e)}"}, status=400
-                )
-            except Exception as e:
-                traceback.print_exc()
-                return JsonResponse({"error": str(e)}, status=400)
-        else:
-            return JsonResponse(
-                {"error": f"Expected application/json, got: '{request.content_type}'"},
-                status=400,
-            )
-    else:
-        return JsonResponse(
-            {"error": f"Expected POST method, got: {request.method}"}, status=405
+    try:
+        body = json.loads(request.body)
+        code = body.get("code", "")
+        problem_id = body.get("problem_id", "1_2sum")
+        user_id = body.get("user_id")
+        
+        if not user_id:
+            return JsonResponse({"error": "Could not find user"}, status=400)
+        
+        # ✅ Fetch problem from Supabase instead of Django ORM
+        problem_res = (
+            supabase.table("problem_completions")
+            .select("*")
+            .eq("problem_id", problem_id)
+            .eq("user_id", user_id)
+            .maybe_single()
         )
+
+        if not problem_res:
+            return JsonResponse(
+                {"error": f"Problem {problem_id} not found in Supabase"}, status=404
+            )
+
+        file_name = f"{problem_id}.py"
+        file_path = os.path.join(media_path, file_name)
+
+        if not os.path.exists(file_path):
+            return JsonResponse(
+                {"error": f"Problem file {file_name} not found"}, status=404
+            )
+
+        res = insert_user_code(file_path, code)
+
+        old_stdout = sys.stdout
+        sys.stdout = mystdout = io.StringIO()
+        namespace = {}
+
+        try:
+            exec(res, namespace)
+            test_results = namespace.get("results", {})
+            formatted_results = []
+
+            for test_name, result in test_results.items():
+                formatted_results.append(
+                    {
+                        "test_name": test_name,
+                        "passed": result.get("passed", False),
+                        "expected": result.get("expected"),
+                        "actual": result.get("actual"),
+                        "error": result.get("error", ""),
+                        "input": result.get("graph")
+                        or result.get("nums")
+                        or result.get("input", ""),
+                        "description": (
+                            f"Test case {test_name.split('_')[-1]}"
+                            if "_" in test_name
+                            else test_name
+                        ),
+                    }
+                )
+
+            passed_tests = sum(1 for r in formatted_results if r["passed"])
+            total_tests = len(formatted_results)
+
+            # ✅ Handle unauthenticated users
+            if user_id is None:
+                formatted_results = [
+                    {
+                        "test_name": "auth_required",
+                        "description": "Authentication required",
+                        "passed": False,
+                        "expected": None,
+                        "actual": None,
+                        "error": "Login required to run and pass tests.",
+                        "input": "",
+                    }
+                ]
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "message": "Anonymous runs not allowed to pass tests.",
+                        "test_results": formatted_results,
+                        "total_tests": len(formatted_results),
+                        "passed_tests": 0,
+                    }
+                )
+
+            # ✅ Store completion in Supabase
+            if total_tests > 0 and passed_tests == total_tests:
+                
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "message": "All tests passed! Problem marked as completed.",
+                        "test_results": formatted_results,
+                        "total_tests": total_tests,
+                        "passed_tests": passed_tests,
+                    }
+                )
+
+            # ✅ Partial completion
+            return JsonResponse(
+                {
+                    "success": True,
+                    "test_results": formatted_results,
+                    "total_tests": total_tests,
+                    "passed_tests": passed_tests,
+                }
+            )
+
+        except Exception as e:
+            traceback.print_exc()
+            return JsonResponse(
+                {"success": False, "error": str(e), "test_results": []}, status=500
+            )
+        finally:
+            sys.stdout = old_stdout
+
+    except json.JSONDecodeError as e:
+        return JsonResponse({"error": f"JSON decode error: {e}"}, status=400)
+    except Exception as e:
+        traceback.print_exc()
+        return JsonResponse({"error": str(e)}, status=400)
+    # media_path = settings.MEDIA_ROOT
+
+    # if request.method == "POST":
+    #     content_type = request.content_type or ""
+
+    #     if "application/json" in content_type:
+    #         try:
+    #             body = json.loads(request.body)
+    #             code = body.get("code", "")
+    #             problem_id = body.get("problem_id", "1_2sum")
+
+    #             user = (
+    #                 request.user
+    #                 if getattr(request.user, "is_authenticated", False)
+    #                 else None
+    #             )
+
+    #             # Find the problem
+    #             try:
+    #                 problem = Problem.objects.get(problem_id=problem_id)
+    #             except Problem.DoesNotExist:
+    #                 return JsonResponse(
+    #                     {"error": f"Problem {problem_id} not found"}, status=404
+    #                 )
+
+    #             # Insert user code into test file (your existing logic)
+    #             file_name = f"{problem_id}.py"
+    #             file_path = os.path.join(media_path, file_name)
+
+    #             if not os.path.exists(file_path):
+    #                 return JsonResponse(
+    #                     {"error": f"Problem file {file_name} not found"}, status=404
+    #                 )
+
+    #             res = insert_user_code(file_path, code)
+
+    #             # Capture stdout
+    #             old_stdout = sys.stdout
+    #             sys.stdout = mystdout = io.StringIO()
+    #             namespace = {}
+
+    #             try:
+    #                 exec(res, namespace)
+    #                 test_results = namespace.get("results", {})
+    #                 formatted_results = []
+    #                 for test_name, result in test_results.items():
+    #                     formatted_results.append(
+    #                         {
+    #                             "test_name": test_name,
+    #                             "passed": result.get("passed", False),
+    #                             "expected": result.get("expected"),
+    #                             "actual": result.get("actual"),
+    #                             "error": result.get("error", ""),
+    #                             "input": result.get("graph")
+    #                             or result.get("nums")
+    #                             or result.get("input", ""),
+    #                             "description": (
+    #                                 f"Test case {test_name.split('_')[-1]}"
+    #                                 if "_" in test_name
+    #                                 else test_name
+    #                             ),
+    #                         }
+    #                     )
+
+    #                 passed_tests = sum(1 for r in formatted_results if r["passed"])
+    #                 total_tests = len(formatted_results)
+
+    #                 # if user is None:
+    #                 if not formatted_results:
+    #                         formatted_results = [
+    #                             {
+    #                                 "test_name": "auth_required",
+    #                                 "description": "Authentication required",
+    #                                 "passed": False,
+    #                                 "expected": None,
+    #                                 "actual": None,
+    #                                 "error": "Login required to run and pass tests.",
+    #                                 "input": "",
+    #                             }
+    #                         ]
+    #                 else:
+    #                         for r in formatted_results:
+    #                             r["passed"] = False
+    #                             r["error"] = (
+    #                                 r.get("error")
+    #                                 or "Login required to run and pass tests."
+    #                             )
+
+                        # return JsonResponse(
+                        #     {
+                        #         "success": True,
+                        #         "message": "Anonymous runs are not allowed to pass. Please log in.",
+                        #         "test_results": formatted_results,
+                        #         "total_tests": len(formatted_results),
+                        #         "passed_tests": 0,
+                        #         "next_problem": None,
+                        #     }
+                        # )
+
+    #                 if total_tests > 0 and passed_tests == total_tests:
+    #                     completion, created = ProblemCompletion.objects.get_or_create(
+    #                         user=user, problem=problem
+    #                     )
+
+    #                     completion.mark_as_completed(user_solution=code)
+
+    #                     if not hasattr(user, "progress"):
+    #                         UserProgress.objects.create(user=user)
+    #                     user.progress.update_progress()
+
+    #                     next_pid = (
+    #                         user.progress.current_problem.problem_id
+    #                         if user.progress and user.progress.current_problem
+    #                         else None
+    #                     )
+
+    #                     return JsonResponse(
+    #                         {
+    #                             "success": True,
+    #                             "message": "All tests passed! Problem marked as completed.",
+    #                             "test_results": formatted_results,
+    #                             "total_tests": total_tests,
+    #                             "passed_tests": passed_tests,
+    #                             "next_problem": (
+    #                                 user.progress.current_problem.problem_id
+    #                                 if (user.progress and user.progress.current_problem)
+    #                                 else None
+    #                             ),
+    #                         }
+    #                     )
+
+    #                 return JsonResponse(
+    #                     {
+    #                         "success": True,
+    #                         "test_results": formatted_results,
+    #                         "total_tests": total_tests,
+    #                         "passed_tests": passed_tests,
+    #                     }
+    #                 )
+
+    #             except Exception as e:
+    #                 error_msg = str(e)
+    #                 traceback.print_exc()
+    #                 return JsonResponse(
+    #                     {"success": False, "error": error_msg, "test_results": []}
+    #                 )
+    #             finally:
+    #                 sys.stdout = old_stdout
+
+    #         except json.JSONDecodeError as e:
+    #             return JsonResponse(
+    #                 {"error": f"JSON decode error: {str(e)}"}, status=400
+    #             )
+    #         except Exception as e:
+    #             traceback.print_exc()
+    #             return JsonResponse({"error": str(e)}, status=400)
+    #     else:
+    #         return JsonResponse(
+    #             {"error": f"Expected application/json, got: '{request.content_type}'"},
+    #             status=400,
+    #         )
+    # else:
+    #     return JsonResponse(
+    #         {"error": f"Expected POST method, got: {request.method}"}, status=405
+    #     )
 
 
 def problem_details(request):

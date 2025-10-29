@@ -2,6 +2,7 @@
 
 
 import { useRef, useState, useEffect } from 'react';
+import { getCurrentUser } from '../../lib/supabase/auth';
 
 export default function TestCasesPanel ({ problemId, editorRef, onAllTestsPassed }) {
   const [runningTests, setRunningTests] = useState(false);
@@ -16,6 +17,8 @@ export default function TestCasesPanel ({ problemId, editorRef, onAllTestsPassed
     setRunningTests(true);
     const userCode = editorRef.current.getValue();
     console.log(problemId)
+    const user =  await getCurrentUser();
+    console.log(user.id);
     try {
       const response = await fetch("http://localhost:8000/api/run-learn-tests", {
         method: "POST",
@@ -25,7 +28,8 @@ export default function TestCasesPanel ({ problemId, editorRef, onAllTestsPassed
         credentials: "include",
         body: JSON.stringify({
           code: userCode,
-          problem_id: problemId
+          problem_id: problemId,
+          user_id: user.id,
         }),
       });
 

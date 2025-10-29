@@ -62,3 +62,15 @@ export async function updateNotes(problem_id: string, notes: string) {
 
     return null;
 }
+
+export async function updateUserProblemCompletion(problem_id: string, test_cases: number, current) {
+    const {data: user, error } = await supabase.auth.getUser();
+
+    if (error) throw error;
+
+    const { error: update_error } = await supabase.from("problem_completions").update({"is_completed": true, "test_cases_passed": test_cases, "total_test_cases": test_cases, "user_solution": current}).eq("problem_id", problem_id).eq("user_id", user.user.id)
+    
+    if (update_error) throw error;
+
+    return null;
+}
