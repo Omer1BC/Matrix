@@ -153,11 +153,15 @@ export type ProblemUpdate = {
 export type ProblemCompletion = {
   id: number;
   user_id: string;
-  problem_id: number;
+  problem_id: string;
+  title: string;
+  category_id: string;
+  is_unlocked: boolean;
   is_completed: boolean;
   is_attempted: boolean;
   completion_date: string | null;
   first_attempt_date: string;
+  notes: string,
   user_solution: string;
   attempts_count: number;
   hints_used: number;

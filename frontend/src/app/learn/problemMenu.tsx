@@ -3,27 +3,31 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { ProblemCategory, ProblemCompletion } from "@/lib/types";
+import { getAllCategories, getAllUserProblems } from "@/lib/supabase/problems";
 
 export default function ProblemMenu({ onProblemSelect, refreshKey }) {
   const [expandedCategory, setExpandedCategory] = useState(null);
-  const [problemCategories, setProblemCategories] = useState({});
+  const [problemCategories, setProblemCategories] = useState<ProblemCategory[]>([]);
+  const [problems, SetProblems] = useState<ProblemCompletion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const { user } = useAuth();
 
   useEffect(() => {
+    console.log(problems);
+  }, [problems]);
+
+  useEffect(() => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:8000/api/categories", {
-          credentials: "include",
-        });
-        const data = await res.json();
-        setProblemCategories(data);
+        const res = await getAllCategories();
+        setProblemCategories(res); // fallback to empty array if null
       } catch (err) {
         console.error(err);
-        setError("Failed to load problems.");
+        setError("Failed to get categories");
       } finally {
         setLoading(false);
       }
@@ -33,24 +37,61 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
   }, [refreshKey]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchProblems = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:8000/api/categories", {
-          credentials: "include",
-        });
-        const data = await res.json();
-        setProblemCategories(data);
+        const res = await getAllUserProblems();
+        SetProblems(res);
       } catch (err) {
         console.error(err);
-        setError("Failed to load problems.");
       } finally {
         setLoading(false);
       }
-    };
+    }
 
-    fetchCategories();
-  }, []);
+    fetchProblems();
+  }, [refreshKey]);
+
+  // useEffect(() => {
+  //   const fetchCategories = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const res = await fetch("http://localhost:8000/api/categories", {
+  //         credentials: "include",
+  //       });
+  //       const data = await res.json();
+  //       setProblemCategories(data);
+  //       console.log(data);
+  //     } catch (err) {
+  //       console.error(err);
+  //       setError("Failed to load problems.");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchCategories();
+  // }, [refreshKey]);
+
+  // useEffect(() => {
+  //   const fetchCategories = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const res = await fetch("http://localhost:8000/api/categories", {
+  //         credentials: "include",
+  //       });
+  //       const data = await res.json();
+  //       setProblemCategories(data);
+  //     } catch (err) {
+  //       console.error(err);
+  //       setError("Failed to load problems.");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchCategories();
+  // }, []);
 
   const toggleCategory = (key) => {
     setExpandedCategory((prev) => (prev === key ? null : key));
@@ -92,8 +133,9 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
 
           {expandedCategory === key && (
             <div className="mt-2 ml-6 space-y-2">
-              {section.items.map((problem) => {
-                const isLocked = !problem.unlocked;
+              {problems.filter(problem => problem.category_id === section.title).map(problem => {
+                const isLocked = !problem.is_unlocked;
+                console.log(problems);
                 return (
                   <button
                     key={problem.id}
@@ -114,12 +156,12 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
                       <div
                         className="w-4 h-4 rounded-full border-2"
                         style={{
-                          backgroundColor: problem.completed
+                          backgroundColor: problem.is_completed
                             ? "var(--success-color)"
                             : "transparent",
                           borderColor: isLocked
                             ? "var(--dbl-1)"
-                            : problem.completed
+                            : problem.is_completed
                             ? "var(--success-color)"
                             : "var(--gr-2)",
                         }}

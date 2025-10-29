@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
-
+import { getCurrentUser } from "@/lib/supabase/auth";
 type Props = {
   saving: boolean;
   disabled: boolean;
