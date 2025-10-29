@@ -1,21 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import {
-  ArrowLeft,
-  Save,
-  User as UserIcon,
-  Mail,
-  Lock,
-  BookOpen,
-} from "lucide-react";
-import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import {
   updateUserProfile,
@@ -24,7 +10,6 @@ import {
 } from "@/lib/supabase/auth";
 import { PasswordState, ProfileState, ProfileUpdate } from "@/lib/types";
 import { redirect } from "next/navigation";
-import { Spinner } from "@/components/ui/spinner";
 import { SettingsHeader } from "./SettingsHeader";
 import { ProfileDetailsCard } from "./PersonalDetailsCard";
 import { SecuritySettingsCard } from "./SecuritySettingsCard";

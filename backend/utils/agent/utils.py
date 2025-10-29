@@ -520,3 +520,37 @@ def generate_animation(
             "media_dir": "",
             "cmd": "",
         }
+
+
+# Code Editor Context
+
+
+def snippet(s: str, max_chars: int = 2000) -> str:
+    if not s:
+        return ""
+    s = s.strip()
+    if len(s) <= max_chars:
+        return s
+    half = max_chars // 2
+    return s[:half] + "\n\n<...snip...>\n\n" + s[-half:]
+
+
+# Autonomous Hints
+
+
+def append_time_stamp(file_name, timestamp, code):
+    path = f"{settings.USER_FILES}/{file_name}"
+    data = {}
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = {}
+
+    data[timestamp] = code
+    try:
+        with open(path, "w") as f:
+            json.dump(data, f, indent=2)
+        return True
+    except Exception as e:
+        return False

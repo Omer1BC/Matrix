@@ -1,11 +1,10 @@
 "use client";
 import NeoIcon from "@/components/NeoIcon";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import {ping} from "@/lib/api";
+import { ping } from "@/lib/api";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type * as monaco from "monaco-editor";
-import { TimerReset } from "lucide-react";
 type TimerControls = {
   running: boolean;
   seconds: number;
@@ -21,7 +20,7 @@ type EditorUtilitiesProps = {
   clearHints: () => void;
   timer: TimerControls;
   className?: string;
-  editorRef : React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
+  editorRef: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
 };
 
 export default function EditorUtilities({
@@ -31,30 +30,107 @@ export default function EditorUtilities({
   clearHints,
   timer,
   className = "",
-  editorRef
+  editorRef,
 }: EditorUtilitiesProps) {
   const { running, seconds, start, stop, reset } = timer;
-  const INTERVAL = 5; // seconds
-  const { user, loading: authLoading } = useAuth();
-  
+  const INTERVAL = 5; // snapshot cadence
+  const STALE_AFTER = 25; // seconds without code change => "stale"
+  const BASE_COOLDOWN = 60; // first auto-hint cooldown
+  const MAX_COOLDOWN = 5 * 60; // cap backoff
+  const IDLE_THRESHOLD = 90 * 1000; // 90s without activity => idle
+  const MAX_AUTO_HINTS = 5; // per session/problem
+  const { user } = useAuth();
 
-  //Takes a snapshot of user's code every INTERVAL seconds if the timer is running
+  const last = useRef({
+    code: "",
+    lastChangeSec: 0,
+    lastHintWallMs: -Infinity,
+    backoffSec: BASE_COOLDOWN,
+    autoHintCount: 0,
+  });
+
+  const inflight = useRef(false);
+  const lastActivityMs = useRef<number>(Date.now());
+
+  // Track user presence (keyboard/mouse + visibility)
   useEffect(() => {
-    if (running && seconds % INTERVAL == 0 && editorRef.current) {
-      // console.log("seconds are ",seconds,editorRef.current.getModel()?.getValue())
-      const code = editorRef.current.getModel()?.getValue() || "";
-      const userInfo = user ? user : { id: "guest"}
-      ping({user_id: userInfo.id, code: code,timestamp:seconds},"log-editor-history")
-      .then((res) => {  
-        console.log("response from logging editor history ",res)
-      })
+    const bump = () => {
+      lastActivityMs.current = Date.now();
+    };
+    const vis = () => {
+      lastActivityMs.current = Date.now();
+    };
+    window.addEventListener("mousemove", bump, { passive: true });
+    window.addEventListener("keydown", bump, { passive: true });
+    document.addEventListener("visibilitychange", vis);
+    return () => {
+      window.removeEventListener("mousemove", bump as any);
+      window.removeEventListener("keydown", bump as any);
+      document.removeEventListener("visibilitychange", vis as any);
+    };
+  }, []);
 
-      
-    
-    }
-    }
-  ,[seconds])
+  useEffect(() => {
+    if (!running || !editorRef.current) return;
 
+    const nowMs = Date.now();
+    const hidden = document.hidden;
+    const idle = nowMs - lastActivityMs.current >= IDLE_THRESHOLD;
+
+    // Current state of editor
+    const code = editorRef.current.getModel()?.getValue() || "";
+
+    // Changes detected
+    if (code !== last.current.code) {
+      last.current.code = code;
+      last.current.lastChangeSec = seconds;
+      last.current.backoffSec = BASE_COOLDOWN;
+      last.current.autoHintCount = Math.max(0, last.current.autoHintCount - 1);
+    }
+
+    if (seconds % INTERVAL === 0) {
+      const userInfo = user ? user : { id: "guest" };
+      ping(
+        { user_id: userInfo.id, code, timestamp: seconds },
+        "log-editor-history"
+      ).catch(() => {});
+    }
+
+    if (hidden || idle) return;
+
+    // Staleness check
+    const stale = seconds - last.current.lastChangeSec >= STALE_AFTER;
+
+    // Cooldown check (wall-clock)
+    const cooled =
+      nowMs - last.current.lastHintWallMs >= last.current.backoffSec * 1000;
+
+    if (!stale || !cooled) return;
+    if (inflight.current) return;
+    if (last.current.autoHintCount >= MAX_AUTO_HINTS) return;
+
+    inflight.current = true;
+    last.current.lastHintWallMs = nowMs;
+
+    Promise.resolve(onAnnotate())
+      .catch(() => {})
+      .finally(() => {
+        inflight.current = false;
+        last.current.autoHintCount += 1;
+        last.current.backoffSec = Math.min(
+          last.current.backoffSec * 2,
+          MAX_COOLDOWN
+        );
+      });
+  }, [
+    running,
+    seconds,
+    editorRef,
+    onAnnotate,
+    user,
+    IDLE_THRESHOLD,
+    MAX_COOLDOWN,
+  ]);
 
   return (
     <>

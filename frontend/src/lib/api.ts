@@ -1,4 +1,11 @@
 // lib/api.ts
+import {
+  clampLengths,
+  type AgentRequest,
+  type AgentResponse,
+  type AgentResponseMap,
+  type Intent,
+} from "./agents";
 
 export async function getAnimationUrl(opts: {
   name: string;
@@ -51,16 +58,21 @@ export async function ping(data: Record<string, unknown>, endpoint: string) {
   }
 }
 
-export async function agentCall(payload: Record<string, unknown>) {
+export async function agentCall<I extends Intent | "chat" = "chat">(
+  payload: AgentRequest & { intent?: I }
+): Promise<AgentResponseMap[I]> {
   const res = await fetch(`http://localhost:8000/api/agent`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(clampLengths(payload)),
   });
 
-  const data = await res.json().catch(() => ({}));
+  const data = (await res.json().catch(() => ({}))) as AgentResponseMap[I];
   if (!res.ok) {
-    const msg = data?.error || `Agent error (${res.status})`;
+    const msg =
+      (data as any)?.data?.error ||
+      (data as any)?.error ||
+      `Agent error (${res.status})`;
     throw new Error(msg);
   }
   return data;

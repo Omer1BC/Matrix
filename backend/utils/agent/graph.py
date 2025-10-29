@@ -6,6 +6,7 @@ from langchain_core.messages import SystemMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import ToolNode
 from langgraph.checkpoint.memory import MemorySaver
+from .utils import snippet
 
 from .tools import (
     generate_animation_tool,
@@ -22,6 +23,7 @@ class State(TypedDict):
     messages: Annotated[list, add_messages]
     question: str
     code: str
+    preferences: str
     task: str
     params: Dict[str, Any]
 
@@ -48,10 +50,14 @@ def llm_node(state: State):
     msgs = [sys]
     if state.get("question"):
         msgs.append(SystemMessage(content=f"Problem:\n{state['question']}"))
+    if state.get("preferences"):
+        msgs.append(
+            SystemMessage(content=f"Learner preferences: {state['preferences']}")
+        )
     if state.get("code"):
         msgs.append(
             SystemMessage(
-                content=f"User code snapshot:\n```python\n{state['code']}\n```"
+                content=f"User code snapshot:\n```python\n{snippet(state['code'])}\n```"
             )
         )
 

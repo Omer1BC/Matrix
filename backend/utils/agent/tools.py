@@ -91,36 +91,44 @@ def grade_via_tests_tool(problem_id: str, code: str) -> Dict[str, Any]:
     "hints",
     return_direct=False,
 )
-def hints_tool(problem_id: str, code: str) -> Dict[str, Any]:
+def hints_tool(problem_id: str, code: str, preferences: str = "") -> Dict[str, Any]:
     """Provide concise, code-aware hints for the given problem without revealing the full solution; returns annotated_code + explanations."""
-    return get_ai_hints(code, tests="", problem_id=problem_id)
+    return get_ai_hints(code, tests="", problem_id=problem_id, preferences=preferences)
 
 
 @tool(
     "annotated_hints",
     return_direct=False,
 )
-def annotated_hints_tool(problem_id: str, code: str) -> Dict[str, Any]:
+def annotated_hints_tool(
+    problem_id: str, code: str, preferences: str = ""
+) -> Dict[str, Any]:
     """Provide line-anchored hints mapping line numbers to comments plus brief explanations and a thought-provoking test case."""
-    return get_annotated_ai_hints(code, tests="", problem_id=problem_id)
+    return get_annotated_ai_hints(
+        code, tests="", problem_id=problem_id, preferences=preferences
+    )
 
 
 @tool(
     "tool_hints",
     return_direct=False,
 )
-def tool_hints_tool(code: str, pattern: str) -> Dict[str, Any]:
+def tool_hints_tool(code: str, pattern: str, preferences: str = "") -> Dict[str, Any]:
     """Explain how a specific algorithmic pattern/tool (e.g., DFS, Set) applies to the current problem/code without giving away the solution."""
-    return get_tool_hints(code, pattern)
+    return get_tool_hints(code, pattern, preferences=preferences)
 
 
 @tool(
     "annotate_errors",
     return_direct=False,
 )
-def annotate_errors_tool(problem_id: str, error: str, code: str) -> Dict[str, Any]:
+def annotate_errors_tool(
+    problem_id: str, error: str, code: str, preferences: str = ""
+) -> Dict[str, Any]:
     """Given an error string and the user's code, suggest minimal line replacements (line_number_to_replacement) with a brief explanation to fix the error."""
-    return get_error_details(problem_id=problem_id, error=error, code=code)
+    return get_error_details(
+        problem_id=problem_id, error=error, code=code, preferences=preferences
+    )
 
 
 @tool(

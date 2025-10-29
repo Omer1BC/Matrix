@@ -7,7 +7,6 @@ import json
 import traceback
 from django.conf import settings
 import json
-from utils.agent.utils import generate_animation, get_solution_grade
 from .models import ProblemCategory, Problem, ProblemCompletion, UserProgress
 from utils.utils import *
 from utils.problem_info import *
@@ -22,6 +21,11 @@ from utils.agent.tools import (
     hints_tool,
     run_tests_tool,
     tool_hints_tool,
+)
+from utils.agent.utils import (
+    append_time_stamp,
+    generate_animation,
+    get_solution_grade,
 )
 from langchain_core.messages import HumanMessage, AIMessage
 
@@ -115,6 +119,7 @@ def agent(request):
                 "code": body.get("code", "") or "",
                 "question": body.get("question", "") or "",
                 "intent": body.get("intent", None),
+                "preferences": body.get("preferences", None),
                 "extras": body.get("extras", {}),
             }
         )
@@ -140,22 +145,39 @@ def agent(request):
                         kind="tool_hints", data={"error": "pattern required"}
                     ).model_dump()
                 )
-            res = tool_hints_tool.invoke({"code": req.code, "pattern": pat})
+            res = tool_hints_tool.invoke(
+                {"code": req.code, "pattern": pat, "preferences": req.preferences or ""}
+            )
             return JsonResponse(AgentResponse(kind="tool_hints", data=res).model_dump())
         if task == "annotate_errors":
             err = params.get("error", req.extras.get("error", req.message))
             res = annotate_errors_tool.invoke(
-                {"problem_id": req.problem_id, "error": err, "code": req.code}
+                {
+                    "problem_id": req.problem_id,
+                    "error": err,
+                    "code": req.code,
+                    "preferences": req.preferences or "",
+                }
             )
             return JsonResponse(
                 AgentResponse(kind="annotate_errors", data=res).model_dump()
             )
         if task == "hints":
-            res = hints_tool.invoke({"problem_id": req.problem_id, "code": req.code})
+            res = hints_tool.invoke(
+                {
+                    "problem_id": req.problem_id,
+                    "code": req.code,
+                    "preferences": req.preferences or "",
+                }
+            )
             return JsonResponse(AgentResponse(kind="hints", data=res).model_dump())
         if task == "annotated_hints":
             res = annotated_hints_tool.invoke(
-                {"problem_id": req.problem_id, "code": req.code}
+                {
+                    "problem_id": req.problem_id,
+                    "code": req.code,
+                    "preferences": req.preferences or "",
+                }
             )
             return JsonResponse(
                 AgentResponse(kind="annotated_hints", data=res).model_dump()
@@ -184,6 +206,7 @@ def agent(request):
                 "messages": [HumanMessage(content=req.message)],
                 "question": req.question,
                 "code": req.code,
+                "preferences": req.preferences,
                 "task": task,
                 "params": params,
             },
@@ -1221,38 +1244,10 @@ def log_editor_history(request):
             code = body.get("code", "")
             timestamp = body.get("timestamp", "")
 
-            res = append_time_stamp(f"{user_id}_code_history.txt",timestamp,code)
-
+            res = append_time_stamp(f"{user_id}_code_history.txt", timestamp, code)
 
             return JsonResponse({"success": res, "message": "Log saved successfully"})
 
         except Exception as e:
             return JsonResponse({"Error Occured": str(e)}, status=400)
     return JsonResponse({"error": "Malformed Request"}, status=400)
-
-def append_time_stamp(file_name,timestamp,code):
-    path = f"{settings.USER_FILES}/{file_name}"
-    data = {}
-    try:
-        with open(path,"r") as f:
-            data = json.load(f)
-    except FileNotFoundError:
-        data = {}
-
-    data[timestamp] = code 
-    try:
-        with open(path,"w") as f:
-            json.dump(data,f,indent=2)
-        return True
-    except Exception as e:
-        return False
-        
-    
-    
-    
-    
-        
-
-
-    
-    

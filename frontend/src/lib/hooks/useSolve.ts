@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { agentCall, ping } from "@/lib/api";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { getUserProfile } from "../supabase/auth";
 
 type ToolInfo = { name: string; description?: string; code?: string };
 
@@ -34,12 +35,21 @@ export function useSolve(problemId: number = 1) {
     async (text: string) => {
       setLoading(true);
       try {
+        const profile = await getUserProfile();
+
+        const code =
+          editorRef.current?.getValue?.() ?? details?.method_stub ?? "";
+
+        const preferences = profile?.learning_style ?? "";
+
         const res = await agentCall({
           user_id: user,
           problem_id: String(details?.id || problemId),
           intent: "chat",
           message: text,
           question: `${details?.title ?? ""}\n${details?.description ?? ""}`,
+          code: code,
+          preferences: preferences,
         });
         setResponse(res?.data?.text ?? res?.data?.response ?? "");
       } finally {
@@ -53,11 +63,15 @@ export function useSolve(problemId: number = 1) {
     async (codeWithLines: string) => {
       setLoading(true);
       try {
+        const profile = await getUserProfile();
+        const preferences = profile?.learning_style ?? "";
+
         const res = await agentCall({
           user_id: user,
           problem_id: String(details?.id || problemId),
           intent: "annotated_hints",
           code: codeWithLines,
+          preferences: preferences,
         });
         return res?.data ?? {};
       } finally {
@@ -71,11 +85,15 @@ export function useSolve(problemId: number = 1) {
     async (codeWithLines: string, error: string) => {
       setLoading(true);
       try {
+        const profile = await getUserProfile();
+        const preferences = profile?.learning_style ?? "";
+
         const res = await agentCall({
           user_id: user,
           problem_id: String(details?.id || problemId),
           intent: "annotate_errors",
           code: codeWithLines,
+          preferences: preferences,
           extras: { error },
         });
         return res?.data ?? {};

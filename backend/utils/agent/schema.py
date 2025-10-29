@@ -1,6 +1,6 @@
 # utils/agent/schema.py
 from typing import Optional, Dict, Any, Literal
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 Intent = Literal[
     "chat",  # general Q&A about the problem
@@ -18,9 +18,10 @@ class AgentRequest(BaseModel):
     user_id: str
     problem_id: str
     message: str = ""
-    code: str = ""
     question: str = ""  # title + description is ideal
     intent: Optional[Intent] = None
+    code: Optional[str] = Field(default=None, max_length=500000)
+    preferences: Optional[str] = Field(default=None, max_length=2000)
     extras: Dict[str, Any] = {}  # e.g. { "pattern": "DFS", "error": "NameError: x" }
 
 
