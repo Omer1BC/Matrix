@@ -64,19 +64,35 @@ export default function Header() {
     <>
       <header className="flex flex-row justify-between w-full relative z-10 border-b border-border/20 backdrop-blur-sm bg-background/80">
         <div className="px-4 py-4 flex flex-1 items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-          >
-            <Image
-              src="/matrix_logo.png"
-              alt="Matrix Logo"
-              className="w-10 h-10"
-              width={10}
-              height={10}
-            />
-            <span className="text-xl font-bold glow-text">Matrix</span>
-          </Link>
+          <div className="flex flex-row gap-4 items-center">
+            <Link
+              href="/"
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+            >
+              <Image
+                src="/matrix_logo.png"
+                alt="Matrix Logo"
+                className="w-10 h-10"
+                width={10}
+                height={10}
+              />
+              <span className="text-xl font-bold glow-text">Matrix</span>
+            </Link>
+            <div className="flex flex-row gap-4 items-center">
+              <Link
+                href={"/learn"}
+                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+              >
+                <span className="text-xl font-bold glow-text">Learn</span>
+              </Link>
+              <Link
+                href={"/solve"}
+                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+              >
+                <span className="text-xl font-bold glow-text">Solve</span>{" "}
+              </Link>
+            </div>
+          </div>
 
           {authLoading ? (
             <div className="flex items-center gap-4">

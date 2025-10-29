@@ -114,6 +114,7 @@ def agent(request):
                 "code": body.get("code", "") or "",
                 "question": body.get("question", "") or "",
                 "intent": body.get("intent", None),
+                "preferences": body.get("preferences", None),
                 "extras": body.get("extras", {}),
             }
         )
@@ -139,22 +140,39 @@ def agent(request):
                         kind="tool_hints", data={"error": "pattern required"}
                     ).model_dump()
                 )
-            res = tool_hints_tool.invoke({"code": req.code, "pattern": pat})
+            res = tool_hints_tool.invoke(
+                {"code": req.code, "pattern": pat, "preferences": req.preferences or ""}
+            )
             return JsonResponse(AgentResponse(kind="tool_hints", data=res).model_dump())
         if task == "annotate_errors":
             err = params.get("error", req.extras.get("error", req.message))
             res = annotate_errors_tool.invoke(
-                {"problem_id": req.problem_id, "error": err, "code": req.code}
+                {
+                    "problem_id": req.problem_id,
+                    "error": err,
+                    "code": req.code,
+                    "preferences": req.preferences or "",
+                }
             )
             return JsonResponse(
                 AgentResponse(kind="annotate_errors", data=res).model_dump()
             )
         if task == "hints":
-            res = hints_tool.invoke({"problem_id": req.problem_id, "code": req.code})
+            res = hints_tool.invoke(
+                {
+                    "problem_id": req.problem_id,
+                    "code": req.code,
+                    "preferences": req.preferences or "",
+                }
+            )
             return JsonResponse(AgentResponse(kind="hints", data=res).model_dump())
         if task == "annotated_hints":
             res = annotated_hints_tool.invoke(
-                {"problem_id": req.problem_id, "code": req.code}
+                {
+                    "problem_id": req.problem_id,
+                    "code": req.code,
+                    "preferences": req.preferences or "",
+                }
             )
             return JsonResponse(
                 AgentResponse(kind="annotated_hints", data=res).model_dump()
@@ -183,6 +201,7 @@ def agent(request):
                 "messages": [HumanMessage(content=req.message)],
                 "question": req.question,
                 "code": req.code,
+                "preferences": req.preferences,
                 "task": task,
                 "params": params,
             },

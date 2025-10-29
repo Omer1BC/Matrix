@@ -23,6 +23,7 @@ class State(TypedDict):
     messages: Annotated[list, add_messages]
     question: str
     code: str
+    preferences: str
     task: str
     params: Dict[str, Any]
 
@@ -49,6 +50,10 @@ def llm_node(state: State):
     msgs = [sys]
     if state.get("question"):
         msgs.append(SystemMessage(content=f"Problem:\n{state['question']}"))
+    if state.get("preferences"):
+        msgs.append(
+            SystemMessage(content=f"Learner preferences: {state['preferences']}")
+        )
     if state.get("code"):
         msgs.append(
             SystemMessage(

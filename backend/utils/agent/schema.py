@@ -20,8 +20,9 @@ class AgentRequest(BaseModel):
     message: str = ""
     question: str = ""  # title + description is ideal
     intent: Optional[Intent] = None
-    extras: Dict[str, Any] = {}  # e.g. { "pattern": "DFS", "error": "NameError: x" }
     code: Optional[str] = Field(default=None, max_length=500000)
+    preferences: Optional[str] = Field(default=None, max_length=2000)
+    extras: Dict[str, Any] = {}  # e.g. { "pattern": "DFS", "error": "NameError: x" }
 
 
 class AgentResponse(BaseModel):

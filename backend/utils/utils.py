@@ -4,7 +4,7 @@ import io
 import ast
 import json
 import re
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from langchain_core.tools import Tool
 from datetime import datetime
 from django.conf import settings
@@ -188,48 +188,62 @@ def run(problem_id, code):
         sys.stdout = old_stdout
 
 
-CODE_HINTS_PROMPT = """You are a technical intervewier for a software engineer.
-    The interviewee has been updating their code following your guidance as shown here
-    {code}. You compare the candidate's code against the solution {solution} and 
-    notice that their code fails on the following tests cases: {cases}. 
-    You don't want to give them the answer, but want them to improve their problem solving abilitiy in technical interviews. 
-    ONLY add comments to their existing code to guide specifying what they are missing, but do NOT put the actual solution in the commented code. You MUST always respond in the following template and no other text.\n
-    {format_instructions}"""
-TOOL_HINTS_PROMPT = """You are a technical intervewier for a software engineer.
-    The interviewee has been updating their code following your guidance as shown here
-    {code}. This is one suggestion that occurs to to give. You MUST NOT explain the answer directly regarding how this approach {pattern} is relevant to the problem, but give the person enough information to figure it out. 
-    You MUST always respond in the following template and no other text.\n
-    {format_instructions}"""
-CODE_HINTS_PROMPT_2 = """You are a technical intervewier for a software engineer.
-    The interviewee has been updating their code following your guidance as shown here
-    {code}. You compare the candidate's code against the solution {solution} and 
-    notice that their code fails on the following tests cases: {cases}. 
-    You don't want to give them the answer, but want them to improve their problem solving abilitiy in technical interviews. 
-    ONLY hints to each relevant line number of their code specifying what they are missing, but do NOT put the actual solution in the commented code. You MUST always respond in the following template and no other text.\n
-    {format_instructions}"""
+CODE_HINTS_PROMPT = """You are a technical interviewer for a software engineer.
+Learner preferences: {preferences_block}
+The interviewee has been updating their code following your guidance as shown here
+{code}. You compare the candidate's code against the solution {solution} and
+notice that their code fails on the following tests cases: {cases}.
+You don't want to give them the answer, but want them to improve their problem solving ability in technical interviews.
+ONLY add comments to their existing code to guide specifying what they are missing, but do NOT put the actual solution in the commented code. You MUST always respond in the following template and no other text.
+{format_instructions}"""
 
-CODE_HINTS_PROMPT_3 = """You are a technical intervewier for a software engineer.
-    The interviewee has been updating their code following your guidance as shown here
-    {code}. You compare the candidate's code against the solution {solution} and 
-    notice that their code fails on the following tests cases: {cases}. 
-    You don't want to give them the answer, but want them to improve their problem solving abilitiy in technical interviews. 
-    ONLY hints to each relevant line number of their code specifying what they are missing, but do NOT put the actual solution in the commented code. You MUST always respond in the following template and no other text.\n
-    {format_instructions}"""
+TOOL_HINTS_PROMPT = """You are a technical interviewer for a software engineer.
+Learner preferences: {preferences_block}
+The interviewee has been updating their code following your guidance as shown here
+{code}. This is one suggestion that occurs to give. You MUST NOT explain the answer directly regarding how this approach {pattern} is relevant to the problem, but give the person enough information to figure it out.
+You MUST always respond in the following template and no other text.
+{format_instructions}"""
+
+CODE_HINTS_PROMPT_2 = """You are a technical interviewer for a software engineer.
+Learner preferences: {preferences_block}
+The interviewee has been updating their code following your guidance as shown here
+{code}. You compare the candidate's code against the solution {solution} and
+notice that their code fails on the following tests cases: {cases}.
+You don't want to give them the answer, but want them to improve their problem solving ability in technical interviews.
+ONLY hints to each relevant line number of their code specifying what they are missing, but do NOT put the actual solution in the commented code. You MUST always respond in the following template and no other text.
+{format_instructions}"""
+
+CODE_HINTS_PROMPT_3 = """You are a technical interviewer for a software engineer.
+Learner preferences: {preferences_block}
+The interviewee has been updating their code following your guidance as shown here
+{code}. You compare the candidate's code against the solution {solution} and
+notice that their code fails on the following tests cases: {cases}.
+You don't want to give them the answer, but want them to improve their problem solving ability in technical interviews.
+ONLY hints to each relevant line number of their code specifying what they are missing, but do NOT put the actual solution in the commented code. You MUST always respond in the following template and no other text.
+{format_instructions}"""
+
 ASK_AI_PROMPT = """
-You are a teachnical interviewer for a software engineer. The problem statement is {question}.
-They are confused on what what a particular section of the problem means. Help them out as concisely as you can. You MUST always respond in the following template and no other text.\n {format_instructions}
+You are a technical interviewer for a software engineer.
+Learner preferences: {preferences_block}
+The problem statement is {question}.
+They are confused about what a particular section of the problem means. Help them out as concisely as you can. You MUST always respond in the following template and no other text.
+{format_instructions}
 """
+
 ERROR_PROMPT = """
-You are going to play the role of the interpreter. It is known that the following code {code} has the error {error}. When ran with the imports {imports} and tested like this {tests}.
-Identify the line number of the code snippet that needs to be replaced and what syntically correct python code it needs to be replaced by to fix the error. Note that since the snippet is a part
-of a larger file, the line numbers are relative to the file, not the snippet. Since the replacement lines will be pasted in exactly character by character, be sure to include any leading tabs. You MUST always respond in the following template and no other text.\n {format_instructions}
+You are going to play the role of the interpreter.
+Learner preferences: {preferences_block}
+It is known that the following code {code} has the error {error}. When run with the imports {imports} and tested like this {tests}.
+Identify the line number of the code snippet that needs to be replaced and what syntactically correct python code it needs to be replaced by to fix the error. Note that since the snippet is a part
+of a larger file, the line numbers are relative to the file, not the snippet. Since the replacement lines will be pasted in exactly character by character, be sure to include any leading tabs. You MUST always respond in the following template and no other text.
+{format_instructions}
 """
 
 
-def get_ai_hints(code, tests, problem_id=1):
+def get_ai_hints(
+    code: str, tests: str = "", problem_id: int = 1, preferences: str = ""
+):
     _, solution_section, _ = get_file_sections(id_to_file_name(problem_id))
-    with open(os.path.join(settings.MEDIA_ROOT, "demo2.py"), "w") as f:
-        f.write("".join(solution_section))
     soln = "".join(solution_section)
 
     class ResearchResponse(BaseModel):
@@ -237,53 +251,42 @@ def get_ai_hints(code, tests, problem_id=1):
         expalantions_of_hint: str
         thought_provoking_test_case_to_consider_as_comment_block: str
 
-    load_dotenv()
-    # llm = ChatAnthropic(model="claude-3-5-sonnet-20241022")
-    llm = ChatOpenAI(
-        model="gpt-4o-mini",
-        temperature=0.0,
-    )
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0)
     parser = PydanticOutputParser(pydantic_object=ResearchResponse)
     prompt = ChatPromptTemplate.from_messages(
         [
-            (
-                "system",
-                CODE_HINTS_PROMPT,
-            ),
+            ("system", CODE_HINTS_PROMPT),
             ("placeholder", "{chat_history}"),
             ("human", "{query}"),
             ("placeholder", "{agent_scratchpad}"),
         ]
     ).partial(
         format_instructions=parser.get_format_instructions(),
+        preferences_block=_preferences_block(preferences),
         code=code,
         solution=soln,
         cases="""
-    stderr: ❌ Test failed for input nums = [3, 2, 4], target = 6
-    stderr: Expected output: [1, 2]
-    stderr: Actual output: [2, 1]
-    """,
+stderr: ❌ Test failed for input nums = [3, 2, 4], target = 6
+stderr: Expected output: [1, 2]
+stderr: Actual output: [2, 1]
+""",
     )
 
     tools = [save_tool]
     agent = create_tool_calling_agent(llm=llm, prompt=prompt, tools=tools)
-
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
     query = "My code is not working. Can you give me some suggestions to think about while not explicitly giving me the answer?"
     raw_response = agent_executor.invoke({"query": query})
 
     try:
         output_str = raw_response.get("output")
-        output_dict = json.loads(output_str)  # Convert JSON string to Python dict
-        return output_dict
+        return json.loads(output_str)
     except Exception as e:
         return {"Error": e, "raw": raw_response}
 
 
-def get_annotated_ai_hints(code, tests, problem_id=1):
+def get_annotated_ai_hints(code, tests, problem_id: int = 1, preferences: str = ""):
     _, solution_section, _ = get_file_sections(id_to_file_name(problem_id))
-    # with open(os.path.join(settings.MEDIA_ROOT, "demo2.py"), "w") as f:
-    #     f.write(''.join(solution_section))
     soln = "".join(solution_section)
 
     class ResearchResponse(BaseModel):
@@ -291,133 +294,143 @@ def get_annotated_ai_hints(code, tests, problem_id=1):
         expalantions_of_hint: str
         thought_provoking_test_case_to_consider_as_comment_block: str
 
-    load_dotenv()
-    llm = ChatOpenAI(
-        model="gpt-4o-mini",
-        temperature=0.0,
-    )
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0)
     parser = PydanticOutputParser(pydantic_object=ResearchResponse)
     prompt = ChatPromptTemplate.from_messages(
         [
-            (
-                "system",
-                CODE_HINTS_PROMPT_2,
-            ),
+            ("system", CODE_HINTS_PROMPT_2),
             ("placeholder", "{chat_history}"),
             ("human", "{query}"),
             ("placeholder", "{agent_scratchpad}"),
         ]
     ).partial(
         format_instructions=parser.get_format_instructions(),
+        preferences_block=_preferences_block(preferences),
         code=code,
         solution=soln,
         cases="""
-    stderr: ❌ Test failed for input nums = [3, 2, 4], target = 6
-    stderr: Expected output: [1, 2]
-    stderr: Actual output: [2, 1]
-    """,
+stderr: ❌ Test failed for input nums = [3, 2, 4], target = 6
+stderr: Expected output: [1, 2]
+stderr: Actual output: [2, 1]
+""",
     )
 
     tools = [save_tool]
     agent = create_tool_calling_agent(llm=llm, prompt=prompt, tools=tools)
-
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
     query = "My code is not working. Can you give me some suggestions to think about while not explicitly giving me the answer?"
     raw_response = agent_executor.invoke({"query": query})
 
     try:
         output_str = raw_response.get("output")
-        output_dict = json.loads(output_str)  # Convert JSON string to Python dict
-        return output_dict
+        return json.loads(output_str)
     except Exception as e:
         return {"Error": e, "raw": raw_response}
 
 
-def ask_ai(question, text):
+def ask_ai(question, text, preferences: str = ""):
     class ResearchResponse(BaseModel):
         response: str
 
-    load_dotenv()
-    llm = ChatOpenAI(
-        model="gpt-4o-mini",
-        temperature=0.0,
-    )
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0)
     parser = PydanticOutputParser(pydantic_object=ResearchResponse)
     prompt = ChatPromptTemplate.from_messages(
         [
-            (
-                "system",
-                ASK_AI_PROMPT,
-            ),
-            ("placeholder", "{chat_history}"),
-            ("human", "{query}"),
-            ("placeholder", "{agent_scratchpad}"),
-        ]
-    ).partial(format_instructions=parser.get_format_instructions(), question=question)
-
-    tools = [save_tool]
-    agent = create_tool_calling_agent(llm=llm, prompt=prompt, tools=tools)
-
-    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-    query = f"I'm not sure what {text} exactly means in the context of the problem statement. Can you help me understand it better?"
-    raw_response = agent_executor.invoke({"query": query})
-    try:
-        output_str = raw_response.get("output")
-        output_dict = json.loads(output_str)  # Convert JSON string to Python dict
-
-        return output_dict
-
-    except Exception as e:
-        return {"Error": e, "raw": raw_response}
-
-
-def get_tool_hints(code, pattern):
-
-    class ResearchResponse(BaseModel):
-        explanation: str
-
-    load_dotenv()
-
-    llm = ChatOpenAI(
-        model="gpt-4o-mini",
-        temperature=0.0,
-    )
-    parser = PydanticOutputParser(pydantic_object=ResearchResponse)
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                TOOL_HINTS_PROMPT,
-            ),
+            ("system", ASK_AI_PROMPT),
             ("placeholder", "{chat_history}"),
             ("human", "{query}"),
             ("placeholder", "{agent_scratchpad}"),
         ]
     ).partial(
         format_instructions=parser.get_format_instructions(),
-        code=code,
-        solution="""def two_sum(nums, target):
-        seen = {}
-        for i, num in enumerate(nums):
-            complement = target - num
-            if complement in seen:
-                return [seen[complement], i]
-            seen[num] = i""",
-        pattern=pattern,
+        preferences_block=_preferences_block(preferences),
+        question=question,
     )
+
     tools = [save_tool]
     agent = create_tool_calling_agent(llm=llm, prompt=prompt, tools=tools)
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+    query = f"I'm not sure what {text} exactly means in the context of the problem statement. Can you help me understand it better?"
+    raw_response = agent_executor.invoke({"query": query})
+    try:
+        output_str = raw_response.get("output")
+        return json.loads(output_str)
+    except Exception as e:
+        return {"Error": e, "raw": raw_response}
 
+
+def get_tool_hints(code, pattern, preferences: str = ""):
+    class ResearchResponse(BaseModel):
+        explanation: str
+
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0)
+    parser = PydanticOutputParser(pydantic_object=ResearchResponse)
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", TOOL_HINTS_PROMPT),
+            ("placeholder", "{chat_history}"),
+            ("human", "{query}"),
+            ("placeholder", "{agent_scratchpad}"),
+        ]
+    ).partial(
+        format_instructions=parser.get_format_instructions(),
+        preferences_block=_preferences_block(preferences),
+        code=code,
+        solution="""def two_sum(nums, target):
+    seen = {}
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i""",
+        pattern=pattern,
+    )
+
+    tools = [save_tool]
+    agent = create_tool_calling_agent(llm=llm, prompt=prompt, tools=tools)
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
     query = "I'm a little stuck here, can you give me some suggestions to think about to get closer to the solution"
     raw_response = agent_executor.invoke({"query": query})
 
     try:
         output_str = raw_response.get("output")
-        output_dict = json.loads(output_str)  # Convert JSON string to Python dict
-        return output_dict
+        return json.loads(output_str)
     except Exception as e:
         return {"Error": e, "raw": raw_response}
+
+
+def get_error_details(problem_id, error, code, preferences: str = ""):
+    imports, _, tests = get_file_sections(id_to_file_name(problem_id))
+    imprts = "".join(imports)
+    tsts = "".join(tests)
+
+    class ResearchResponse(BaseModel):
+        line_number_to_replacement: Dict[int, str]
+        expalantions_of_hint: str
+
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.0)
+    parser = PydanticOutputParser(pydantic_object=ResearchResponse)
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", ERROR_PROMPT),
+            ("placeholder", "{agent_scratchpad}"),
+        ]
+    ).partial(
+        format_instructions=parser.get_format_instructions(),
+        preferences_block=_preferences_block(preferences),
+        code=code,
+        imports=imprts,
+        tests=tsts,
+        error=error,
+    )
+
+    raw_response = llm.invoke(prompt.format_prompt().to_messages())
+    try:
+        output_str = raw_response.content
+        output_dict = parser.parse(output_str)
+        return output_dict.dict()
+    except Exception as e:
+        return {"Error": str(e), "raw": raw_response.content}
 
 
 def get_anim(data={"pattern": "Set", "action": "Insert", "step": 6}):
@@ -507,60 +520,6 @@ def pattern_to_video(name, data):
     return {"data": f"media/videos/{new_name[:-3]}/480p15/{new_name[:-3]}.mp4"}
 
 
-def get_error_details(problem_id, error, code):
-    imports, _, tests = get_file_sections(id_to_file_name(problem_id))
-    imprts = "".join(imports)
-    tsts = "".join(tests)
-
-    class ResearchResponse(BaseModel):
-        line_number_to_replacement: Dict[int, str]
-        expalantions_of_hint: str
-
-    load_dotenv()
-    llm = ChatOpenAI(
-        model="gpt-4o-mini",
-        temperature=0.0,
-    )
-    parser = PydanticOutputParser(pydantic_object=ResearchResponse)
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            (
-                "system",
-                ERROR_PROMPT,
-            ),
-            ("placeholder", "{agent_scratchpad}"),
-        ]
-    ).partial(
-        format_instructions=parser.get_format_instructions(),
-        code=code,
-        imports=imprts,
-        tests=tsts,
-        error=error,
-    )
-    # llm.invoke(prompt)
-    # tools = [ save_tool]
-    # agent = create_tool_calling_agent(
-    #     llm=llm,
-    #     prompt=prompt,
-    #     tools=tools
-    # )
-
-    # agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-    raw_response = llm.invoke(prompt.format_prompt().to_messages())
-
-    try:
-        # output_str = raw_response.get("output")
-        # output_dict = json.loads(output_str)
-        output_str = raw_response.content  # ✅ not .get()
-        output_dict = parser.parse(
-            output_str
-        )  # ✅ directly parse into your Pydantic model
-        return output_dict.dict()
-
-    except Exception as e:
-        return {"Error": str(e), "raw": raw_response.content}
-
-
 def parse_results_str(s: str) -> Dict[str, Any]:
 
     if not s or not isinstance(s, str):
@@ -576,3 +535,11 @@ def parse_results_str(s: str) -> Dict[str, Any]:
         return json.loads(s.replace("'", '"'))
     except Exception:
         return {}
+
+
+def _preferences_block(preferences: Optional[str]) -> str:
+    p = (preferences or "").strip()
+    if not p:
+        return "none"
+    # cap to avoid runaway payloads
+    return p[:800]
