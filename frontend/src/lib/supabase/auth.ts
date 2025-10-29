@@ -43,16 +43,35 @@ export async function signUp(
 
   if (data.user) {
     const { error: profileErr } = await supabase.from("profiles").insert({
-      user_id: data.user.id,
+      id: data.user.id,
       user_name: username,
       first_name: firstname,
       last_name: lastname,
+      email: email,
     });
     if (profileErr) throw profileErr;
-    return { pending: false as const };
+    // return { pending: false as const };
   }
 
-  return { pending: true as const, reservedUserName: username };
+  const {data: problems, error: problems_error} = await supabase
+    .from("problems")
+    .select("*")
+
+  if (problems_error) throw problems_error
+
+  const problemsToADD = problems?.map(({ problem_id, category_id, is_locked_by_default, title }) => ({
+    problem_id: problem_id,        
+    user_id: data.user!.id,
+    category_id: category_id,
+    is_unlocked: !is_locked_by_default,
+    title: title,
+  })) ?? [];
+
+  const {error: problem_completions_error} = await supabase.from("problem_completions").insert(problemsToADD);
+  
+  if(problem_completions_error) throw problem_completions_error;
+
+  return { pending: true as const, reservedUserName: username, problemsToADD };
 }
 
 export async function signIn(email: string, password: string) {
@@ -60,9 +79,19 @@ export async function signIn(email: string, password: string) {
     email,
     password,
   });
+
   if (error) throw error;
 
-  return data.user;
+  const { data: userProfile, error: profileError } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("id", data.user?.id)
+  .single();
+
+  if (profileError) throw profileError;
+
+  return userProfile;
+
 }
 
 export async function signOut() {
@@ -114,6 +143,18 @@ export async function updateUserProfile(profile: ProfileUpdate) {
 
   if (error) throw error;
   return data;
+}
+
+export async function deleteProfile() {
+
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw error;
+
+  const userId = data.user?.id;
+  if (!userId) throw new Error("No signed-in user found");
+
+  const { error: delete_error } = await supabase.auth.admin.deleteUser(userId);
+  if (delete_error) throw delete_error;
 }
 
 export async function isAdmin(): Promise<boolean> {
