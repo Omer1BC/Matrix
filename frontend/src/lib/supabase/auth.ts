@@ -171,3 +171,25 @@ export async function isAdmin(): Promise<boolean> {
 
   return !!data?.is_admin;
 }
+
+export async function updateTokensUsed(tokens: number) {
+  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  if (authErr) throw authErr;
+  const uid = auth.user?.id;
+  if (!uid) return null;
+
+  const { data: profile, error: profileErr } = await supabase
+    .from('profiles')
+    .select("*")
+    .eq("id", uid)
+    .maybeSingle();
+
+  if (profileErr) throw profileErr;
+
+  const new_tokens = (profile?.total_tokens_used || 0) + tokens;
+
+  const { error: updateErr } = await supabase
+    .from('profiles')
+    .update({"total_tokens_used": new_tokens})
+    .eq('id', uid);
+}
