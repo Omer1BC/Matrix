@@ -74,3 +74,8 @@ export async function updateUserProblemCompletion(problem_id: string, test_cases
 
     return null;
 }
+
+// get all problems for a section
+// compute number of completed vs incomplted 
+// calculate perecentage
+// return percentage

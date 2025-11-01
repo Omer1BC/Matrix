@@ -12,6 +12,7 @@ import { AnnotationsProvider } from "@/lib/contexts/AnnotationsContext";
 import { getAnimationUrl } from "@/lib/api";
 import AnimationPlayer from "@/components/AnimationPlayer";
 import AnimationInput from "@/components/AnimationInput";
+import Notes from "./Notes";
 
 export default function SolvePage({ problemId }: { problemId: number }) {
   const {
@@ -201,6 +202,13 @@ export default function SolvePage({ problemId }: { problemId: number }) {
             askAboutTool={askAboutTool}
             onOpenAnimation={openAnimationForTool}
             onCustomAnimate={handleCustomAnimate}
+          />
+        ),
+      },
+      Notes: {
+        label: "Notes",
+        content: (
+          <Notes
           />
         ),
       },

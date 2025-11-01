@@ -56,6 +56,7 @@ export async function signUp(
   const {data: problems, error: problems_error} = await supabase
     .from("problems")
     .select("*")
+    .order("id", {ascending: true});
 
   if (problems_error) throw problems_error
 
