@@ -200,7 +200,7 @@ export default function ProblemsPage() {
               </div>
             </div>
 
-            <div className="flex-1 min-h-[300px]">
+            <div className="flex-1 min-h-0">
               <Editor
                 height="100%"
                 width="100%"
@@ -222,20 +222,22 @@ export default function ProblemsPage() {
       notes: {
         label: "Notes",
         content: (
-          <NotesCard
-            notes={currProblemCompletion.notes}
-            onChange={(value) =>
-              setCurrentProblemCompletion(prev => ({
-                ...prev,
-                notes: value
-              }))
-            }
-            onBlur={async () => {
-              if (currProblemCompletion.problem_id) {
-                await updateNotes(currProblemCompletion.problem_id, currProblemCompletion.notes);
+          <div className="h-full w-full overflow-hidden">
+            <NotesCard
+              notes={currProblemCompletion.notes}
+              onChange={(value) =>
+                setCurrentProblemCompletion(prev => ({
+                  ...prev,
+                  notes: value
+                }))
               }
-            }}
-          />
+              onBlur={async () => {
+                if (currProblemCompletion.problem_id) {
+                  await updateNotes(currProblemCompletion.problem_id, currProblemCompletion.notes);
+                }
+              }}
+            />
+          </div>
         )
       },
     }),
@@ -322,7 +324,7 @@ export default function ProblemsPage() {
               </div>
             </div>
             {/* Exercise & Code Editor Combined */}
-            <Card className="exercise/editor matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300" tabs={codeTabs} />
+            <Card className="exercise/editor flex flex-col h-full matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300" tabs={codeTabs} />
           </div>
 
           {/* Column 3: Test Cases and Output */}
