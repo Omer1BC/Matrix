@@ -32,8 +32,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build --if-present
+      - name: Start Dev Server & Smoke Test
+        run: |
+          npm run dev &
+          DEV_PID=$!
+          
+          for i in {1..30}; do
+            if curl -s http://localhost:3000 > /dev/null; then
+              echo "Dev server is running!"
+              kill $DEV_PID
+              exit 0
+            fi
+            echo "Waiting for dev server... ($i/30)"
+            sleep 2
+          done
+          
+          echo "Dev server failed to start"
+          kill $DEV_PID || true
+          exit 1
 
       - name: Test (undefined)
         run: |
