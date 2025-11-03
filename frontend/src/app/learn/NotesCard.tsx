@@ -16,7 +16,7 @@ type Props = {
 export function NotesCard({ notes, onChange, onBlur }: Props) {
   return (
     <>
-      <Card className="matrix-border bg-card/40 p-6 backdrop-blur-sm">
+      <Card className="bg-card/40 p-6 backdrop-blur-sm">
         <div className="space-y-4">
           <div className="space-y-2">
             <Textarea
