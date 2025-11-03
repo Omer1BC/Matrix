@@ -7,11 +7,12 @@ import TabPanel from "@/components/TabPanel";
 import Tools from "@/components/Tools";
 import ValidationPanel from "@/components/ValidationPanel";
 import { useSolve } from "@/lib/hooks/useSolve";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { AnnotationsProvider } from "@/lib/contexts/AnnotationsContext";
 import { getAnimationUrl } from "@/lib/api";
 import AnimationPlayer from "@/components/AnimationPlayer";
 import AnimationInput from "@/components/AnimationInput";
+import Notes from "./Notes";
 
 export default function SolvePage({ problemId }: { problemId: number }) {
   const {
@@ -201,6 +202,13 @@ export default function SolvePage({ problemId }: { problemId: number }) {
             askAboutTool={askAboutTool}
             onOpenAnimation={openAnimationForTool}
             onCustomAnimate={handleCustomAnimate}
+          />
+        ),
+      },
+      Notes: {
+        label: "Notes",
+        content: (
+          <Notes
           />
         ),
       },

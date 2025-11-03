@@ -1,5 +1,6 @@
 from django.http import FileResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from functools import wraps
 import os
 import io
 import sys
@@ -100,6 +101,21 @@ def get_completion(request):
 
 
 @csrf_exempt
+def get_token_count(func):
+    @wraps(func)
+    def wrapper(request, *args, **kwargs):
+        response = func(request, *args, **kwargs)
+        
+        try:
+            return JsonResponse({"hello": "hello"})
+        except Exception as e:
+            print("Error getting token count", e)
+            return response
+        return response
+    return wrapper
+            
+@csrf_exempt
+# @get_token_count
 def agent(request):
     if request.method != "POST" or "application/json" not in (
         request.content_type or ""
@@ -179,6 +195,8 @@ def agent(request):
                     "preferences": req.preferences or "",
                 }
             )
+            
+            # return JsonResponse(json.loads(json.dumps(res, default=lambda o: o.__dict__)), safe=False)
             return JsonResponse(
                 AgentResponse(kind="annotated_hints", data=res).model_dump()
             )
@@ -214,11 +232,18 @@ def agent(request):
         )
         # pluck latest AI message
         msgs = result["messages"]
+        
+        last_msg = result["messages"][-1]
+        total_tokens = 0
+        if hasattr(last_msg, "usage_metadata"):
+            total_tokens = last_msg.usage_metadata.get("total_tokens", 0)
+            
         content = next(
             (m.content for m in reversed(msgs) if isinstance(m, AIMessage)), ""
         )
+        # return JsonResponse(json.loads(json.dumps(result, default=lambda o: o.__dict__)), safe=False)
         return JsonResponse(
-            AgentResponse(kind="chat", data={"text": content}).model_dump()
+            AgentResponse(kind="chat", data={"text": content}, meta={"total_tokens": total_tokens}).model_dump()
         )
     except Exception as e:
         traceback.print_exc()

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { agentCall, ping } from "@/lib/api";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { getUserProfile } from "../supabase/auth";
+import { getUserProfile, updateTokensUsed } from "../supabase/auth";
 
 type ToolInfo = { name: string; description?: string; code?: string };
 
@@ -14,6 +14,7 @@ export function useSolve(problemId: number = 1) {
   const [tools, setTools] = useState<ToolInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState("");
+  const[testResponse, setTestResponse] = useState("");
 
   useEffect(() => {
     ping({ problem_id: problemId }, "problem_details").then((data) => {
@@ -51,13 +52,19 @@ export function useSolve(problemId: number = 1) {
           code: code,
           preferences: preferences,
         });
+        await updateTokensUsed((res?.meta?.total_tokens as number) ?? 0)
         setResponse(res?.data?.text ?? res?.data?.response ?? "");
+        setTestResponse(res);
       } finally {
         setLoading(false);
       }
     },
     [details, problemId, user]
   );
+
+  useEffect(() => {
+    console.log(testResponse);
+  }, [testResponse])
 
   const annotate = useCallback(
     async (codeWithLines: string) => {
@@ -73,6 +80,7 @@ export function useSolve(problemId: number = 1) {
           code: codeWithLines,
           preferences: preferences,
         });
+        setTestResponse(res);
         return res?.data ?? {};
       } finally {
         setLoading(false);
