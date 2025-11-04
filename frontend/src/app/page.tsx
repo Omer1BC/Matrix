@@ -11,7 +11,45 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Zap, Target, Trophy, Brain } from "lucide-react";
 import Link from "next/link";
 
+import { useEffect } from 'react';
+import Shepherd from 'shepherd.js';
+import 'shepherd.js/dist/css/shepherd.css';
+
 export default function HomePage() {
+
+  // useEffect(() => {
+  //   const tour = new Shepherd.Tour({
+  //     useModalOverlay: true,
+  //     defaultStepOptions: {
+  //       cancelIcon: {
+  //         enabled: true
+  //       },
+  //       classes: "shadow-md bg-purple-50",
+  //       scrollTo: { behavior: "smooth", block: "center" }
+  //     }
+  //   });
+
+  //   tour.addStep({
+  //     id: "Demo Button",
+  //     text: "You can click here to watch a demo video of Matrix!",
+  //     attachTo: { element: ".demo", on: "left"},
+  //     buttons: [
+  //       {
+  //         text: "Next",
+  //         action: tour.next
+  //       }
+  //     ]
+  //   });
+
+  //   tour.start();
+
+  //   return () => {
+  //     tour.cancel();
+  //   }
+  // }, []);
+
+
+
   return (
     <main className="flex flex-1 flex-col min-h-0 items-center text-center p-4 justify-evenly gap-4">
       <div className="matrix-rain" />
@@ -40,7 +78,7 @@ export default function HomePage() {
             <Button
               style={{ cursor: "pointer" }}
               size="lg"
-              className="text-lg px-8 py-6 glow-text"
+              className="demo text-lg px-8 py-6 glow-text"
               variant={undefined}
             >
               Watch Demo <ArrowRight className="ml-2 h-5 w-5" />
