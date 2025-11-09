@@ -321,14 +321,14 @@ export default function SolvePage({ problemId }: { problemId: number }) {
     <AnnotationsProvider>
       <main className="flex flex-1 flex-col min-h-0 overflow-hidden">
         <div className="grid flex-1 min-h-0 gap-2 p-2 grid-cols-[4fr_5fr] grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
-          <TabPanel
+          <TabPanel className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
             key={`q-${questionPanelKey}`}
             tabs={questionTabs}
             defaultActiveKey={questionDefaultKey}
           />
-          <TabPanel tabs={codeTabs} />
-          <TabPanel tabs={referencesTabs} />
-          <TabPanel
+          <TabPanel tabs={codeTabs} className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"/>
+          <TabPanel tabs={referencesTabs} className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"/>
+          <TabPanel className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
             key={`v-${validationPanelKey}`}
             tabs={validationTabs}
             defaultActiveKey={validationDefaultKey}
