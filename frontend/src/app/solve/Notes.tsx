@@ -23,7 +23,7 @@ export default function Notes() {
     }, [userProblems]);
 
     return (
-    <div className="flex h-full max-h-full w-full flex-col p-2">
+    <div className="notes flex h-full max-h-full w-full flex-col p-2">
           <div className="flex-1 min-h-0 overflow-y-auto custom-scroll pr-2 space-y-2">
             {userProblems.map((t, i) => (
               <NotesPill

@@ -1,0 +1,36 @@
+.shepherd-element {
+  background: rgba(0, 0, 0, 0.8) !important;
+  border: 1px solid rgba(147, 197, 253, 0.2) !important; /* Tailwind: border-primary/20 */
+  border-radius: 1rem !important; /* rounded-2xl */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(12px) !important;
+  color: rgb(255 255 255 / 0.8) !important;
+}
+
+.shepherd-text {
+  color: rgb(102 255 102) !important;
+  font-size: 1.25rem !important;
+}
+
+.shepherd-header {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.shepherd-button {
+  background:rgb(102 255 102) !important; /* Tailwind: sky-500 */
+  color: rgb(0, 0, 0) !important;
+  border-radius: 0.75rem !important;
+  text-shadow: 0 0 2px rgba(102, 255, 102, 0.8),
+    0 0 5px rgba(102, 255, 102, 0.6), 0 0 8px rgba(102, 255, 102, 0.4);
+}
+.shepherd-button:hover {
+  background: rgba(102 255 102, 0.9) !important;
+}
+
+.shepherd-cancel-icon {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+.shepherd-cancel-icon:hover {
+  color: white !important;
+}

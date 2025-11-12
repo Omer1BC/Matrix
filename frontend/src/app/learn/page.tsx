@@ -17,7 +17,7 @@ import { NotesCard } from './NotesCard';
 import { Problem, ProblemCompletion } from "@/lib/types";
 import { editor as MonacoEditor } from "monaco-editor";
 import { getProblemById, getUserProblemById, updateNotes, updateUserProblemCompletion } from "@/lib/supabase/problems";
-// Problem Selection Drawer Component
+import 'shepherd.js/dist/css/shepherd.css';
 
 export default function ProblemsPage() {
   const [output, setOutput] = useState("");
@@ -263,7 +263,7 @@ export default function ProblemsPage() {
       editor: {
         label: "Editor",
         content: (
-          <div className="flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
+          <div className="editor flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
 
             <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
               <div className="mb-2">
@@ -334,7 +334,7 @@ export default function ProblemsPage() {
         {/* Main 3-Column Grid with custom column widths */}
         <div className="grid grid-cols-[1fr_3fr_1fr] gap-6 h-full p-6 mx-auto">
           {/* Column 1: Problem Menu with vertical progress bar */}
-          <div className="rounded-lg shadow-lg overflow-hidden flex flex-col">
+          <div className="problems rounded-lg shadow-lg overflow-hidden flex flex-col">
             {/* Navigation Menu Header */}
             <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
               <h2
@@ -393,7 +393,7 @@ export default function ProblemsPage() {
               </div>
               {/* Video Content Section */}
               <div className="" style={{ backgroundColor: "var(--dbl-5)" }}>
-                <div className="flex justify-center items-center">
+                <div className="videos flex justify-center items-center">
                   <ReactPlayer
                     muted={false}
                     playing={false}
@@ -407,12 +407,12 @@ export default function ProblemsPage() {
               </div>
             </div>
             {/* Exercise & Code Editor Combined */}
-            <Card className="exercise/editor" tabs={codeTabs} />
+            <Card className="notes exercise/editor" tabs={codeTabs} />
           </div>
 
           {/* Column 3: Test Cases and Output */}
           <div
-            className="rounded-lg shadow-lg p-6 flex flex-col overflow-y-auto"
+            className="tests rounded-lg shadow-lg p-6 flex flex-col overflow-y-auto"
             style={{ backgroundColor: "var(--dbl-2)" }}
           >
             {/* Output Display */}

@@ -48,7 +48,7 @@ export default function Tools({
   }
 
   return (
-    <div className="flex h-full max-h-full w-full flex-col p-2">
+    <div className="tools flex h-full max-h-full w-full flex-col p-2">
       <div className="flex-1 min-h-0 overflow-y-auto custom-scroll pr-2 space-y-2">
         {tools.map((t, i) => (
           <ToolPill
@@ -63,7 +63,7 @@ export default function Tools({
           />
         ))}
       </div>
-      <div className="mt-3 rounded-xl border border-slate-700 bg-[var(--dbl-4)] p-2">
+      <div className="createanimation mt-3 rounded-xl border border-slate-700 bg-[var(--dbl-4)] p-2">
         <div className="flex items-center gap-2">
           <Input
             type="text"
@@ -143,7 +143,7 @@ export function ToolPill({
 
         <div className="flex items-center gap-2">
           <button
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-[var(--gr-2)] text-black hover:bg-[var(--gr-1)]"
+            className="askabouttool inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-[var(--gr-2)] text-black hover:bg-[var(--gr-1)]"
             title="Ask about this tool"
             onClick={() => askAboutTool(name, details)}
           >
@@ -151,7 +151,7 @@ export function ToolPill({
           </button>
 
           <button
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-[var(--gr-2)] text-black hover:bg-[var(--gr-1)]"
+            className="playanimation inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-[var(--gr-2)] text-black hover:bg-[var(--gr-1)]"
             title="Play animation for this tool"
             onClick={() => onOpenAnimation(name)}
           >

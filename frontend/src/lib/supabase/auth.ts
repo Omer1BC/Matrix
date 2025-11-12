@@ -1,5 +1,6 @@
-import { Profile, ProfileUpdate } from "../types";
+import { Profile, ProfileUpdate, SeenStatus } from "../types";
 import { createClient } from "./client";
+import { sawHomepage, sawLearn, sawSolve } from "../../lib/supabase/auth";
 
 const supabase = createClient();
 
@@ -193,4 +194,75 @@ export async function updateTokensUsed(tokens: number) {
     .from('profiles')
     .update({"total_tokens_used": new_tokens})
     .eq('id', uid);
+
+  if (updateErr) throw updateErr;
+}
+
+export async function sawHomepage() {
+  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  if (authErr) throw authErr;
+  const uid = auth.user?.id;
+  if (!uid) return null;
+
+  const { error: updateErr } = await supabase
+    .from('profiles')
+    .update({"saw_homepage": true})
+    .eq('id', uid);
+  
+  if (updateErr) throw updateErr;
+}
+
+export async function sawLearn() {
+  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  if (authErr) throw authErr;
+  const uid = auth.user?.id;
+  if (!uid) return null;
+
+  const { error: updateErr } = await supabase
+    .from('profiles')
+    .update({"saw_learn": true})
+    .eq('id', uid);
+  
+  if (updateErr) throw updateErr;
+}
+
+export async function sawSolve() {
+  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  if (authErr) throw authErr;
+  const uid = auth.user?.id;
+  if (!uid) return null;
+
+  const { error: updateErr } = await supabase
+    .from('profiles')
+    .update({"saw_solve": true})
+    .eq('id', uid);
+
+  if (updateErr) throw updateErr;
+}
+
+export const getSeenStatus = async (): Promise<SeenStatus> => {
+  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  if (authErr) {
+    return { homepage: false, learn: false, solve: false };
+  }
+  const uid = auth.user?.id;
+  if (!uid) {
+    return { homepage: false, learn: false, solve: false };
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("saw_homepage, saw_learn, saw_solve")
+    .eq("id", uid)
+    .single();
+
+  if (error || !data) {
+    return { homepage: false, learn: false, solve: false };
+  }
+
+  return {
+    homepage: data.saw_homepage,
+    learn: data.saw_learn,
+    solve: data.saw_solve,
+  }
 }

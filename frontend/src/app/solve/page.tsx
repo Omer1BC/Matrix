@@ -13,6 +13,7 @@ import { getAnimationUrl } from "@/lib/api";
 import AnimationPlayer from "@/components/AnimationPlayer";
 import AnimationInput from "@/components/AnimationInput";
 import Notes from "./Notes";
+import 'shepherd.js/dist/css/shepherd.css';
 
 export default function SolvePage({ problemId }: { problemId: number }) {
   const {
@@ -42,6 +43,25 @@ export default function SolvePage({ problemId }: { problemId: number }) {
   const validationDefaultKey = animToolName ? "animation-args" : "test";
   const [questionPanelKey, setQuestionPanelKey] = useState(0);
   const [validationPanelKey, setValidationPanelKey] = useState(0);
+  const [activeCodeTab, setActiveCodeTab] = useState("editor");
+
+  useEffect(() => {
+    const setTools = () => {
+      setActiveCodeTab("tools"); // switch to Tools tab
+    };
+
+    const setNotes = () => {
+      setActiveCodeTab("Notes");
+    }
+
+    window.addEventListener("switchToTools", setTools);
+    window.addEventListener("switchToNotes", setNotes);
+
+    return () => {
+      window.removeEventListener("switchToTools", setTools);
+      window.removeEventListener("switchToNotes", setNotes);
+    };
+  }, []);
 
   const addToolCode = useCallback(
     (snippet?: string) => {
@@ -183,13 +203,13 @@ export default function SolvePage({ problemId }: { problemId: number }) {
       editor: {
         label: "Editor",
         content: (
-          <EditorPanel
-            editorRef={editorRef}
-            monacoRef={monacoRef}
-            showHints={showHints}
-            setShowHints={setShowHints}
-            onAnnotate={async (code) => annotate(code)}
-          />
+            <EditorPanel
+              editorRef={editorRef}
+              monacoRef={monacoRef}
+              showHints={showHints}
+              setShowHints={setShowHints}
+              onAnnotate={async (code) => annotate(code)}
+            />
         ),
       },
       tools: {
@@ -321,14 +341,14 @@ export default function SolvePage({ problemId }: { problemId: number }) {
     <AnnotationsProvider>
       <main className="flex flex-1 flex-col min-h-0 overflow-hidden">
         <div className="grid flex-1 min-h-0 gap-2 p-2 grid-cols-[4fr_5fr] grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
-          <TabPanel
+          <TabPanel className="question"
             key={`q-${questionPanelKey}`}
             tabs={questionTabs}
             defaultActiveKey={questionDefaultKey}
           />
-          <TabPanel tabs={codeTabs} />
-          <TabPanel tabs={referencesTabs} />
-          <TabPanel
+          <TabPanel tabs={codeTabs} activeKey={activeCodeTab} onTabChange={setActiveCodeTab}/>
+          <TabPanel tabs={referencesTabs} className="chatbox"/>
+          <TabPanel className="tests-solve"
             key={`v-${validationPanelKey}`}
             tabs={validationTabs}
             defaultActiveKey={validationDefaultKey}

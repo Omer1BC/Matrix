@@ -136,7 +136,7 @@ export default function EditorUtilities({
     <>
       <div
         className={[
-          "absolute bottom-3 right-3 z-50",
+          "timer absolute bottom-3 right-3 z-50",
           "rounded-lg border border-[color:var(--dbl-4)]",
           "bg-[color:var(--dbl-3)]/90 backdrop-blur",
           "shadow-[0_8px_24px_rgba(0,0,0,0.35)]",
@@ -218,7 +218,7 @@ export default function EditorUtilities({
           await onAnnotate();
         }}
         title="AI Hint"
-        className="absolute top-1 right-5 z-50 rounded-full p-2  hover:shadow-[0_8px_20px_rgba(0,0,0,0.45)] transition-shadow"
+        className="neo absolute top-1 right-5 z-50 rounded-full p-2  hover:shadow-[0_8px_20px_rgba(0,0,0,0.45)] transition-shadow"
       >
         <NeoIcon width={30} height={30} hoverBehavior="self" />
       </button>
