@@ -1,13 +1,11 @@
-# utils/agent/graph.py
 from typing import TypedDict, Annotated, Dict, Any
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
-from langchain_core.messages import SystemMessage, AIMessage
+from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import ToolNode
 from langgraph.checkpoint.memory import MemorySaver
 from .utils import snippet
-
 from .tools import (
     generate_animation_tool,
     run_tests_tool,
@@ -17,6 +15,7 @@ from .tools import (
     tool_hints_tool,
     annotate_errors_tool,
 )
+from .rag import context_text
 
 
 class State(TypedDict):
@@ -26,14 +25,21 @@ class State(TypedDict):
     preferences: str
     task: str
     params: Dict[str, Any]
+    user_id: str
+    problem_id: str
+
+
+def _last_user_text(msgs: list) -> str:
+    for m in reversed(msgs):
+        if isinstance(m, HumanMessage):
+            # m.content can be str or list; just stringify
+            return m.content if isinstance(m.content, str) else str(m.content)
+    return ""
 
 
 def llm_node(state: State):
     sys = SystemMessage(
-        content=(
-            "You are a strict but supportive technical interviewer. "
-            "Be concise. Use tools when appropriate. Do not reveal full solutions."
-        )
+        content="You are a strict but supportive technical interviewer. Be concise. Use tools when appropriate. Do not reveal full solutions."
     )
     model = ChatOpenAI(model="gpt-4o-mini", temperature=0.0).bind_tools(
         [
@@ -46,7 +52,6 @@ def llm_node(state: State):
             generate_animation_tool,
         ]
     )
-
     msgs = [sys]
     if state.get("question"):
         msgs.append(SystemMessage(content=f"Problem:\n{state['question']}"))
@@ -58,6 +63,20 @@ def llm_node(state: State):
         msgs.append(
             SystemMessage(
                 content=f"User code snapshot:\n```python\n{snippet(state['code'])}\n```"
+            )
+        )
+    uid = state.get("user_id", "")
+    pid = state.get("problem_id", "")
+    query = state.get("question") or _last_user_text(state["messages"])
+    try:
+        notes_ctx = context_text(uid, pid, query, k=6).strip()
+    except Exception:
+        notes_ctx = ""
+
+    if notes_ctx:
+        msgs.append(
+            SystemMessage(
+                content=f"User's own notes for this problem (treat as high-priority context):\n{notes_ctx}"
             )
         )
 

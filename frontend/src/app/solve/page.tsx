@@ -7,14 +7,14 @@ import TabPanel from "@/components/TabPanel";
 import Tools from "@/components/Tools";
 import ValidationPanel from "@/components/ValidationPanel";
 import { useSolve } from "@/lib/hooks/useSolve";
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { AnnotationsProvider } from "@/lib/contexts/AnnotationsContext";
 import { getAnimationUrl } from "@/lib/api";
 import AnimationPlayer from "@/components/AnimationPlayer";
 import AnimationInput from "@/components/AnimationInput";
 import Notes from "./Notes";
 
-export default function SolvePage({ problemId }: { problemId: number }) {
+export default function SolvePage({ problemId }: { problemId: string }) {
   const {
     editorRef,
     monacoRef,
@@ -26,7 +26,7 @@ export default function SolvePage({ problemId }: { problemId: number }) {
     annotate,
     annotateErrors,
     askSelection,
-  } = useSolve(problemId | 1);
+  } = useSolve(problemId || "intro-1");
 
   const [output] = useState("");
   const [showHints, setShowHints] = useState(true);
@@ -207,10 +207,7 @@ export default function SolvePage({ problemId }: { problemId: number }) {
       },
       Notes: {
         label: "Notes",
-        content: (
-          <Notes
-          />
-        ),
+        content: <Notes />,
       },
     }),
     [

@@ -9,6 +9,7 @@ import traceback
 from django.conf import settings
 import json
 from .models import ProblemCategory, Problem, ProblemCompletion, UserProgress
+from langchain_core.messages import HumanMessage, AIMessage
 from utils.utils import *
 from utils.problem_info import *
 from utils.agent.schema import AgentRequest, AgentResponse
@@ -28,15 +29,11 @@ from utils.agent.utils import (
     generate_animation,
     get_solution_grade,
 )
-from langchain_core.messages import HumanMessage, AIMessage
+from utils.agent.rag import reindex_notes
+from utils.supabase.client import supabase
 
 GRAPH = build_graph()
-from supabase import create_client, Client
 
-SUPABASE_URL = "https://lskkeazcckgvxtvvyqbw.supabase.co"
-SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxza2tlYXpjY2tndnh0dnZ5cWJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5ODkxNzUsImV4cCI6MjA3MzU2NTE3NX0.28SI3IdZGZ9e_87wfk2J8Ceybl1H65mK_E7lM69U5gY"
-
-supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 @csrf_exempt
 def generate_animation_view(request):
@@ -105,17 +102,58 @@ def get_token_count(func):
     @wraps(func)
     def wrapper(request, *args, **kwargs):
         response = func(request, *args, **kwargs)
-        
+
         try:
             return JsonResponse({"hello": "hello"})
         except Exception as e:
             print("Error getting token count", e)
             return response
-        return response
+
     return wrapper
-            
+
+
 @csrf_exempt
-# @get_token_count
+def save_notes(request):
+    if request.method != "POST" or "application/json" not in (
+        request.content_type or ""
+    ):
+        return JsonResponse({"error": "Malformed Request"}, status=400)
+    try:
+        body = json.loads(request.body)
+        user = (
+            request.user if getattr(request.user, "is_authenticated", False) else None
+        )
+        user_id = str(getattr(user, "id", body.get("user_id", "")))
+        problem_id = str(body.get("problem_id", ""))
+        notes = body.get("notes", "") or ""
+        pc = (
+            supabase.table("problem_completions")
+            .select("id,title")
+            .eq("user_id", user_id)
+            .eq("problem_id", problem_id)
+            .maybe_single()
+            .execute()
+            .data
+        )
+        if not pc:
+            return JsonResponse({"error": "not_found"}, status=404)
+        supabase.table("problem_completions").update({"notes": notes}).eq(
+            "id", pc["id"]
+        ).execute()
+        stats = reindex_notes(
+            pc_id=pc["id"],
+            user_id=user_id,
+            problem_id=problem_id,
+            title=pc.get("title"),
+            notes=notes,
+        )
+        return JsonResponse({"ok": True, **stats})
+    except Exception as e:
+        traceback.print_exc()
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
 def agent(request):
     if request.method != "POST" or "application/json" not in (
         request.content_type or ""
@@ -123,10 +161,11 @@ def agent(request):
         return JsonResponse({"error": "Malformed Request"}, status=400)
     try:
         body = json.loads(request.body)
-        user = request.user if request.user.is_authenticated else None
+        user = (
+            request.user if getattr(request.user, "is_authenticated", False) else None
+        )
         user_id = str(getattr(user, "id", body.get("user_id", "anon")))
         problem_id = str(body.get("problem_id", "global"))
-
         req = AgentRequest(
             **{
                 "user_id": user_id,
@@ -139,10 +178,8 @@ def agent(request):
                 "extras": body.get("extras", {}),
             }
         )
-
         task, params = route(req)
         thread_id = f"{req.user_id}:{req.problem_id}"
-
         if task == "tests":
             res = run_tests_tool.invoke(
                 {"problem_id": req.problem_id, "code": req.code}
@@ -195,8 +232,6 @@ def agent(request):
                     "preferences": req.preferences or "",
                 }
             )
-            
-            # return JsonResponse(json.loads(json.dumps(res, default=lambda o: o.__dict__)), safe=False)
             return JsonResponse(
                 AgentResponse(kind="annotated_hints", data=res).model_dump()
             )
@@ -217,8 +252,6 @@ def agent(request):
                 AgentResponse(kind="generate_animation", data=res).model_dump(),
                 status=200 if res.get("ok") else 400,
             )
-
-        # Otherwise: go through the LLM node with memory (chat/general, or future tasks)
         result = GRAPH.invoke(
             {
                 "messages": [HumanMessage(content=req.message)],
@@ -227,23 +260,25 @@ def agent(request):
                 "preferences": req.preferences,
                 "task": task,
                 "params": params,
+                "user_id": user_id,
+                "problem_id": problem_id,
             },
             config={"configurable": {"thread_id": thread_id}},
         )
-        # pluck latest AI message
         msgs = result["messages"]
-        
-        last_msg = result["messages"][-1]
-        total_tokens = 0
-        if hasattr(last_msg, "usage_metadata"):
-            total_tokens = last_msg.usage_metadata.get("total_tokens", 0)
-            
+        last_msg = msgs[-1]
+        total_tokens = (
+            getattr(last_msg, "usage_metadata", {}).get("total_tokens", 0)
+            if hasattr(last_msg, "usage_metadata")
+            else 0
+        )
         content = next(
             (m.content for m in reversed(msgs) if isinstance(m, AIMessage)), ""
         )
-        # return JsonResponse(json.loads(json.dumps(result, default=lambda o: o.__dict__)), safe=False)
         return JsonResponse(
-            AgentResponse(kind="chat", data={"text": content}, meta={"total_tokens": total_tokens}).model_dump()
+            AgentResponse(
+                kind="chat", data={"text": content}, meta={"total_tokens": total_tokens}
+            ).model_dump()
         )
     except Exception as e:
         traceback.print_exc()
@@ -326,7 +361,9 @@ def run_learn_tests(request):
     media_path = settings.MEDIA_ROOT
 
     if request.method != "POST":
-        return JsonResponse({"error": f"Expected POST, got {request.method}"}, status=405)
+        return JsonResponse(
+            {"error": f"Expected POST, got {request.method}"}, status=405
+        )
 
     if "application/json" not in (request.content_type or ""):
         return JsonResponse({"error": "Expected application/json"}, status=400)
@@ -336,11 +373,10 @@ def run_learn_tests(request):
         code = body.get("code", "")
         problem_id = body.get("problem_id", "1_2sum")
         user_id = body.get("user_id")
-        
+
         if not user_id:
             return JsonResponse({"error": "Could not find user"}, status=400)
-        
-        # ✅ Fetch problem from Supabase instead of Django ORM
+
         problem_res = (
             supabase.table("problem_completions")
             .select("*")
@@ -420,7 +456,7 @@ def run_learn_tests(request):
 
             # ✅ Store completion in Supabase
             if total_tests > 0 and passed_tests == total_tests:
-                
+
                 return JsonResponse(
                     {
                         "success": True,
@@ -454,233 +490,6 @@ def run_learn_tests(request):
     except Exception as e:
         traceback.print_exc()
         return JsonResponse({"error": str(e)}, status=400)
-    # media_path = settings.MEDIA_ROOT
-
-    # if request.method == "POST":
-    #     content_type = request.content_type or ""
-
-    #     if "application/json" in content_type:
-    #         try:
-    #             body = json.loads(request.body)
-    #             code = body.get("code", "")
-    #             problem_id = body.get("problem_id", "1_2sum")
-
-    #             user = (
-    #                 request.user
-    #                 if getattr(request.user, "is_authenticated", False)
-    #                 else None
-    #             )
-
-    #             # Find the problem
-    #             try:
-    #                 problem = Problem.objects.get(problem_id=problem_id)
-    #             except Problem.DoesNotExist:
-    #                 return JsonResponse(
-    #                     {"error": f"Problem {problem_id} not found"}, status=404
-    #                 )
-
-    #             # Insert user code into test file (your existing logic)
-    #             file_name = f"{problem_id}.py"
-    #             file_path = os.path.join(media_path, file_name)
-
-    #             if not os.path.exists(file_path):
-    #                 return JsonResponse(
-    #                     {"error": f"Problem file {file_name} not found"}, status=404
-    #                 )
-
-    #             res = insert_user_code(file_path, code)
-
-    #             # Capture stdout
-    #             old_stdout = sys.stdout
-    #             sys.stdout = mystdout = io.StringIO()
-    #             namespace = {}
-
-    #             try:
-    #                 exec(res, namespace)
-    #                 test_results = namespace.get("results", {})
-    #                 formatted_results = []
-    #                 for test_name, result in test_results.items():
-    #                     formatted_results.append(
-    #                         {
-    #                             "test_name": test_name,
-    #                             "passed": result.get("passed", False),
-    #                             "expected": result.get("expected"),
-    #                             "actual": result.get("actual"),
-    #                             "error": result.get("error", ""),
-    #                             "input": result.get("graph")
-    #                             or result.get("nums")
-    #                             or result.get("input", ""),
-    #                             "description": (
-    #                                 f"Test case {test_name.split('_')[-1]}"
-    #                                 if "_" in test_name
-    #                                 else test_name
-    #                             ),
-    #                         }
-    #                     )
-
-    #                 passed_tests = sum(1 for r in formatted_results if r["passed"])
-    #                 total_tests = len(formatted_results)
-
-    #                 # if user is None:
-    #                 if not formatted_results:
-    #                         formatted_results = [
-    #                             {
-    #                                 "test_name": "auth_required",
-    #                                 "description": "Authentication required",
-    #                                 "passed": False,
-    #                                 "expected": None,
-    #                                 "actual": None,
-    #                                 "error": "Login required to run and pass tests.",
-    #                                 "input": "",
-    #                             }
-    #                         ]
-    #                 else:
-    #                         for r in formatted_results:
-    #                             r["passed"] = False
-    #                             r["error"] = (
-    #                                 r.get("error")
-    #                                 or "Login required to run and pass tests."
-    #                             )
-
-                        # return JsonResponse(
-                        #     {
-                        #         "success": True,
-                        #         "message": "Anonymous runs are not allowed to pass. Please log in.",
-                        #         "test_results": formatted_results,
-                        #         "total_tests": len(formatted_results),
-                        #         "passed_tests": 0,
-                        #         "next_problem": None,
-                        #     }
-                        # )
-
-    #                 if total_tests > 0 and passed_tests == total_tests:
-    #                     completion, created = ProblemCompletion.objects.get_or_create(
-    #                         user=user, problem=problem
-    #                     )
-
-    #                     completion.mark_as_completed(user_solution=code)
-
-    #                     if not hasattr(user, "progress"):
-    #                         UserProgress.objects.create(user=user)
-    #                     user.progress.update_progress()
-
-    #                     next_pid = (
-    #                         user.progress.current_problem.problem_id
-    #                         if user.progress and user.progress.current_problem
-    #                         else None
-    #                     )
-
-    #                     return JsonResponse(
-    #                         {
-    #                             "success": True,
-    #                             "message": "All tests passed! Problem marked as completed.",
-    #                             "test_results": formatted_results,
-    #                             "total_tests": total_tests,
-    #                             "passed_tests": passed_tests,
-    #                             "next_problem": (
-    #                                 user.progress.current_problem.problem_id
-    #                                 if (user.progress and user.progress.current_problem)
-    #                                 else None
-    #                             ),
-    #                         }
-    #                     )
-
-    #                 return JsonResponse(
-    #                     {
-    #                         "success": True,
-    #                         "test_results": formatted_results,
-    #                         "total_tests": total_tests,
-    #                         "passed_tests": passed_tests,
-    #                     }
-    #                 )
-
-    #             except Exception as e:
-    #                 error_msg = str(e)
-    #                 traceback.print_exc()
-    #                 return JsonResponse(
-    #                     {"success": False, "error": error_msg, "test_results": []}
-    #                 )
-    #             finally:
-    #                 sys.stdout = old_stdout
-
-    #         except json.JSONDecodeError as e:
-    #             return JsonResponse(
-    #                 {"error": f"JSON decode error: {str(e)}"}, status=400
-    #             )
-    #         except Exception as e:
-    #             traceback.print_exc()
-    #             return JsonResponse({"error": str(e)}, status=400)
-    #     else:
-    #         return JsonResponse(
-    #             {"error": f"Expected application/json, got: '{request.content_type}'"},
-    #             status=400,
-    #         )
-    # else:
-    #     return JsonResponse(
-    #         {"error": f"Expected POST method, got: {request.method}"}, status=405
-    #     )
-
-
-def problem_details(request):
-    print(request.method, request.content_type)
-    if request.method == "POST" and request.content_type == "application/json":
-        import json
-
-        try:
-            body = json.loads(request.body)
-            # Modularize
-            print(body)
-            problem_id = body.get("problem_id", "")
-            res = {
-                "title": "Number of Connected Components in an Undirected Graph",
-                "difficulty": "Medium",
-                "description": """There is an undirected graph with n nodes. There is also an edges array, where edges[i] = [a, b] means that there is an edge between node a and node b in the graph.
-
-The nodes are numbered from 0 to n - 1.
-
-Return the total number of connected components in that graph.""",
-                "method_stub": "def countComponents(n: int, edges: List[List[int]]):\n        return 0",
-                "input_args": ["nums", "target", "output", "expected"],
-                "tools": {
-                    "DFS": {
-                        "description": "Algorithm for traversing a graph",
-                        "args": {
-                            "edges": {
-                                "type": "List[List[int]]",
-                                "default_value": "[[1,2]]",
-                            }
-                        },
-                        "code": """#DFS
-visit = set()
-def dfs(u):
-    visit.add(u)
-    for nbr in nbrs(u):
-        if nbr not in visit:
-            dfs(nbr)""",
-                    },
-                    "Set": {
-                        "description": "Unordered data structure with O(1) insertion, removal, and find",
-                        "args": {
-                            "numbers": {
-                                "type": "List[int]",
-                                "default_value": "[1,2,3,1,4,2,5]",
-                            }
-                        },
-                        "code": """#Set
-elements = set()
-elements.add(2) # O(1)
-if 2 in elements: # O(1)
-elements.remove(2) # O(1)""",
-                    },
-                },
-            }
-            result, error = run(problem_id, res["method_stub"])
-            res["tests"] = result if not error else {}
-            # problem_details = get_problem_details(problem_id)
-            return JsonResponse(res)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-    return JsonResponse({"error": "Malformed Request"}, status=400)
 
 
 @csrf_exempt
@@ -976,98 +785,6 @@ def get_all_categories(request):
     return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
-# Replace your existing problem_details function with this enhanced version:
-@csrf_exempt
-def problem_details(request):
-    print(request.method, request.content_type)
-    if request.method == "POST" and request.content_type == "application/json":
-        import json
-
-        try:
-            body = json.loads(request.body)
-            problem_id = body.get("problem_id", "")
-
-            try:
-                # Try to get problem from database first
-                problem = Problem.objects.get(problem_id=problem_id)
-
-                res = {
-                    "title": problem.title,
-                    "difficulty": problem.difficulty,
-                    "description": problem.description,
-                    "method_stub": problem.method_stub,
-                    "solution": problem.solution,
-                    "test_cases": problem.get_test_cases(),  # This uses the model method to parse JSON
-                    "category": problem.category.title,
-                    "input_args": problem.input_args,
-                    "tools": problem.tools,
-                }
-
-                # Try to run existing tests if available
-                try:
-                    result, error = run(problem_id, res["method_stub"])
-                    res["tests"] = result if not error else {}
-                except:
-                    res["tests"] = {}
-
-                return JsonResponse(res)
-
-            except Problem.DoesNotExist:
-                # Fallback to your existing hardcoded response
-                res = {
-                    "title": "Number of Connected Components in an Undirected Graph",
-                    "difficulty": "Medium",
-                    "description": """There is an undirected graph with n nodes. There is also an edges array, where edges[i] = [a, b] means that there is an edge between node a and node b in the graph.
-
-The nodes are numbered from 0 to n - 1.
-
-Return the total number of connected components in that graph.""",
-                    "method_stub": """def countComponents(n: int, edges: List[List[int]]) -> int:
-        return 0""",
-                    "input_args": ["nums", "target", "output", "expected"],
-                    "tools": {
-                        "DFS": {
-                            "description": "Algorithm for traversing a graph",
-                            "args": {
-                                "edges": {
-                                    "type": "List[List[int]]",
-                                    "default_value": "[[1,2]]",
-                                }
-                            },
-                            "code": """#DFS
-visit = set()
-def dfs(u):
-    visit.add(u)
-    for nbr in nbrs(u):
-        if nbr not in visit:
-            dfs(nbr)""",
-                        },
-                        "Set": {
-                            "description": "Unordered data structure with O(1) insertion, removal, and find",
-                            "args": {
-                                "numbers": {
-                                    "type": "List[int]",
-                                    "default_value": "[1,2,3,2,5]",
-                                }
-                            },
-                            "code": """#Set
-elements = set()
-elements.add(2) # O(1)
-if 2 in elements: # O(1)
-elements.remove(2) # O(1)""",
-                        },
-                    },
-                    "test_cases": [],  # Add empty test cases for compatibility
-                }
-                result, error = run(problem_id, res["method_stub"])
-                res["tests"] = result if not error else {}
-                return JsonResponse(res)
-
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-    return JsonResponse({"error": "Malformed Request"}, status=400)
-
-
 # Add this new function for running individual test cases:
 @csrf_exempt
 def run_test_case(request):
@@ -1143,119 +860,6 @@ def run_test_case(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Method not allowed"}, status=405)
-
-
-from django.contrib.auth import authenticate, login, logout
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-
-
-@csrf_exempt  # for testing — better to configure CSRF properly
-def login_view(request):
-    if request.method == "POST":
-        data = json.loads(request.body.decode("utf-8"))
-        username = data.get("username")
-        password = data.get("password")
-
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return JsonResponse({"success": True, "message": "Logged in"})
-        else:
-            return JsonResponse(
-                {"success": False, "message": "Invalid credentials"}, status=400
-            )
-    return JsonResponse({"success": False, "message": "Only POST allowed"}, status=405)
-
-
-@csrf_exempt
-def logout_view(request):
-    logout(request)
-    return JsonResponse({"success": True, "message": "Logged out"})
-
-
-# ---------- Supabase implementation functionality -------#
-
-import json
-from supabase import create_client
-
-SUPABASE_URL = "https://lskkeazcckgvxtvvyqbw.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxza2tlYXpjY2tndnh0dnZ5cWJ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Nzk4OTE3NSwiZXhwIjoyMDczNTY1MTc1fQ.njTAUkwk_9W1qoUxB_Ga_pvcEMhWlsXffEUwTTCEy5U"
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-
-@csrf_exempt
-def signup(request):
-    if request.method == "POST":
-        body = json.loads(request.body)
-        email = body.get("email")
-        password = body.get("password")
-        firstname = body.get("firstname")
-        lastname = body.get("lastname")
-
-        response = supabase.auth.sign_up({"email": email, "password": password})
-
-        if response.user:
-            response2 = (
-                supabase.table("profiles")
-                .insert(
-                    {
-                        "id": response.user.id,
-                        "first_name": firstname,
-                        "last_name": lastname,
-                        "email": email,
-                    }
-                )
-                .execute()
-            )
-            if response2:
-                return JsonResponse({"success": True, "user": response2.data})
-        else:
-            return JsonResponse({"success": False, "error": response.error}, status=400)
-
-
-@csrf_exempt
-def logout(request):
-    try:
-        supabase.auth.sign_out()
-        return JsonResponse(
-            {"success": True, "message": "Logged out successfully"}, status=200
-        )
-    except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)}, status=500)
-
-
-@csrf_exempt
-def supabase_login(request):
-    if request.method == "POST":
-        body = json.loads(request.body)
-        email = body.get("email")
-        password = body.get("password")
-
-        response = supabase.auth.sign_in_with_password(
-            {
-                "email": email,
-                "password": password,
-            }
-        )
-        if response.user:
-            user_id = response.user.id
-            response2 = (
-                supabase.table("profiles").select("*").eq("id", user_id).execute()
-            )
-            if response2.data:
-                return JsonResponse({"success": True, "user": response2.data})
-        else:
-            return JsonResponse(
-                {"success": False, "message": "Could not retrieve from profiles"},
-                status=400,
-            )
-    else:
-        return JsonResponse(
-            {"success": False, "message": "Incorrect method"}, status=405
-        )
 
 
 # --------------#

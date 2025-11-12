@@ -2,10 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { BookOpen } from "lucide-react";
 import React from "react";
-import { useEffect } from "react";
 
 type Props = {
   notes: string;
