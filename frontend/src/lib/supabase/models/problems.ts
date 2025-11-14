@@ -36,6 +36,18 @@ export async function createProblem(input: ProblemCreate) {
   return data as Problem;
 }
 
+export async function getProblemBySlug(problemId: string) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("problems")
+    .select("*")
+    .eq("problem_id", problemId)
+    .single();
+
+  if (error) throw error;
+  return data as Problem;
+}
+
 export async function getProblems(opts?: {
   categoryId?: number;
   difficulty?: Difficulty;

@@ -1,25 +1,29 @@
 "use client";
 
-import Image from "next/image";
 import "../templates.css";
-import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Disclosure, Menu, Textarea } from "@headlessui/react";
 import ReactPlayer from "react-player";
 import { Editor } from "@monaco-editor/react";
 import { useRef, useState, useEffect, useMemo } from "react";
-import Link from "next/link";
 import Card from "../templates/card/card";
-import ValidationContent from "../cards/validation/content";
 import TestCasesPanel from "./testCasesPanel";
 import ProblemMenu from "./problemMenu";
-import { NotesCard } from './NotesCard';
+import { NotesCard } from "./NotesCard";
 
 import { Problem, ProblemCompletion } from "@/lib/types";
 import { editor as MonacoEditor } from "monaco-editor";
-import { getProblemById, getUserProblemById, updateNotes, updateUserProblemCompletion, calculateProblemCompletion } from "@/lib/supabase/problems";
+import {
+  getProblemById,
+  getUserProblemById,
+  saveNotes,
+  updateUserProblemCompletion,
+  calculateProblemCompletion,
+} from "@/lib/supabase/problems";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { formatCodeForEditor } from "@/lib/utils";
 // Problem Selection Drawer Component
 
 export default function ProblemsPage() {
+  const { user } = useAuth();
   const [output, setOutput] = useState("");
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const [drawerToggle, setDrawerToggle] = useState(false);
@@ -61,29 +65,30 @@ export default function ProblemsPage() {
     updated_at: new Date().toISOString(),
   });
 
-  const [currProblemCompletion, setCurrentProblemCompletion] = useState<ProblemCompletion>({
-    id: 0,
-    user_id: "",
-    problem_id: "",
-    title: "",
-    category_id: "",
-    is_unlocked: false,
-    is_completed: false,
-    is_attempted: false,
-    completion_date: "",
-    first_attempt_date: "",
-    notes: "",
-    user_solution: "",
-    attempts_count: 0,
-    hints_used: 0,
-    time_spent_seconds: 0,
-    test_cases_passed: 0,
-    total_test_cases: 0,
-    points_earned: 0,
-    efficiency_score: 0,
-    created_at: "",
-    updated_at: "",
-  });
+  const [currProblemCompletion, setCurrentProblemCompletion] =
+    useState<ProblemCompletion>({
+      id: 0,
+      user_id: "",
+      problem_id: "",
+      title: "",
+      category_id: "",
+      is_unlocked: false,
+      is_completed: false,
+      is_attempted: false,
+      completion_date: "",
+      first_attempt_date: "",
+      notes: "",
+      user_solution: "",
+      attempts_count: 0,
+      hints_used: 0,
+      time_spent_seconds: 0,
+      test_cases_passed: 0,
+      total_test_cases: 0,
+      points_earned: 0,
+      efficiency_score: 0,
+      created_at: "",
+      updated_at: "",
+    });
   const [testCases, setTestCases] = useState([]);
   const [refreshKey, setRefreshKey] = useState(false);
   const [completionPercentage, setCompletionPercentage] = useState(0);
@@ -91,12 +96,18 @@ export default function ProblemsPage() {
   function toggleRefresh() {
     setRefreshKey(!refreshKey);
   }
-  
+
   async function handleAllTestsPassed() {
     setShowVictoryModal(true);
-    await updateUserProblemCompletion(currProblemCompletion.id, currentProblem.problem_id, currProblemCompletion.category_id, testCases.length, editorRef.current?.getValue());
+    await updateUserProblemCompletion(
+      currProblemCompletion.id,
+      currentProblem.problem_id,
+      currProblemCompletion.category_id,
+      testCases.length,
+      editorRef.current?.getValue()
+    );
     toggleRefresh();
-  };
+  }
 
   useEffect(() => {
     async function loadCompletion() {
@@ -124,8 +135,7 @@ export default function ProblemsPage() {
       setCurrentProblemCompletion(user_data);
       if (editorRef.current && data.method_stub) {
         editorRef.current.setValue(formatCodeForEditor(data.method_stub));
-      }
-      else {
+      } else {
         console.error("Failed to fetch problem details");
         // Fallback to default starter code
         if (editorRef.current) {
@@ -146,20 +156,11 @@ export default function ProblemsPage() {
         parsedTestCases = [];
       }
       setTestCases(parsedTestCases);
-
     } catch (error) {
       console.error(error);
     }
     setOutput(""); // Clear previous output
   };
-
-  function formatCodeForEditor(code: string) {
-    return code
-      .replace(/\\n/g, "\n")   // convert \n to actual newlines
-      .replace(/\\t/g, "\t")   // convert \t to actual tabs
-      .replace(/\\"/g, '"')    // convert \" to actual double quotes
-      .replace(/\\'/g, "'");   // convert \' to actual single quotes
-  }
 
   const getStarterCode = (problemId) => {
     const starterCodes = {
@@ -181,7 +182,6 @@ export default function ProblemsPage() {
         label: "Editor",
         content: (
           <div className="flex-1 flex flex-col h-full  shadow-lg overflow-hidden ">
-
             <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
               <div className="mb-2">
                 <h2
@@ -222,23 +222,32 @@ export default function ProblemsPage() {
       notes: {
         label: "Notes",
         content: (
-          <div className="h-full w-full overflow-hidden">
-            <NotesCard
-              notes={currProblemCompletion.notes}
-              onChange={(value) =>
-                setCurrentProblemCompletion(prev => ({
-                  ...prev,
-                  notes: value
-                }))
+          <NotesCard
+            notes={currProblemCompletion.notes}
+            onChange={(value) =>
+              setCurrentProblemCompletion((prev) => ({
+                ...prev,
+                notes: value,
+              }))
+            }
+            onBlur={async () => {
+              const user_id =
+                typeof user === "string"
+                  ? user
+                  : user?.id ?? user?.user?.id ?? "";
+
+              if (!user_id) throw new Error("Missing user_id");
+
+              if (currProblemCompletion.problem_id) {
+                await saveNotes({
+                  user_id: user_id,
+                  problem_id: String(currProblemCompletion.problem_id),
+                  notes: currProblemCompletion.notes || "",
+                });
               }
-              onBlur={async () => {
-                if (currProblemCompletion.problem_id) {
-                  await updateNotes(currProblemCompletion.problem_id, currProblemCompletion.notes);
-                }
-              }}
-            />
-          </div>
-        )
+            }}
+          />
+        ),
       },
     }),
     [currentProblem, problemDetails, currProblemCompletion]
@@ -246,8 +255,7 @@ export default function ProblemsPage() {
 
   return (
     <>
-      <div
-        className="Page h-screen overflow-hidden bg-background/80">
+      <div className="Page h-screen overflow-hidden bg-background/80">
         {/* Main 3-Column Grid with custom column widths */}
         <div className="grid grid-cols-[1fr_3fr_1fr] gap-6 h-full p-6 mx-auto">
           {/* Column 1: Problem Menu with vertical progress bar */}
@@ -324,7 +332,10 @@ export default function ProblemsPage() {
               </div>
             </div>
             {/* Exercise & Code Editor Combined */}
-            <Card className="exercise/editor flex flex-col h-full matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300" tabs={codeTabs} />
+            <Card
+              className="exercise/editor flex flex-col h-full matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+              tabs={codeTabs}
+            />
           </div>
 
           {/* Column 3: Test Cases and Output */}

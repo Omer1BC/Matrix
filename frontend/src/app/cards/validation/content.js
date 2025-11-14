@@ -24,36 +24,6 @@ export default function ValidationContent({
 
   const { user } = useAuth();
 
-  const fetchDetails = () => {
-    ping({ problem_id: problemId }, "problem_details").then((data) => {
-      if (editorRef.current) {
-        editorRef.current.setValue(data.method_stub);
-      }
-      setDetails(data);
-      try {
-        const orig = data.tests;
-        if (orig) {
-          const fixedStr = orig.replace(/'/g, '"');
-          const json = JSON.parse(fixedStr);
-          console.log(json);
-          setTests(json);
-          setActiveTest(Object.values(json)[0]);
-          setActiveKey(Object.keys(json)[0]);
-        } else {
-          setTests({});
-          setActiveTest({});
-          setActiveKey(0);
-        }
-      } catch {
-        setTests({});
-        setActiveTest({});
-        setActiveKey(0);
-      }
-    });
-  };
-
-  useEffect(() => fetchDetails, [editorRef]);
-
   const test = async () => {
     setHasError(false);
 
