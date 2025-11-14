@@ -13,12 +13,6 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const { user } = useAuth();
-
-  useEffect(() => {
-    console.log(problems);
-  }, [problems]);
-
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -135,7 +129,6 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
             <div className="mt-2 ml-6 space-y-2">
               {problems.filter(problem => problem.category_id === section.title).map(problem => {
                 const isLocked = !problem.is_unlocked;
-                console.log(problems);
                 return (
                   <button
                     key={problem.id}

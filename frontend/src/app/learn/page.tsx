@@ -12,21 +12,25 @@ import { NotesCard } from "./NotesCard";
 import { Problem, ProblemCompletion } from "@/lib/types";
 import { editor as MonacoEditor } from "monaco-editor";
 import {
-  saveNotes,
   getProblemById,
   getUserProblemById,
+  saveNotes,
   updateUserProblemCompletion,
+  calculateProblemCompletion,
 } from "@/lib/supabase/problems";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { formatCodeForEditor } from "@/lib/utils";
+// Problem Selection Drawer Component
 
-export default function LearnPage() {
+export default function ProblemsPage() {
   const { user } = useAuth();
   const [output, setOutput] = useState("");
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
+  const [drawerToggle, setDrawerToggle] = useState(false);
   const [currentProblem, setCurrentProblem] = useState<Problem>({
     id: 1,
     category_id: 0,
-    problem_id: "intro-1",
+    problem_id: "default",
     title: "Hello World",
     description: "Write a program that prints 'Hello, World!' to the console.",
     difficulty: "easy",
@@ -96,21 +100,31 @@ export default function LearnPage() {
   async function handleAllTestsPassed() {
     setShowVictoryModal(true);
     await updateUserProblemCompletion(
+      currProblemCompletion.id,
       currentProblem.problem_id,
+      currProblemCompletion.category_id,
       testCases.length,
       editorRef.current?.getValue()
     );
     toggleRefresh();
   }
 
-  const [notes, setNotes] = useState("");
+  useEffect(() => {
+    async function loadCompletion() {
+      const completion = await calculateProblemCompletion();
+      setCompletionPercentage(completion);
+    }
+
+    loadCompletion();
+  }, [refreshKey, completionPercentage]);
 
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
+    // Set initial code based on current problem
     editor.setValue('# Write your solution here\nprint("Hello, World!")');
   }
 
-  const handleProblemSelect = async (problem) => {
+  const handleProblemSelect = async (problem: Problem) => {
     setCurrentProblem(problem);
 
     try {
@@ -125,7 +139,7 @@ export default function LearnPage() {
         console.error("Failed to fetch problem details");
         // Fallback to default starter code
         if (editorRef.current) {
-          const starterCode = getStarterCode(problem.id);
+          const starterCode = getStarterCode(currentProblem.id);
           editorRef.current.setValue(starterCode);
         }
         setTestCases([]);
@@ -143,34 +157,10 @@ export default function LearnPage() {
       }
       setTestCases(parsedTestCases);
     } catch (error) {
-      console.err(error);
+      console.error(error);
     }
-
-    // Update editor with the starter code from the API
-    if (editorRef.current && problemDetails.method_stub) {
-      editorRef.current.setValue(
-        formatCodeForEditor(problemDetails.method_stub)
-      );
-    } else {
-      console.error("Failed to fetch problem details");
-      // Fallback to default starter code
-      if (editorRef.current) {
-        const starterCode = getStarterCode(problem.id);
-        editorRef.current.setValue(starterCode);
-      }
-      setTestCases([]);
-    }
-
     setOutput(""); // Clear previous output
   };
-
-  function formatCodeForEditor(code: string) {
-    return code
-      .replace(/\\n/g, "\n") // convert \n to actual newlines
-      .replace(/\\t/g, "\t") // convert \t to actual tabs
-      .replace(/\\"/g, '"') // convert \" to actual double quotes
-      .replace(/\\'/g, "'"); // convert \' to actual single quotes
-  }
 
   const getStarterCode = (problemId) => {
     const starterCodes = {
@@ -186,29 +176,19 @@ export default function LearnPage() {
     return starterCodes[problemId] || "# Write your solution here\n";
   };
 
-  useEffect(() => {
-    console.log("testcasess", testCases);
-  }, [testCases]);
-
-  const urls = ["/vid.mp4", "/vid2.mp4"];
-  const [idx, setIdx] = useState(0);
-  const handleEnded = () => {
-    setIdx(1);
-  };
-
   const codeTabs = useMemo(
     () => ({
       editor: {
         label: "Editor",
         content: (
-          <div className="flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
+          <div className="flex-1 flex flex-col h-full  shadow-lg overflow-hidden ">
             <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
               <div className="mb-2">
                 <h2
                   className="text-xl font-bold"
                   style={{ color: "var(--gr-2)" }}
                 >
-                  Exercise {currentProblem.id}:{" "}
+                  Exercise {currentProblem.problem_id}:{" "}
                   {problemDetails?.title || currentProblem.title}
                 </h2>
               </div>
@@ -220,7 +200,7 @@ export default function LearnPage() {
               </div>
             </div>
 
-            <div className="flex-1 min-h-[300px]">
+            <div className="flex-1 min-h-0">
               <Editor
                 height="100%"
                 width="100%"
@@ -231,7 +211,7 @@ export default function LearnPage() {
                   minimap: { enabled: false },
                   fontSize: 14,
                   lineNumbers: "on",
-                  scrollBeyondLastLine: false,
+                  scrollBeyondLastLine: true,
                   automaticLayout: true,
                 }}
               />
@@ -275,18 +255,15 @@ export default function LearnPage() {
 
   return (
     <>
-      <div
-        className="Page h-screen overflow-hidden"
-        style={{ backgroundColor: "var(--dbl-1)" }}
-      >
+      <div className="Page h-screen overflow-hidden bg-background/80">
         {/* Main 3-Column Grid with custom column widths */}
         <div className="grid grid-cols-[1fr_3fr_1fr] gap-6 h-full p-6 mx-auto">
           {/* Column 1: Problem Menu with vertical progress bar */}
-          <div className="rounded-lg shadow-lg overflow-hidden flex flex-col">
+          <div className="rounded-lg shadow-lg overflow-hidden flex flex-col matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300">
             {/* Navigation Menu Header */}
             <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
               <h2
-                className="text-lg font-bold text-center"
+                className="text-lg font-bold text-center "
                 style={{ color: "var(--gr-2)" }}
               >
                 Menu
@@ -329,7 +306,7 @@ export default function LearnPage() {
           {/* Column 2: Video, Exercise & Editor */}
           <div className="flex flex-col gap-4 flex-1 min-h-0">
             {/* Video Player */}
-            <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0">
+            <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0 matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300">
               {/* Video Title Section */}
               <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
                 <h3
@@ -355,12 +332,15 @@ export default function LearnPage() {
               </div>
             </div>
             {/* Exercise & Code Editor Combined */}
-            <Card className="exercise/editor" tabs={codeTabs} />
+            <Card
+              className="exercise/editor flex flex-col h-full matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+              tabs={codeTabs}
+            />
           </div>
 
           {/* Column 3: Test Cases and Output */}
           <div
-            className="rounded-lg shadow-lg p-6 flex flex-col overflow-y-auto"
+            className="rounded-lg shadow-lg p-6 flex flex-col overflow-y-auto matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
             style={{ backgroundColor: "var(--dbl-2)" }}
           >
             {/* Output Display */}

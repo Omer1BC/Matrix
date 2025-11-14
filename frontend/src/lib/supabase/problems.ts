@@ -1,3 +1,4 @@
+import type * as monaco from "monaco-editor";
 import { createClient } from "./client";
 
 const supabase = createClient();
@@ -60,25 +61,6 @@ export async function getProblemById(problem_id: string) {
   return data;
 }
 
-export async function updateNotes(problem_id: string, notes: string) {
-  const { data: user, error } = await supabase.auth.getUser();
-
-  if (error) throw error;
-
-  if (user) {
-    const { error: update_error } = await supabase
-      .from("problem_completions")
-      .update({ notes: notes })
-      .eq("problem_id", problem_id)
-      .eq("user_id", user.user.id);
-    if (update_error) throw update_error;
-  }
-
-  if (error) throw error;
-
-  return null;
-}
-
 export async function saveNotes(payload: {
   user_id: string;
   problem_id: string;
@@ -96,11 +78,12 @@ export async function saveNotes(payload: {
     );
   return data;
 }
-
 export async function updateUserProblemCompletion(
+  id: number,
   problem_id: string,
+  category_id: string,
   test_cases: number,
-  current
+  current: monaco.editor.IStandaloneCodeEditor
 ) {
   const { data: user, error } = await supabase.auth.getUser();
 
@@ -113,16 +96,40 @@ export async function updateUserProblemCompletion(
       test_cases_passed: test_cases,
       total_test_cases: test_cases,
       user_solution: current,
+      completion_date: new Date().toISOString(),
     })
     .eq("problem_id", problem_id)
     .eq("user_id", user.user.id);
 
   if (update_error) throw error;
 
+  const { error: update_next_problem_error } = await supabase
+    .from("problem_completions")
+    .update({ is_unlocked: true })
+    .eq("id", id + 1)
+    .eq("user_id", user.user.id)
+    .eq("category_id", category_id);
+
+  if (update_next_problem_error) throw update_next_problem_error;
+
   return null;
 }
 
-// get all problems for a section
-// compute number of completed vs incomplted
-// calculate perecentage
-// return percentage
+export async function calculateProblemCompletion(): Promise<number> {
+  const { data: user, error } = await supabase.auth.getUser();
+
+  if (error) throw error;
+
+  const { data: problems, error: retrieve_error } = await supabase
+    .from("problem_completions")
+    .select("*")
+    .eq("user_id", user.user.id);
+
+  if (retrieve_error) throw retrieve_error;
+
+  const total_problems = problems.length;
+
+  const completed_problems = problems.filter((problem) => problem.is_completed);
+
+  return (completed_problems.length / total_problems) * 100;
+}

@@ -13,6 +13,7 @@ import { getAnimationUrl } from "@/lib/api";
 import AnimationPlayer from "@/components/AnimationPlayer";
 import AnimationInput from "@/components/AnimationInput";
 import Notes from "./Notes";
+import { formatCodeForEditor } from "@/lib/utils";
 
 export default function SolvePage({ problemId }: { problemId: string }) {
   const {
@@ -26,7 +27,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     annotate,
     annotateErrors,
     askSelection,
-  } = useSolve(problemId || "intro-1");
+  } = useSolve(problemId || "dfs-1");
 
   const [output] = useState("");
   const [showHints, setShowHints] = useState(true);
@@ -48,8 +49,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       if (!snippet || !editorRef.current || !monacoRef.current) return;
       const editor = editorRef.current;
       const current = editor.getValue();
-
-      editor.setValue(`'''\n${snippet}\n'''\n${current}`);
+      editor.setValue(formatCodeForEditor(`'''\n${snippet}\n'''\n${current}`));
     },
     [editorRef, monacoRef]
   );
@@ -319,13 +319,21 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       <main className="flex flex-1 flex-col min-h-0 overflow-hidden">
         <div className="grid flex-1 min-h-0 gap-2 p-2 grid-cols-[4fr_5fr] grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
           <TabPanel
+            className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
             key={`q-${questionPanelKey}`}
             tabs={questionTabs}
             defaultActiveKey={questionDefaultKey}
           />
-          <TabPanel tabs={codeTabs} />
-          <TabPanel tabs={referencesTabs} />
           <TabPanel
+            tabs={codeTabs}
+            className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+          />
+          <TabPanel
+            tabs={referencesTabs}
+            className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+          />
+          <TabPanel
+            className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
             key={`v-${validationPanelKey}`}
             tabs={validationTabs}
             defaultActiveKey={validationDefaultKey}
