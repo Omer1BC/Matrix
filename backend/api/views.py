@@ -96,6 +96,7 @@ def get_completion(request):
         print(user.completion_percentage)
         return JsonResponse({"percentage": user.completion_percentage}, status=200)
 
+
 @csrf_exempt
 def save_notes(request):
     if request.method != "POST" or "application/json" not in (
@@ -361,15 +362,18 @@ def run_learn_tests(request):
         if not user_id:
             return JsonResponse({"error": "Could not find user"}, status=400)
 
-        problem_res = (
+        resp = (
             supabase.table("problem_completions")
             .select("*")
             .eq("problem_id", problem_id)
             .eq("user_id", user_id)
             .maybe_single()
+            .execute()
         )
 
-        if not problem_res:
+        problem_row = resp.data
+
+        if not problem_row:
             return JsonResponse(
                 {"error": f"Problem {problem_id} not found in Supabase"}, status=404
             )
@@ -415,32 +419,7 @@ def run_learn_tests(request):
             passed_tests = sum(1 for r in formatted_results if r["passed"])
             total_tests = len(formatted_results)
 
-            # ✅ Handle unauthenticated users
-            if user_id is None:
-                formatted_results = [
-                    {
-                        "test_name": "auth_required",
-                        "description": "Authentication required",
-                        "passed": False,
-                        "expected": None,
-                        "actual": None,
-                        "error": "Login required to run and pass tests.",
-                        "input": "",
-                    }
-                ]
-                return JsonResponse(
-                    {
-                        "success": True,
-                        "message": "Anonymous runs not allowed to pass tests.",
-                        "test_results": formatted_results,
-                        "total_tests": len(formatted_results),
-                        "passed_tests": 0,
-                    }
-                )
-
-            # ✅ Store completion in Supabase
             if total_tests > 0 and passed_tests == total_tests:
-
                 return JsonResponse(
                     {
                         "success": True,
@@ -451,7 +430,6 @@ def run_learn_tests(request):
                     }
                 )
 
-            # ✅ Partial completion
             return JsonResponse(
                 {
                     "success": True,
