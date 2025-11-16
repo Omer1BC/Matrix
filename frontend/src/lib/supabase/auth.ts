@@ -61,12 +61,13 @@ export async function signUp(
 
   if (problems_error) throw problems_error
 
-  const problemsToADD = problems?.map(({ problem_id, category_id, is_locked_by_default, title }) => ({
+  const problemsToADD = problems?.map(({ problem_id, category_id, prerequisite,is_locked_by_default, title }) => ({
     problem_id: problem_id,        
     user_id: data.user!.id,
     category_id: category_id,
     is_unlocked: !is_locked_by_default,
     title: title,
+    prerequisite: prerequisite,
   })) ?? [];
 
   const {error: problem_completions_error} = await supabase.from("problem_completions").insert(problemsToADD);

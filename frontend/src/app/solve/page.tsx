@@ -7,7 +7,7 @@ import TabPanel from "@/components/TabPanel";
 import Tools from "@/components/Tools";
 import ValidationPanel from "@/components/ValidationPanel";
 import { useSolve } from "@/lib/hooks/useSolve";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { AnnotationsProvider } from "@/lib/contexts/AnnotationsContext";
 import { getAnimationUrl } from "@/lib/api";
 import AnimationPlayer from "@/components/AnimationPlayer";
@@ -344,9 +344,9 @@ export default function SolvePage({ problemId }: { problemId: string }) {
             tabs={questionTabs}
             defaultActiveKey={questionDefaultKey}
           />
-          <TabPanel tabs={codeTabs} activeKey={activeCodeTab} onTabChange={setActiveCodeTab}/>
-          <TabPanel tabs={referencesTabs} className="chatbox"/>
-          <TabPanel className="tests-solve"
+          <TabPanel tabs={codeTabs} activeKey={activeCodeTab} onTabChange={setActiveCodeTab} className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"/>
+          <TabPanel tabs={referencesTabs} className="chatbox question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"/>
+          <TabPanel className="tests-solve question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
             key={`v-${validationPanelKey}`}
             tabs={validationTabs}
             defaultActiveKey={validationDefaultKey}

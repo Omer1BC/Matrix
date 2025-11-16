@@ -96,22 +96,6 @@ def get_completion(request):
         print(user.completion_percentage)
         return JsonResponse({"percentage": user.completion_percentage}, status=200)
 
-
-@csrf_exempt
-def get_token_count(func):
-    @wraps(func)
-    def wrapper(request, *args, **kwargs):
-        response = func(request, *args, **kwargs)
-
-        try:
-            return JsonResponse({"hello": "hello"})
-        except Exception as e:
-            print("Error getting token count", e)
-            return response
-
-    return wrapper
-
-
 @csrf_exempt
 def save_notes(request):
     if request.method != "POST" or "application/json" not in (

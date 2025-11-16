@@ -133,7 +133,10 @@ export default function ProblemsPage() {
 
       const user_data = await getUserProblemById(problem.problem_id);
       setCurrentProblemCompletion(user_data);
-      if (editorRef.current && data.method_stub) {
+      if(editorRef.current && user_data.user_solution != "") {
+        editorRef.current.setValue(formatCodeForEditor(user_data.user_solution));
+      }
+      else if (editorRef.current && data.method_stub) {
         editorRef.current.setValue(formatCodeForEditor(data.method_stub));
       } else {
         console.error("Failed to fetch problem details");
