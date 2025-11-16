@@ -72,7 +72,7 @@ export default function Header() {
               <Image
                 src="/matrix_logo.png"
                 alt="Matrix Logo"
-                className="w-10 h-10"
+                className="matrix-header w-10 h-10"
                 width={10}
                 height={10}
               />
@@ -138,7 +138,7 @@ export default function Header() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="signup flex items-center gap-3">
               <Button
                 variant="outline"
                 className="matrix-border bg-transparent hover:bg-primary/10"

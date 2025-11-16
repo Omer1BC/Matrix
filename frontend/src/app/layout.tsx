@@ -1,9 +1,14 @@
+
 import "./globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "../lib/contexts/AuthContext";
 import React from "react";
 import Header from "@/components/Header";
 import type { Metadata } from "next";
+
+import { useEffect } from 'react';
+import { usePathname } from "next/navigation"
+import GlobalTourWrapper from "../components/GlobalTourWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,8 +39,10 @@ export default function RootLayout({
         className={`h-dvh flex flex-col ${geistSans.variable} ${geistMono.variable}`}
       >
         <AuthProvider>
-          <Header />
-          {children}
+          <GlobalTourWrapper>
+            <Header />
+            {children}
+          </GlobalTourWrapper>
         </AuthProvider>
       </body>
     </html>

@@ -106,7 +106,7 @@ export async function updateUserProblemCompletion(
   const { error: update_next_problem_error } = await supabase
     .from("problem_completions")
     .update({ is_unlocked: true })
-    .eq("id", id + 1)
+    .eq("prerequisite", problem_id)
     .eq("user_id", user.user.id)
     .eq("category_id", category_id);
 

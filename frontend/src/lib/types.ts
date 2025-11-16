@@ -236,3 +236,11 @@ export type UserProgressUpdate = {
   currentProblemId?: number | null;
   achievementsEarned?: Json;
 };
+
+// -------
+
+export type SeenStatus = {
+  homepage: boolean;
+  learn: boolean;
+  solve: boolean;
+};

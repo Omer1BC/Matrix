@@ -8,6 +8,7 @@ import { getAllCategories, getAllUserProblems } from "@/lib/supabase/problems";
 
 export default function ProblemMenu({ onProblemSelect, refreshKey }) {
   const [expandedCategory, setExpandedCategory] = useState(null);
+  const [expandedCategories, setExpandedCategories] = useState(new Set());
   const [problemCategories, setProblemCategories] = useState<ProblemCategory[]>([]);
   const [problems, SetProblems] = useState<ProblemCompletion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,8 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
       try {
         setLoading(true);
         const res = await getAllCategories();
-        setProblemCategories(res); // fallback to empty array if null
+        setProblemCategories(res);
+        setExpandedCategories(new Set(Object.keys(res)));
       } catch (err) {
         console.error(err);
         setError("Failed to get categories");
@@ -118,14 +120,13 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
           <button
             onClick={() => toggleCategory(key)}
             className="w-full text-left font-semibold flex items-center gap-2"
-            style={{ color: "var(--gr-2)" }}
-          >
+            style={{ color: "var(--gr-2)" }}>
             <span>{expandedCategory === key ? "▼" : "▶"}</span>
             <span className="text-2xl">{section.icon}</span>
             {section.title}
           </button>
 
-          {expandedCategory === key && (
+          {expandedCategories.has(key) && (
             <div className="mt-2 ml-6 space-y-2">
               {problems.filter(problem => problem.category_id === section.title).map(problem => {
                 const isLocked = !problem.is_unlocked;

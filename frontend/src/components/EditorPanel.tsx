@@ -84,7 +84,7 @@ export default function EditorPanel({
 
   return (
     <div
-      className={`flex flex-col relative w-full min-h-0 ${
+      className={`editor flex flex-col relative w-full min-h-0 ${
         showHints ? "" : "hints-off"
       }`}
       style={{ borderRadius: ".5rem", position: "relative" }}

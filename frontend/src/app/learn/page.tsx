@@ -20,7 +20,7 @@ import {
 } from "@/lib/supabase/problems";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { formatCodeForEditor } from "@/lib/utils";
-// Problem Selection Drawer Component
+import 'shepherd.js/dist/css/shepherd.css';
 
 export default function ProblemsPage() {
   const { user } = useAuth();
@@ -133,7 +133,10 @@ export default function ProblemsPage() {
 
       const user_data = await getUserProblemById(problem.problem_id);
       setCurrentProblemCompletion(user_data);
-      if (editorRef.current && data.method_stub) {
+      if(editorRef.current && user_data.user_solution != "") {
+        editorRef.current.setValue(formatCodeForEditor(user_data.user_solution));
+      }
+      else if (editorRef.current && data.method_stub) {
         editorRef.current.setValue(formatCodeForEditor(data.method_stub));
       } else {
         console.error("Failed to fetch problem details");
@@ -181,7 +184,8 @@ export default function ProblemsPage() {
       editor: {
         label: "Editor",
         content: (
-          <div className="flex-1 flex flex-col h-full  shadow-lg overflow-hidden ">
+          <div className="editor flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
+
             <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
               <div className="mb-2">
                 <h2
@@ -259,7 +263,7 @@ export default function ProblemsPage() {
         {/* Main 3-Column Grid with custom column widths */}
         <div className="grid grid-cols-[1fr_3fr_1fr] gap-6 h-full p-6 mx-auto">
           {/* Column 1: Problem Menu with vertical progress bar */}
-          <div className="rounded-lg shadow-lg overflow-hidden flex flex-col matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300">
+          <div className="problems rounded-lg shadow-lg overflow-hidden flex flex-col">
             {/* Navigation Menu Header */}
             <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
               <h2
@@ -318,7 +322,7 @@ export default function ProblemsPage() {
               </div>
               {/* Video Content Section */}
               <div className="" style={{ backgroundColor: "var(--dbl-5)" }}>
-                <div className="flex justify-center items-center">
+                <div className="videos flex justify-center items-center">
                   <ReactPlayer
                     muted={false}
                     playing={false}
@@ -333,14 +337,14 @@ export default function ProblemsPage() {
             </div>
             {/* Exercise & Code Editor Combined */}
             <Card
-              className="exercise/editor flex flex-col h-full matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+              className="notes exercise/editor flex flex-col h-full matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
               tabs={codeTabs}
             />
           </div>
 
           {/* Column 3: Test Cases and Output */}
           <div
-            className="rounded-lg shadow-lg p-6 flex flex-col overflow-y-auto matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+            className="tests rounded-lg shadow-lg p-6 flex flex-col overflow-y-auto"
             style={{ backgroundColor: "var(--dbl-2)" }}
           >
             {/* Output Display */}

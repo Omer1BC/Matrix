@@ -10,8 +10,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Zap, Target, Trophy, Brain } from "lucide-react";
 import Link from "next/link";
+ 
+import { useEffect } from 'react';
+import Shepherd from 'shepherd.js';
+import 'shepherd.js/dist/css/shepherd.css';
 
 export default function HomePage() {
+
   return (
     <main className="flex flex-1 flex-col min-h-0 items-center text-center p-4 justify-evenly gap-4">
       <div className="matrix-rain" />
@@ -40,7 +45,7 @@ export default function HomePage() {
             <Button
               style={{ cursor: "pointer" }}
               size="lg"
-              className="text-lg px-8 py-6 glow-text"
+              className="demo text-lg px-8 py-6 glow-text"
               variant={undefined}
             >
               Watch Demo <ArrowRight className="ml-2 h-5 w-5" />
@@ -50,7 +55,7 @@ export default function HomePage() {
             <Button
               style={{ cursor: "pointer" }}
               size="lg"
-              className="text-lg px-8 py-6 glow-text"
+              className="learn text-lg px-8 py-6 glow-text"
               variant={undefined}
             >
               Start Learning <ArrowRight className="ml-2 h-5 w-5" />
