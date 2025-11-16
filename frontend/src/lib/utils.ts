@@ -32,3 +32,11 @@ export function injectMonacoDecorationStyles() {
 `;
   document.head.appendChild(style);
 }
+
+export function formatCodeForEditor(code: string) {
+  return code
+    .replace(/\\n/g, "\n") // convert \n to actual newlines
+    .replace(/\\t/g, "\t") // convert \t to actual tabs
+    .replace(/\\"/g, '"') // convert \" to actual double quotes
+    .replace(/\\'/g, "'"); // convert \' to actual single quotes
+}

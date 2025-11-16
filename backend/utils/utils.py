@@ -94,44 +94,6 @@ def insert_user_code(file_path, user_code, sample=None, include_solution=False):
             f.write(res)
     return res
 
-    # import_lines = []
-    # rest_lines = []
-    # for line in lines:
-    #     if line.strip().startswith("import") or line.strip().startswith("from"):
-    #         import_lines.append(line)
-    #     else:
-    #         rest_lines.append(line)
-    # res = (
-    #     "".join(imports)
-    #     + "\n"
-    #     + "".join(solution)
-    #     + "\n"
-    #     + user_code
-    #     + "\n"
-    #     + "".join(tests)
-    # )
-    # if sample:
-    #     with open(os.path.join(settings.MEDIA_ROOT, sample), "w") as f:
-    #         f.write(res)
-    # return res
-
-
-def get_problem_details(problem_id):
-    # This function should fetch problem details from a database or other source
-    # For demonstration, we return a static response
-
-    res = {
-        "title": "Example Problem",
-        "description": "Description of the problem goes here.",
-        "test_cases": 3,
-        "method_stub": "def twoSum(self, nums: List[int], target: int) -> List[int]:\n        return []",
-        "input_args": ["nums", "target", "output", "expected"],
-    }
-    result, error = run(res["method_stub"])
-    res["tests"] = result if not error else {}
-    return res
-
-
 def id_to_file_name(problem_id):
     res = "2_connectedComps.py"
     return os.path.join(settings.MEDIA_ROOT, res)

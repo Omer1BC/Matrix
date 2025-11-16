@@ -40,7 +40,7 @@ export default function ValidationContent({
 
   useEffect(() => {
     const fetchDetails = () => {
-      ping({ problem_id: problemId }, "problem_details").then((data) => {
+      ping({ problem_id: problemId }, "problem-details").then((data) => {
         setDetails(data);
 
         try {

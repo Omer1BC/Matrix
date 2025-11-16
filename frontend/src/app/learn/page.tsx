@@ -1,32 +1,36 @@
 "use client";
 
-import Image from "next/image";
 import "../templates.css";
-import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { Disclosure, Menu, Textarea } from "@headlessui/react";
 import ReactPlayer from "react-player";
 import { Editor } from "@monaco-editor/react";
 import { useRef, useState, useEffect, useMemo } from "react";
-import Link from "next/link";
 import Card from "../templates/card/card";
-import ValidationContent from "../cards/validation/content";
 import TestCasesPanel from "./testCasesPanel";
 import ProblemMenu from "./problemMenu";
-import { NotesCard } from './NotesCard';
+import { NotesCard } from "./NotesCard";
 
 import { Problem, ProblemCompletion } from "@/lib/types";
 import { editor as MonacoEditor } from "monaco-editor";
-import { getProblemById, getUserProblemById, updateNotes, updateUserProblemCompletion } from "@/lib/supabase/problems";
+import {
+  getProblemById,
+  getUserProblemById,
+  saveNotes,
+  updateUserProblemCompletion,
+  calculateProblemCompletion,
+} from "@/lib/supabase/problems";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { formatCodeForEditor } from "@/lib/utils";
 import 'shepherd.js/dist/css/shepherd.css';
 
 export default function ProblemsPage() {
+  const { user } = useAuth();
   const [output, setOutput] = useState("");
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const [drawerToggle, setDrawerToggle] = useState(false);
   const [currentProblem, setCurrentProblem] = useState<Problem>({
     id: 1,
     category_id: 0,
-    problem_id: "intro-1",
+    problem_id: "default",
     title: "Hello World",
     description: "Write a program that prints 'Hello, World!' to the console.",
     difficulty: "easy",
@@ -41,7 +45,6 @@ export default function ProblemsPage() {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   });
-
 
   const [problemDetails, setProblemDetails] = useState<Problem>({
     id: 1,
@@ -62,29 +65,30 @@ export default function ProblemsPage() {
     updated_at: new Date().toISOString(),
   });
 
-  const [currProblemCompletion, setCurrentProblemCompletion] = useState<ProblemCompletion>({
-    id: 0,
-    user_id: "",
-    problem_id: "",
-    title: "",
-    category_id: "",
-    is_unlocked: false,
-    is_completed: false,
-    is_attempted: false,
-    completion_date: "",
-    first_attempt_date: "",
-    notes: "",
-    user_solution: "",
-    attempts_count: 0,
-    hints_used: 0,
-    time_spent_seconds: 0,
-    test_cases_passed: 0,
-    total_test_cases: 0,
-    points_earned: 0,
-    efficiency_score: 0,
-    created_at: "",
-    updated_at: "",
-  });
+  const [currProblemCompletion, setCurrentProblemCompletion] =
+    useState<ProblemCompletion>({
+      id: 0,
+      user_id: "",
+      problem_id: "",
+      title: "",
+      category_id: "",
+      is_unlocked: false,
+      is_completed: false,
+      is_attempted: false,
+      completion_date: "",
+      first_attempt_date: "",
+      notes: "",
+      user_solution: "",
+      attempts_count: 0,
+      hints_used: 0,
+      time_spent_seconds: 0,
+      test_cases_passed: 0,
+      total_test_cases: 0,
+      points_earned: 0,
+      efficiency_score: 0,
+      created_at: "",
+      updated_at: "",
+    });
   const [testCases, setTestCases] = useState([]);
   const [refreshKey, setRefreshKey] = useState(false);
   const [completionPercentage, setCompletionPercentage] = useState(0);
@@ -92,34 +96,27 @@ export default function ProblemsPage() {
   function toggleRefresh() {
     setRefreshKey(!refreshKey);
   }
-  
+
   async function handleAllTestsPassed() {
     setShowVictoryModal(true);
-    await updateUserProblemCompletion(currentProblem.problem_id, testCases.length, editorRef.current?.getValue());
+    await updateUserProblemCompletion(
+      currProblemCompletion.id,
+      currentProblem.problem_id,
+      currProblemCompletion.category_id,
+      testCases.length,
+      editorRef.current?.getValue()
+    );
     toggleRefresh();
-  };
+  }
 
-  const [notes, setNotes] = useState("");
+  useEffect(() => {
+    async function loadCompletion() {
+      const completion = await calculateProblemCompletion();
+      setCompletionPercentage(completion);
+    }
 
-  // useEffect(() => {
-  //   pingPercentage();
-  // }, [refreshKey]);
-
-  // function pingPercentage() {
-  //   fetch("http://localhost:8000/api/completion", {
-  //     method: "GET",
-
-  //     credentials: "include",
-  //   })
-  //     .then((response) => response.json())
-  //     .then((data) => {
-  //       setCompletionPercentage(data.percentage);
-  //       console.log(completionPercentage);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error fetching completion percentage:", error);
-  //     });
-  // }
+    loadCompletion();
+  }, [refreshKey, completionPercentage]);
 
   function handleEditorDidMount(editor, monaco) {
     editorRef.current = editor;
@@ -127,7 +124,7 @@ export default function ProblemsPage() {
     editor.setValue('# Write your solution here\nprint("Hello, World!")');
   }
 
-  const handleProblemSelect = async (problem) => {
+  const handleProblemSelect = async (problem: Problem) => {
     setCurrentProblem(problem);
 
     try {
@@ -138,12 +135,11 @@ export default function ProblemsPage() {
       setCurrentProblemCompletion(user_data);
       if (editorRef.current && data.method_stub) {
         editorRef.current.setValue(formatCodeForEditor(data.method_stub));
-      }
-      else {
+      } else {
         console.error("Failed to fetch problem details");
         // Fallback to default starter code
         if (editorRef.current) {
-          const starterCode = getStarterCode(problem.id);
+          const starterCode = getStarterCode(currentProblem.id);
           editorRef.current.setValue(starterCode);
         }
         setTestCases([]);
@@ -160,79 +156,11 @@ export default function ProblemsPage() {
         parsedTestCases = [];
       }
       setTestCases(parsedTestCases);
-
     } catch (error) {
-      console.err(error);
+      console.error(error);
     }
-    // Fetch detailed problem information from the API
-    // try {
-    //   const response = await fetch(
-    //     "http://localhost:8000/api/problem-details",
-    //     {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       body: JSON.stringify({ problem_id: problem.id }),
-    //     }
-    //   );
-
-    //   if (response.ok) {
-    //     const details = await response.json();
-    //     setProblemDetails(details);
-
-    //     // Parse test cases from JSON string
-    // let parsedTestCases = [];
-    // try {
-    //   parsedTestCases =
-    //     typeof details.test_cases === "string"
-    //       ? JSON.parse(details.test_cases)
-    //       : details.test_cases || [];
-    // } catch (e) {
-    //   console.error("Error parsing test cases:", e);
-    //   parsedTestCases = [];
-    // }
-    // setTestCases(parsedTestCases);
-
-    // Update editor with the starter code from the API
-    if (editorRef.current && problemDetails.method_stub) {
-      editorRef.current.setValue(formatCodeForEditor(problemDetails.method_stub));
-    }
-    else {
-      console.error("Failed to fetch problem details");
-      // Fallback to default starter code
-      if (editorRef.current) {
-        const starterCode = getStarterCode(problem.id);
-        editorRef.current.setValue(starterCode);
-      }
-      setTestCases([]);
-    }
-    // } catch (error) {
-    //   console.error("Error fetching problem details:", error);
-    //   // Fallback to default starter code
-    //   if (editorRef.current) {
-    //     const starterCode = getStarterCode(problem.id);
-    //     editorRef.current.setValue(starterCode);
-    //   }
-    //   setTestCases([]);
-    // }
-
     setOutput(""); // Clear previous output
   };
-
-  // useEffect(() => {
-  //   if (problemDetails && editorRef.current) {
-  //     editorRef.current.setValue(formatCodeForEditor(problemDetails.method_stub));
-  //   }
-  // }, [problemDetails]);
-
-  function formatCodeForEditor(code: string) {
-    return code
-      .replace(/\\n/g, "\n")   // convert \n to actual newlines
-      .replace(/\\t/g, "\t")   // convert \t to actual tabs
-      .replace(/\\"/g, '"')    // convert \" to actual double quotes
-      .replace(/\\'/g, "'");   // convert \' to actual single quotes
-  }
 
   const getStarterCode = (problemId) => {
     const starterCodes = {
@@ -248,16 +176,6 @@ export default function ProblemsPage() {
     return starterCodes[problemId] || "# Write your solution here\n";
   };
 
-  useEffect(() => {
-    console.log("testcasess", testCases);
-  }, [testCases])
-
-  const urls = ["/vid.mp4", "/vid2.mp4"];
-  const [idx, setIdx] = useState(0);
-  const handleEnded = () => {
-    setIdx(1);
-  };
-
   const codeTabs = useMemo(
     () => ({
       editor: {
@@ -271,7 +189,7 @@ export default function ProblemsPage() {
                   className="text-xl font-bold"
                   style={{ color: "var(--gr-2)" }}
                 >
-                  Exercise {currentProblem.id}:{" "}
+                  Exercise {currentProblem.problem_id}:{" "}
                   {problemDetails?.title || currentProblem.title}
                 </h2>
               </div>
@@ -283,7 +201,7 @@ export default function ProblemsPage() {
               </div>
             </div>
 
-            <div className="flex-1 min-h-[300px]">
+            <div className="flex-1 min-h-0">
               <Editor
                 height="100%"
                 width="100%"
@@ -294,7 +212,7 @@ export default function ProblemsPage() {
                   minimap: { enabled: false },
                   fontSize: 14,
                   lineNumbers: "on",
-                  scrollBeyondLastLine: false,
+                  scrollBeyondLastLine: true,
                   automaticLayout: true,
                 }}
               />
@@ -308,18 +226,29 @@ export default function ProblemsPage() {
           <NotesCard
             notes={currProblemCompletion.notes}
             onChange={(value) =>
-              setCurrentProblemCompletion(prev => ({
+              setCurrentProblemCompletion((prev) => ({
                 ...prev,
-                notes: value
+                notes: value,
               }))
             }
             onBlur={async () => {
+              const user_id =
+                typeof user === "string"
+                  ? user
+                  : user?.id ?? user?.user?.id ?? "";
+
+              if (!user_id) throw new Error("Missing user_id");
+
               if (currProblemCompletion.problem_id) {
-                await updateNotes(currProblemCompletion.problem_id, currProblemCompletion.notes);
+                await saveNotes({
+                  user_id: user_id,
+                  problem_id: String(currProblemCompletion.problem_id),
+                  notes: currProblemCompletion.notes || "",
+                });
               }
             }}
           />
-        )
+        ),
       },
     }),
     [currentProblem, problemDetails, currProblemCompletion]
@@ -327,10 +256,7 @@ export default function ProblemsPage() {
 
   return (
     <>
-      <div
-        className="Page h-screen overflow-hidden"
-        style={{ backgroundColor: "var(--dbl-1)" }}
-      >
+      <div className="Page h-screen overflow-hidden bg-background/80">
         {/* Main 3-Column Grid with custom column widths */}
         <div className="grid grid-cols-[1fr_3fr_1fr] gap-6 h-full p-6 mx-auto">
           {/* Column 1: Problem Menu with vertical progress bar */}
@@ -338,7 +264,7 @@ export default function ProblemsPage() {
             {/* Navigation Menu Header */}
             <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
               <h2
-                className="text-lg font-bold text-center"
+                className="text-lg font-bold text-center "
                 style={{ color: "var(--gr-2)" }}
               >
                 Menu
@@ -381,7 +307,7 @@ export default function ProblemsPage() {
           {/* Column 2: Video, Exercise & Editor */}
           <div className="flex flex-col gap-4 flex-1 min-h-0">
             {/* Video Player */}
-            <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0">
+            <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0 matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300">
               {/* Video Title Section */}
               <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
                 <h3
@@ -407,7 +333,10 @@ export default function ProblemsPage() {
               </div>
             </div>
             {/* Exercise & Code Editor Combined */}
-            <Card className="notes exercise/editor" tabs={codeTabs} />
+            <Card
+              className="notes exercise/editor flex flex-col h-full matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+              tabs={codeTabs}
+            />
           </div>
 
           {/* Column 3: Test Cases and Output */}
