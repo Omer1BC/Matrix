@@ -38,36 +38,6 @@ export default function ValidationContent({
   const [testSummary, setTestSummary] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchDetails = () => {
-      ping({ problem_id: problemId }, "problem-details").then((data) => {
-        setDetails(data);
-
-        try {
-          const orig = data.tests;
-          if (orig) {
-            const fixedStr = String(orig).replace(/'/g, '"');
-            const json = JSON.parse(fixedStr);
-            setTests(json);
-            const firstK = Object.keys(json)[0];
-            setActiveTest(json[firstK]);
-            setActiveKey(firstK);
-          } else {
-            setTests({});
-            setActiveTest({});
-            setActiveKey(0);
-          }
-        } catch {
-          setTests({});
-          setActiveTest({});
-          setActiveKey(0);
-        }
-      });
-    };
-
-    fetchDetails();
-  }, [problemId]);
-
   const buildNumberedCode = () => {
     const editor = editorRef.current;
     if (!editor) return "";
