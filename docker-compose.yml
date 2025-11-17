@@ -29,6 +29,6 @@ services:
     environment:
       - WATCHPACK_POLLING=true
     env_file:
-      - ./frontend/.env    
+      - .env    
 
 

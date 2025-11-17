@@ -7,8 +7,9 @@ import { useRef, useState, useEffect, useMemo } from "react";
 import Card from "../templates/card/card";
 import TestCasesPanel from "./testCasesPanel";
 import ProblemMenu from "./problemMenu";
+import ReferencesPanel from "@/components/ReferencesPanel";
+import { useSolve } from "@/lib/hooks/useSolve";
 import { NotesCard } from "./NotesCard";
-
 import { Problem, ProblemCompletion } from "@/lib/types";
 import { editor as MonacoEditor } from "monaco-editor";
 import {
@@ -20,17 +21,17 @@ import {
 } from "@/lib/supabase/problems";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { formatCodeForEditor } from "@/lib/utils";
-import 'shepherd.js/dist/css/shepherd.css';
+import "shepherd.js/dist/css/shepherd.css";
+import NeoIcon from "@/components/NeoIcon";
 
-export default function ProblemsPage() {
+export default function LearnPage() {
   const { user } = useAuth();
   const [output, setOutput] = useState("");
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
-  const [drawerToggle, setDrawerToggle] = useState(false);
   const [currentProblem, setCurrentProblem] = useState<Problem>({
     id: 1,
     category_id: 0,
-    problem_id: "default",
+    problem_id: "intro-1",
     title: "Hello World",
     description: "Write a program that prints 'Hello, World!' to the console.",
     difficulty: "easy",
@@ -93,6 +94,30 @@ export default function ProblemsPage() {
   const [refreshKey, setRefreshKey] = useState(false);
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
+
+  const {
+    loading: neoLoading,
+    response: neoResponse,
+    setResponse: setNeoResponse,
+    annotate: neoAnnotate,
+    askSelection: neoAskSelection,
+  } = useSolve(currentProblem.problem_id || "intro-1");
+
+  const handleViewHint = async () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const model = editor.getModel();
+    if (!model) return;
+
+    let code = "";
+    for (let i = 1; i <= model.getLineCount(); i++) {
+      code += `${i} | ${model.getLineContent(i)}\n`;
+    }
+
+    const data = await neoAnnotate(code);
+    setNeoResponse(data?.expalantions_of_hint || "");
+  };
+
   function toggleRefresh() {
     setRefreshKey(!refreshKey);
   }
@@ -133,10 +158,11 @@ export default function ProblemsPage() {
 
       const user_data = await getUserProblemById(problem.problem_id);
       setCurrentProblemCompletion(user_data);
-      if(editorRef.current && user_data.user_solution != "") {
-        editorRef.current.setValue(formatCodeForEditor(user_data.user_solution));
-      }
-      else if (editorRef.current && data.method_stub) {
+      if (editorRef.current && user_data.user_solution != "") {
+        editorRef.current.setValue(
+          formatCodeForEditor(user_data.user_solution)
+        );
+      } else if (editorRef.current && data.method_stub) {
         editorRef.current.setValue(formatCodeForEditor(data.method_stub));
       } else {
         console.error("Failed to fetch problem details");
@@ -185,7 +211,6 @@ export default function ProblemsPage() {
         label: "Editor",
         content: (
           <div className="editor flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
-
             <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
               <div className="mb-2">
                 <h2
@@ -254,7 +279,60 @@ export default function ProblemsPage() {
         ),
       },
     }),
-    [currentProblem, problemDetails, currProblemCompletion]
+    [
+      currentProblem.problem_id,
+      currentProblem.title,
+      currentProblem.description,
+      problemDetails?.title,
+      problemDetails?.description,
+      currProblemCompletion.notes,
+      currProblemCompletion.problem_id,
+      user,
+    ]
+  );
+
+  const testTabs = useMemo(
+    () => ({
+      tests: {
+        label: "Tests",
+        content: (
+          <div className="h-full min-h-0 flex">
+            <TestCasesPanel
+              problemId={currentProblem.problem_id}
+              editorRef={editorRef}
+              onAllTestsPassed={handleAllTestsPassed}
+            />
+          </div>
+        ),
+      },
+      neo: {
+        label: (
+          <div className="flex items-center gap-1.5">
+            <NeoIcon width={18} height={18} />
+            <span>Neo</span>
+          </div>
+        ),
+        content: (
+          <div className="flex flex-col h-full min-h-0">
+            <ReferencesPanel
+              loading={neoLoading}
+              response={neoResponse}
+              onNextThread={(input) => neoAskSelection(input)}
+              onViewHint={handleViewHint}
+            />
+          </div>
+        ),
+      },
+    }),
+    [
+      currentProblem.problem_id,
+      editorRef,
+      handleAllTestsPassed,
+      neoAskSelection,
+      neoLoading,
+      neoResponse,
+      handleViewHint,
+    ]
   );
 
   return (
@@ -347,26 +425,10 @@ export default function ProblemsPage() {
             className="tests rounded-lg shadow-lg p-6 flex flex-col overflow-y-auto"
             style={{ backgroundColor: "var(--dbl-2)" }}
           >
-            {/* Output Display */}
-            {output && (
-              <div className="mb-6 flex-shrink-0">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                  Console Output:
-                </h4>
-                <pre className="bg-gray-900 text-green-400 p-3 rounded text-sm font-mono overflow-auto max-h-32">
-                  {output}
-                </pre>
-              </div>
-            )}
-
-            {/* Test Cases Panel */}
-            <div className="flex-1 min-h-0">
-              <TestCasesPanel
-                problemId={currentProblem.problem_id}
-                editorRef={editorRef}
-                onAllTestsPassed={handleAllTestsPassed}
-              />
-            </div>
+            <Card
+              className="notes exercise/editor flex flex-col h-full matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+              tabs={testTabs}
+            />
           </div>
         </div>
 
