@@ -95,8 +95,9 @@ def insert_user_code(file_path, user_code, sample=None, include_solution=False):
     return res
 
 def id_to_file_name(problem_id):
-    res = "2_connectedComps.py"
+    res = "1_remove.py"
     return os.path.join(settings.MEDIA_ROOT, res)
+
 
 
 def run(problem_id, code):
