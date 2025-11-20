@@ -3,6 +3,10 @@ import { createClient } from "./client";
 
 const supabase = createClient();
 
+/**
+ * Gets all categories from problem_categories table in supabase
+ * @returns Array of json objects
+ */
 export async function getAllCategories() {
   const { data, error } = await supabase.from("problem_categories").select("*");
 
@@ -11,6 +15,10 @@ export async function getAllCategories() {
   return data;
 }
 
+/**
+ * Gets all of the problems associated with the logged in user
+ * @returns  Array of json objects of each problem
+ */
 export async function getAllUserProblems() {
   const { data: user, error } = await supabase.auth.getUser();
 
@@ -21,13 +29,46 @@ export async function getAllUserProblems() {
       .from("problem_completions")
       .select("*")
       .eq("user_id", user.user.id)
-      .order("problem_id", { ascending: true });
+      .eq("type", "Learn")
+      .order("order", { ascending: true });
     if (problem_error) throw problem_error;
     return data;
   }
   return [];
 }
 
+/**
+ * Gets all of the problems associated with the specific user
+ * @returns Json of Json Objects
+ */
+export async function getAllUserProblemsAsJson() {
+  const { data: user, error } = await supabase.auth.getUser();
+
+  if (error) throw error;
+
+  if (user) {
+    const { data, error: problem_error } = await supabase
+      .from("problem_completions")
+      .select("*")
+      .eq("user_id", user.user.id)
+      .eq("type", "Learn")
+      .order("order", { ascending: true });
+    if (problem_error) throw problem_error;
+
+    const jsonOfJson = data?.reduce((acc, row) => {
+      acc[row.order] = row;
+      return acc;
+    }, {} as Record<string, typeof data[0]>);
+
+    return jsonOfJson;
+  }
+}
+
+/**
+ * Provides a problem that is associated with the user using an id
+ * @param problem_id problem id associated with problem
+ * @returns Json object
+ */
 export async function getUserProblemById(problem_id: string) {
   const { data: user, error } = await supabase.auth.getUser();
 
@@ -49,6 +90,26 @@ export async function getUserProblemById(problem_id: string) {
   return null;
 }
 
+/**
+ * Provides all of the rows in problems table in supabase
+ * @returns Array of json objects
+ */
+export async function getAllProblems() {
+  const { data, error } = await supabase
+    .from("problems")
+    .select("*")
+    .eq("type", "Learn")
+    .order("order", { ascending: true })
+  if (error) throw error;
+
+  return data || [];
+}
+
+/**
+ * Provides problem using a specified id
+ * @param problem_id Problem id
+ * @returns Json Object
+ */
 export async function getProblemById(problem_id: string) {
   const { data, error } = await supabase
     .from("problems")
@@ -61,6 +122,11 @@ export async function getProblemById(problem_id: string) {
   return data;
 }
 
+/**
+ * 
+ * @param payload 
+ * @returns 
+ */
 export async function saveNotes(payload: {
   user_id: string;
   problem_id: string;
@@ -115,6 +181,10 @@ export async function updateUserProblemCompletion(
   return null;
 }
 
+/**
+ * Calculates the percentage of problems the user has completed under problem_completions table
+ * @returns Decimal percentage
+ */
 export async function calculateProblemCompletion(): Promise<number> {
   const { data: user, error } = await supabase.auth.getUser();
 

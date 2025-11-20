@@ -114,6 +114,7 @@ export type Problem = {
   tools: Json;
   created_at: string;
   updated_at: string;
+  type: string,
 };
 
 export type ProblemCreate = {
@@ -162,6 +163,7 @@ export type ProblemCompletion = {
   completion_date: string | null;
   first_attempt_date: string;
   notes: string,
+  order: number,
   user_solution: string;
   attempts_count: number;
   hints_used: number;
@@ -172,6 +174,7 @@ export type ProblemCompletion = {
   efficiency_score: number;
   created_at: string;
   updated_at: string;
+  type: string,
 };
 
 export type ProblemCompletionCreate = {

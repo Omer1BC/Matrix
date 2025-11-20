@@ -12,20 +12,26 @@ import { useSolve } from "@/lib/hooks/useSolve";
 import { NotesCard } from "./NotesCard";
 import { Problem, ProblemCompletion } from "@/lib/types";
 import { editor as MonacoEditor } from "monaco-editor";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   getProblemById,
   getUserProblemById,
   saveNotes,
   updateUserProblemCompletion,
   calculateProblemCompletion,
+  getAllUserProblemsAsJson,
+  getAllProblems,
 } from "@/lib/supabase/problems";
+import { syncProblemCompletions } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { formatCodeForEditor } from "@/lib/utils";
 import "shepherd.js/dist/css/shepherd.css";
 import NeoIcon from "@/components/NeoIcon";
 
 export default function LearnPage() {
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [output, setOutput] = useState("");
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const [currentProblem, setCurrentProblem] = useState<Problem>({
@@ -45,6 +51,7 @@ export default function LearnPage() {
     tools: [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    type: "",
   });
 
   const [problemDetails, setProblemDetails] = useState<Problem>({
@@ -64,6 +71,7 @@ export default function LearnPage() {
     tools: [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    type: "",
   });
 
   const [currProblemCompletion, setCurrentProblemCompletion] =
@@ -79,6 +87,7 @@ export default function LearnPage() {
       completion_date: "",
       first_attempt_date: "",
       notes: "",
+      order: 0,
       user_solution: "",
       attempts_count: 0,
       hints_used: 0,
@@ -89,11 +98,14 @@ export default function LearnPage() {
       efficiency_score: 0,
       created_at: "",
       updated_at: "",
+      type: "",
     });
   const [testCases, setTestCases] = useState([]);
   const [refreshKey, setRefreshKey] = useState(false);
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
+
+  const [showMenu, setShowMenu] = useState(false);
 
   const {
     loading: neoLoading,
@@ -101,7 +113,114 @@ export default function LearnPage() {
     setResponse: setNeoResponse,
     annotate: neoAnnotate,
     askSelection: neoAskSelection,
-  } = useSolve(currentProblem.problem_id || "intro-1");
+  } = useSolve(currentProblem?.problem_id || "intro-1");
+
+  const [pageLoading, setPageLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const [problemCompletionList, setProblemCompletionList] = useState<
+    Record<string, ProblemCompletion>
+  >({});
+
+  const [problemList, setProblemList] = useState<Problem[]>([]);
+
+  const [problemIds, setProblemIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const setMenu = () => {
+      setShowMenu(!showMenu);
+    };
+
+    window.addEventListener("switchToProblems", setMenu);
+    window.addEventListener("switchToRegular", setMenu);
+
+    return () => {
+      window.removeEventListener("switchToProblems", setMenu);
+      window.addEventListener("switchToRegular", setMenu);
+    };
+  }, [showMenu]);
+
+  useEffect(() => {
+    console.log(problemCompletionList);
+  }, [problemCompletionList]);
+
+  useEffect(() => {
+    const getProblems = async () => {
+      try {
+        await syncProblemCompletions();
+        const data = await getAllUserProblemsAsJson();
+        const problems = await getAllProblems();
+
+        setCurrentProblemCompletion(data[0]);
+        setProblemCompletionList(data);
+        setCurrentProblem(problems[0]);
+        setProblemDetails(problems[0]);
+        setCurrentIndex(0);
+
+        const ids = Object.values(data).map((row) => row.problem_id); // keep original order
+        setProblemIds(ids);
+        setProblemList(problems);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setPageLoading(false);
+      }
+    };
+    getProblems();
+  }, []);
+
+  const handleNextProblem = () => {
+    let nextIndex = currentIndex + 1;
+
+    // don't rely on old currentIndex in condition
+    if (nextIndex >= problemIds.length) {
+      nextIndex = nextIndex % problemIds.length;
+    }
+
+    setCurrentIndex(nextIndex);
+
+    const nextProblemCompletion = problemCompletionList[String(nextIndex)];
+    const nextProblem = problemList[nextIndex];
+
+    if (nextProblemCompletion && nextProblem) {
+      setCurrentProblemCompletion(nextProblemCompletion);
+      setCurrentProblem(nextProblem);
+      setProblemDetails(nextProblem);
+
+      if (editorRef.current) {
+        const codeToSet =
+          nextProblemCompletion.user_solution.length > 0
+            ? nextProblemCompletion.user_solution
+            : nextProblem.method_stub;
+        editorRef.current.setValue(formatCodeForEditor(codeToSet));
+      }
+    }
+  };
+
+  const handlePrevProblem = () => {
+    if (currentIndex <= 0) return;
+
+    const prevIndex = currentIndex - 1;
+
+    setCurrentIndex(prevIndex);
+
+    const prevProblemCompletion = problemCompletionList[prevIndex];
+    const prevProblem = problemList[prevIndex];
+
+    if (prevProblemCompletion && prevProblem) {
+      setCurrentProblemCompletion(prevProblemCompletion);
+      setCurrentProblem(prevProblem);
+      setProblemDetails(prevProblem);
+
+      if (editorRef.current) {
+        const codeToSet =
+          prevProblemCompletion.user_solution.length > 0
+            ? prevProblemCompletion.user_solution
+            : prevProblem.method_stub;
+        editorRef.current.setValue(formatCodeForEditor(codeToSet));
+      }
+    }
+  };
 
   const handleViewHint = async () => {
     const editor = editorRef.current;
@@ -143,15 +262,21 @@ export default function LearnPage() {
     loadCompletion();
   }, [refreshKey, completionPercentage]);
 
-  function handleEditorDidMount(editor, monaco) {
+  function handleEditorDidMount(editor: MonacoEditor.IStandaloneCodeEditor) {
     editorRef.current = editor;
-    // Set initial code based on current problem
-    editor.setValue('# Write your solution here\nprint("Hello, World!")');
+
+    if (currProblemCompletion?.user_solution) {
+      editor.setValue(formatCodeForEditor(currProblemCompletion.user_solution));
+    } else if (currentProblem?.method_stub) {
+      editor.setValue(formatCodeForEditor(currentProblem.method_stub));
+    } else {
+      editor.setValue("# Write your solution here\n");
+    }
   }
 
   const handleProblemSelect = async (problem: Problem) => {
     setCurrentProblem(problem);
-
+    setCurrentIndex(problem.order);
     try {
       const data = await getProblemById(problem.problem_id);
       setProblemDetails(data);
@@ -205,31 +330,41 @@ export default function LearnPage() {
     return starterCodes[problemId] || "# Write your solution here\n";
   };
 
+  const isNextDisabled = useMemo(() => {
+    return !currProblemCompletion.is_completed;
+  }, [currProblemCompletion]);
+
+  const isPrevDisabled = useMemo(() => {
+    return (currentIndex === 0);
+  }, [currentIndex]);
+
   const codeTabs = useMemo(
     () => ({
       editor: {
         label: "Editor",
         content: (
-          <div className="editor flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
+          <div className="flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
             <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
               <div className="mb-2">
                 <h2
                   className="text-xl font-bold"
                   style={{ color: "var(--gr-2)" }}
                 >
-                  Exercise {currentProblem.problem_id}:{" "}
-                  {problemDetails?.title || currentProblem.title}
+                  Exercise: {problemDetails?.title || currentProblem.title}
                 </h2>
               </div>
               <div
                 className="text-sm whitespace-pre-wrap"
                 style={{ color: "var(--gr-2)" }}
               >
-                {problemDetails?.description || currentProblem.description}
+                {problemDetails?.description ||
+                  currentProblem?.title ||
+                  "No description available."}
               </div>
             </div>
 
-            <div className="flex-1 min-h-0">
+            <div className="relative flex-1 min-h-0">
+              {/* Editor fills the container */}
               <Editor
                 height="100%"
                 width="100%"
@@ -244,6 +379,44 @@ export default function LearnPage() {
                   automaticLayout: true,
                 }}
               />
+
+              {/* Button overlay */}
+              <div className="absolute top-4 right-5 z-50">
+                {currentIndex === problemIds.length - 1 ? (
+                  <Button
+                    // disabled={isNextDisabled} UNCOMMENT IF UNLOCKING/LOCKING FEATURE IS REQUIRED
+                    onClick={() => {
+                      router.push("/solve");
+                    }}
+                    className="px-6 py-4 glow-text"
+                    variant={undefined}
+                    size="lg"
+                  >
+                    To Solve page
+                  </Button>
+                ) : (
+                  <Button
+                    // disabled={isNextDisabled} UNCOMMENT IF UNLOCKING/LOCKING FEATURE IS REQUIRED
+                    onClick={handleNextProblem}
+                    className="px-6 py-4 glow-text"
+                    variant={undefined}
+                    size="lg"
+                  >
+                    Next Problem
+                  </Button>
+                )}
+              </div>
+              <div className="absolute bottom-4 right-5 z-50">
+                <Button
+                  onClick={handlePrevProblem}
+                  disabled={isPrevDisabled}
+                  className="px-6 py-4 glow-text"
+                  variant={undefined}
+                  size="lg"
+                >
+                  Previous Problem
+                </Button>
+              </div>
             </div>
           </div>
         ),
@@ -296,8 +469,9 @@ export default function LearnPage() {
       tests: {
         label: "Tests",
         content: (
-          <div className="h-full min-h-0 flex">
+          <div className="min-h-0 flex">
             <TestCasesPanel
+              key={currentProblem.problem_id}
               problemId={currentProblem.problem_id}
               editorRef={editorRef}
               onAllTestsPassed={handleAllTestsPassed}
@@ -335,129 +509,178 @@ export default function LearnPage() {
     ]
   );
 
-  return (
-    <>
-      <div className="Page h-screen overflow-hidden bg-background/80">
-        {/* Main 3-Column Grid with custom column widths */}
-        <div className="grid grid-cols-[1fr_3fr_1fr] gap-6 h-full p-6 mx-auto">
-          {/* Column 1: Problem Menu with vertical progress bar */}
-          <div className="problems rounded-lg shadow-lg overflow-hidden flex flex-col">
-            {/* Navigation Menu Header */}
-            <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
-              <h2
-                className="text-lg font-bold text-center "
-                style={{ color: "var(--gr-2)" }}
-              >
-                Menu
-              </h2>
+  if (
+    pageLoading ||
+    !currentProblem ||
+    !currProblemCompletion ||
+    !problemDetails
+  ) {
+    return (
+      <div className="Page h-screen flex items-center justify-center bg-background/80">
+        <p className="text-lg text-[#7dff7d]">Loading problems...</p>
+      </div>
+    );
+  } else {
+    return (
+      <>
+        <div className="Page h-screen overflow-hidden bg-background/80 pl-5">
+          <button
+            onClick={() => setShowMenu(true)}
+            className="problembutton absolute left-0 top-1/2 -translate-y-1/2 p-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-lg text-xl font-bold glow-text cursor-pointer "
+          >
+            ☰
+          </button>
+          {/* Main 3-Column Grid with custom column widths */}
+          <div className="flex flex-col md:flex-row gap-6 w-full h-full p-6">
+            {/* Column 1: Problem Menu with vertical progress bar */}
+
+            {/* Column 2: Video, Exercise & Editor */}
+            <div className="flex flex-col gap-4 flex-1 min-h-0 w-full">
+              {/* Video Player */}
+              <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0 matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300">
+                {/* Video Title Section */}
+                <div
+                  className="p-4"
+                  style={{ backgroundColor: "var(--dbl-3)" }}
+                >
+                  <h3
+                    className="text-lg font-semibold"
+                    style={{ color: "var(--gr-2)" }}
+                  >
+                    {problemDetails?.title || currentProblem.title}
+                  </h3>
+                </div>
+                {/* Video Content Section */}
+                <div className="" style={{ backgroundColor: "var(--dbl-5)" }}>
+                  <div className="videos flex justify-center items-center">
+                    <ReactPlayer
+                      muted={false}
+                      playing={false}
+                      controls={true}
+                      playbackRate={2}
+                      // src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
+                      src="http://localhost:8000/media/videos/4_set-1/480p15/4_set-1.mp4" //temporary until final videos are done
+                      width="50%"
+                      height="300px"
+                      style={{ objectFit: "contain" }}
+                    />
+                  </div>
+                </div>
+              </div>
+              {/* Exercise & Code Editor Combined */}
+              <Card
+                className="editor notes exercise/editor flex flex-col h-full overflow-auto matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+                tabs={codeTabs}
+              />
             </div>
 
-            {/* Problem Menu with Progress Bar */}
+            {/* Column 3: Test Cases and Output */}
             <div
-              className="relative p-4 overflow-y-auto flex flex-1"
+              className="tests rounded-lg shadow-lg flex flex-col min-h-0 md:w-1/6"
               style={{ backgroundColor: "var(--dbl-2)" }}
             >
-              {/* Progress Bar Container */}
-              <div
-                className="relative w-2 mr-4 rounded-full"
-                style={{ backgroundColor: "var(--dbl-4)" }}
-              >
-                {/* Filled part */}
-                <div
-                  className="rounded-full w-full absolute left-0 transition-all duration-300"
-                  style={{
-                    height: `${completionPercentage}%`,
-                    backgroundColor: "var(--gr-2)",
-                  }}
-                />
-              </div>
-
-              {/* Actual Problem Menu content */}
-              <div
-                className="flex-1"
-                style={{ backgroundColor: "var(--dbl-2)" }}
-              >
-                <ProblemMenu
-                  onProblemSelect={handleProblemSelect}
-                  refreshKey={refreshKey}
-                />
-              </div>
+              <Card
+                className="flex flex-col h-full min-h-0 overflow-y-auto matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+                tabs={testTabs}
+              />
             </div>
           </div>
 
-          {/* Column 2: Video, Exercise & Editor */}
-          <div className="flex flex-col gap-4 flex-1 min-h-0">
-            {/* Video Player */}
-            <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0 matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300">
-              {/* Video Title Section */}
-              <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
-                <h3
-                  className="text-lg font-semibold"
-                  style={{ color: "var(--gr-2)" }}
+          {/* Slide-in Menu Drawer */}
+          <div
+            className={` fixed inset-0 z-[150] transition-opacity ${
+              showMenu
+                ? "opacity-100 pointer-events-auto"
+                : "opacity-0 pointer-events-none"
+            }`}
+            onClick={() => setShowMenu(false)}
+            style={{ background: "rgba(0,0,0,0.4)" }}
+          >
+            <div
+              className={`fixed left-0 top-0 bottom-0 w-100 shadow-xl transform transition-transform duration-300
+              ${showMenu ? "translate-x-0" : "-translate-x-full"}`}
+              style={{ backgroundColor: "var(--dbl-2)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* MENU CONTENT MOVED HERE */}
+              <div className="problemList rounded-lg shadow-lg flex flex-col h-full overflow-hidden">
+                {/* Navigation Menu Header */}
+                <div
+                  className="p-4"
+                  style={{ backgroundColor: "var(--dbl-3)" }}
                 >
-                  {problemDetails?.title || currentProblem.title}
-                </h3>
-              </div>
-              {/* Video Content Section */}
-              <div className="" style={{ backgroundColor: "var(--dbl-5)" }}>
-                <div className="videos flex justify-center items-center">
-                  <ReactPlayer
-                    muted={false}
-                    playing={false}
-                    controls={true}
-                    playbackRate={2}
-                    src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
-                    width="auto"
-                    height="250px"
-                  />
+                  <h2
+                    className="text-lg font-bold text-center"
+                    style={{ color: "var(--gr-2)" }}
+                  >
+                    Menu
+                  </h2>
+                </div>
+
+                {/* Problem Menu with Progress Bar */}
+                <div
+                  className="relative p-4 flex-1 min-h-0 flex"
+                  style={{ backgroundColor: "var(--dbl-2)" }}
+                >
+                  {/* Progress Bar */}
+                  <div
+                    className="relative w-2 mr-4 rounded-full"
+                    style={{ backgroundColor: "var(--dbl-4)" }}
+                  >
+                    <div
+                      className="rounded-full w-full absolute left-0 transition-all duration-300"
+                      style={{
+                        height: `${completionPercentage}%`,
+                        backgroundColor: "var(--gr-2)",
+                      }}
+                    />
+                  </div>
+
+                  {/* Actual Problem Menu content */}
+                  <div
+                    className="flex-1 min-h-0 overflow-y-auto"
+                    style={{ backgroundColor: "var(--dbl-2)" }}
+                  >
+                    <ProblemMenu
+                      onProblemSelect={handleProblemSelect}
+                      refreshKey={refreshKey}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-            {/* Exercise & Code Editor Combined */}
-            <Card
-              className="notes exercise/editor flex flex-col h-full matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
-              tabs={codeTabs}
-            />
           </div>
 
-          {/* Column 3: Test Cases and Output */}
-          <div
-            className="tests rounded-lg shadow-lg p-6 flex flex-col overflow-y-auto"
-            style={{ backgroundColor: "var(--dbl-2)" }}
-          >
-            <Card
-              className="notes exercise/editor flex flex-col h-full matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
-              tabs={testTabs}
-            />
-          </div>
-        </div>
+          {/* Victory Modal */}
+          {showVictoryModal && (
+            <div
+              className="victory-modal-overlay"
+              onClick={() => setShowVictoryModal(false)}
+            >
+              <div
+                className="victory-modal"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="victory-content">
+                  <h2>Right on! 👍</h2>
+                  <p>All test cases passed successfully!</p>
+                  <p>
+                    You{"'"}ve completed:{" "}
+                    {problemDetails?.title || currentProblem.title}
+                  </p>
 
-        {/* Victory Modal */}
-        {showVictoryModal && (
-          <div
-            className="victory-modal-overlay"
-            onClick={() => setShowVictoryModal(false)}
-          >
-            <div className="victory-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="victory-content">
-                <h2>Right on! 👍</h2>
-                <p>All test cases passed successfully!</p>
-                <p>
-                  You{"'"}ve completed:{" "}
-                  {problemDetails?.title || currentProblem.title}
-                </p>
-
-                <button
-                  className="victory-close-btn"
-                  onClick={() => setShowVictoryModal(false)}
-                >
-                  Close
-                </button>
+                  <button
+                    className="victory-close-btn"
+                    onClick={() => setShowVictoryModal(false)}
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </>
-  );
+          )}
+        </div>
+      </>
+    );
+  }
 }

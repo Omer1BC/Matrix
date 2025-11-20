@@ -57,17 +57,20 @@ export async function signUp(
   const {data: problems, error: problems_error} = await supabase
     .from("problems")
     .select("*")
+    .eq("type", "Learn")
     .order("id", {ascending: true});
 
   if (problems_error) throw problems_error
 
-  const problemsToADD = problems?.map(({ problem_id, category_id, prerequisite,is_locked_by_default, title }) => ({
+  const problemsToADD = problems?.map(({ problem_id, category_id, prerequisite,is_locked_by_default, title, order, type }) => ({
     problem_id: problem_id,        
     user_id: data.user!.id,
     category_id: category_id,
     is_unlocked: !is_locked_by_default,
     title: title,
     prerequisite: prerequisite,
+    order: order,
+    type: type,
   })) ?? [];
 
   const {error: problem_completions_error} = await supabase.from("problem_completions").insert(problemsToADD);
@@ -95,6 +98,62 @@ export async function signIn(email: string, password: string) {
 
   return userProfile;
 
+}
+
+export async function syncProblemCompletions() {
+  const { data: auth, error: authErr } = await supabase.auth.getUser();
+  if (authErr) throw authErr;
+
+  const uid = auth.user?.id;
+  if (!uid) throw new Error("Not authenticated");
+
+  try {
+
+    const { data: allProblems, error: problemError } = await supabase
+      .from("problems")
+      .select("*");
+
+    if (problemError) throw problemError;
+    if (!allProblems) return;
+
+    const { data: userCompletions, error: completionError } = await supabase
+      .from("problem_completions")
+      .select("*")
+      .eq("user_id", uid);
+
+    if (completionError) throw completionError;
+
+    const existingProblemIds = new Set(userCompletions?.map(pc => pc.problem_id));
+
+    // Prepare missing completions
+    const missingCompletions = allProblems
+      .filter(p => !existingProblemIds.has(p.problem_id))
+      .map(p => ({
+        user_id: uid,
+        problem_id: p.problem_id,        
+      category_id: p.category_id,
+      is_unlocked: !p.is_locked_by_default,
+      title: p.title,
+      prerequisite: p.prerequisite,
+      order: p.order,
+      type: p.type,
+      }));
+
+    if (missingCompletions.length === 0) return; // Nothing to add
+
+    // Upsert to avoid duplicates (on user_id + problem_id)
+    const { data, error } = await supabase
+   .from("problem_completions")
+    .upsert(missingCompletions, {
+    onConflict: ["user_id", "problem_id"] as unknown as string, 
+    });
+
+    if (error) throw error;
+
+    console.log("Synced problem completions:", data);
+  } catch (err) {
+    console.error("Failed to sync problem completions:", err);
+  }
 }
 
 export async function signOut() {

@@ -28,7 +28,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     annotate,
     annotateErrors,
     askSelection,
-  } = useSolve(problemId || "dfs-1");
+  } = useSolve(problemId || "final-prob-1");
 
   const [output] = useState("");
   const [showHints, setShowHints] = useState(true);
