@@ -243,8 +243,8 @@ export default function ValidationContent({
             isLoading
               ? "cursor-not-allowed bg-[var(--muted,#6b7280)] text-[var(--dbl-1)]"
               : hasError
-              ? "bg-[var(--failure-color)] text-[var(--dbl-1)]"
-              : "bg-[var(--gr-2)] text-[var(--dbl-1)] hover:bg-[var(--gr-1)]",
+              ? "cursor-pointer bg-[var(--failure-color)] text-[var(--dbl-1)] hover:brightness-110"
+              : "cursor-pointer bg-[var(--gr-2)] text-[var(--dbl-1)] hover:bg-[var(--gr-1)]",
           ].join(" ")}
         >
           {isLoading ? "Running…" : "Test"}

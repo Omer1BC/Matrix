@@ -11,9 +11,26 @@ class Node:
 # 		self.left = left 
 # 		self.right = right
 
+#Removes the node containing target provided a BST tree root
 def remove(root:Node,target:int):
-    remove(root,target)
-    return root
+	#Target found in left subtree
+	if target < root.val:
+		root.left = remove(root.left,target)
+	#Target found in right subtree
+	elif target > root.val:
+		root.right = remove(root.right,target)
+	else:
+		#If one child is missing, return the other subtree
+		if not root.right:
+			return root.left 
+		if not root.left:
+			return root.right
+		else:
+			#Replace the target's value with the predessor and remove it
+			predecessor =  find_max(root.left)
+			root.val = predecessor.val  
+			root.left = remove_max(root.left)
+	return root
 def find_max(root):
 	if not root.right:
 		return root
