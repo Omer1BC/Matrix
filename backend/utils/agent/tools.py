@@ -8,6 +8,7 @@ from utils.utils import (
     get_annotated_ai_hints,
     get_tool_hints,
     get_error_details,
+    ask_ai
 )
 from api.models import Problem
 from .utils import generate_animation_from_prompt, get_solution_grade
@@ -85,6 +86,13 @@ def grade_via_tests_tool(problem_id: str, code: str) -> Dict[str, Any]:
     grade["verdict"] = bool(total > 0 and failed == 0 and not tests["had_error"])
 
     return {"tests": tests, "grade": grade}
+@tool(
+    "question",
+    return_direct = True     
+)
+def snippet_tool(question:str, text:str,preferences:str):
+    """Explains a snippet of the the question to the user"""
+    return ask_ai(question,text,preferences)
 
 
 @tool(

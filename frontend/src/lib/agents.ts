@@ -7,7 +7,8 @@ export type Intent =
   | "tests"
   | "grade"
   | "annotate_errors"
-  | "generate_animation";
+  | "generate_animation"
+  | "explain";
 
 export type Extras = {
   pattern?: string;
@@ -20,6 +21,7 @@ export interface AgentRequest {
   problem_id: string;
   message?: string;
   question?: string;
+  test_cases?:string;
   intent?: Intent | null;
   code?: string | null;
   preferences?: string | null;
@@ -68,6 +70,7 @@ export type AgentResponseMap = {
   annotated_hints: AgentResponse<"annotated_hints", any>;
   annotate_errors: AgentResponse<"annotate_errors", any>;
   tool_hints: AgentResponse<"tool_hints", any>;
+  explain: AgentResponse<"explain",any>;
   generate_animation: AgentResponse<"generate_animation", any>;
 };
 

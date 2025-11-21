@@ -14,6 +14,7 @@ from .tools import (
     annotated_hints_tool,
     tool_hints_tool,
     annotate_errors_tool,
+    snippet_tool
 )
 from .rag import context_text
 
@@ -50,6 +51,8 @@ def llm_node(state: State):
             tool_hints_tool,
             annotate_errors_tool,
             generate_animation_tool,
+            snippet_tool
+            
         ]
     )
     msgs = [sys]
@@ -104,6 +107,7 @@ def build_graph():
                 annotated_hints_tool,
                 tool_hints_tool,
                 annotate_errors_tool,
+                snippet_tool
             ]
         ),
     )

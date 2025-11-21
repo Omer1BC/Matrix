@@ -29,7 +29,7 @@ export default function ValidationContent({
   const [activeKey, setActiveKey] = useState<string | number>(0);
 
   const [showVictoryModal, setShowVictoryModal] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [hasError, setHasError] = useState("");
   const [llmMetrics, setLLmMetrics] = useState<any>(null);
   const [llmExplanations, setLLmExplanations] = useState<
     Record<string, string>
@@ -108,12 +108,12 @@ export default function ValidationContent({
   };
 
   const runTests = async () => {
-    setHasError(false);
+    setHasError("");
     const code = editorRef.current?.getValue() || "";
 
     if (!code.trim()) {
-      alert("Please add some code before running tests.");
-      setHasError(true);
+      // alert("Please add some code before running tests.");
+      setHasError("Please add some code before running tests.");
       setShowVictoryModal(false);
       setTests({});
       setActiveTest({});
@@ -143,14 +143,15 @@ export default function ValidationContent({
               column: r.offset,
               sourceLine: r.line || "",
             });
-          } else {
-            alert(r.msg);
+            setHasError(r.type + ": " + r.msg + " at line " + r.line || "")
+          } 
+          else {
+            setHasError(r.msg);
           }
         } else {
-          alert(String(r ?? "Unknown error while running tests."));
+          setHasError(String(r ?? "Unknown error while running tests."))
         }
         setIsLoading(false);
-        setHasError(true);
         setShowVictoryModal(false);
         setTests({});
         setActiveTest({});
@@ -198,7 +199,7 @@ export default function ValidationContent({
         (test_summary?.total || 0) > 0 && (test_summary?.failed || 0) === 0;
       setShowVictoryModal(Boolean(verdict || allPassed));
     } catch {
-      setHasError(true);
+      setHasError("Error encountered while running test");
     } finally {
       setIsLoading(false);
     }
@@ -252,7 +253,7 @@ export default function ValidationContent({
 
       <div className="flex w-4/5 flex-col overflow-hidden bg-[var(--dbl-4)] p-4">
         <div className="max-h-64 overflow-auto break-words font-sans text-[var(--gr-2)]">
-          {Object.entries(activeTest).map(([key, val]) => (
+          {hasError ? <div>{hasError}</div> :Object.entries(activeTest).map(([key, val]) => (
             <Fragment key={key}>
               <div className="text-sm">{key}</div>
               <div className="mb-2 rounded-md bg-[var(--dbl-3)] px-4 py-2 font-mono text-sm text-[var(--gr-2)]">

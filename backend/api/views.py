@@ -23,6 +23,7 @@ from utils.agent.tools import (
     hints_tool,
     run_tests_tool,
     tool_hints_tool,
+    snippet_tool
 )
 from utils.agent.utils import (
     append_time_stamp,
@@ -220,6 +221,15 @@ def agent(request):
             return JsonResponse(
                 AgentResponse(kind="annotated_hints", data=res).model_dump()
             )
+        if task == "explain":
+            res = snippet_tool.invoke({
+                "question":req.question,
+                "text": req.message,
+                "preferences":req.preferences or ""
+            }
+
+            )
+            return JsonResponse(AgentResponse(kind="explain",data=res).model_dump(),safe=False )
         if task == "generate_animation":
             prompt = (
                 params.get("request", "")

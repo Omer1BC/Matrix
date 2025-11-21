@@ -56,7 +56,7 @@ export function useSolve(problemId: string = "intro-1") {
         const res = await agentCall({
           user_id: user_id,
           problem_id: String(probId),
-          intent: "chat",
+          intent: "explain",
           message: text,
           question: `${details?.title ?? ""}\n${details?.description ?? ""}`,
           code: code,

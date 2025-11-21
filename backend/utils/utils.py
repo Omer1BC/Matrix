@@ -170,8 +170,8 @@ You MUST always respond in the following template and no other text.
 CODE_HINTS_PROMPT_2 = """You are a technical interviewer for a software engineer.
 Learner preferences: {preferences_block}
 The interviewee has been updating their code following your guidance as shown here
-{code}. You compare the candidate's code against the solution {solution} and
-notice that their code fails on the following tests cases: {cases}.
+{code}. You compare the candidate's code against the solution {solution} which is the model answer. Here are the result
+of the candidate's test cases: {cases}.
 You don't want to give them the answer, but want them to improve their problem solving ability in technical interviews.
 ONLY hints to each relevant line number of their code specifying what they are missing, but do NOT put the actual solution in the commented code. You MUST always respond in the following template and no other text.
 {format_instructions}"""
