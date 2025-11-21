@@ -561,8 +561,8 @@ export default function LearnPage() {
                       // src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
                       src="http://localhost:8000/media/videos/4_set-1/480p15/4_set-1.mp4" //temporary until final videos are done
                       width="50%"
-                      height="300px"
-                      style={{ objectFit: "contain" }}
+                      height="350px"
+                      style={{ objectFit: "fill" }}
                     />
                   </div>
                 </div>
