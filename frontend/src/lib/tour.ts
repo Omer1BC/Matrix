@@ -5,33 +5,16 @@ import { sawHomepage, sawLearn, sawSolve } from "./supabase/auth";
 import { SeenStatus } from "./types";
 
 export const allSteps = {
-    // "/": [
-    //     {
-    //         id: "welcome",
-    //         text: "Welcome to the Matrix Home Page!",
-    //         attachTo: { element: ".matrix-header", on: "bottom" },
-    //     }, 
-    //     {
-    //         id: "demo",
-    //         text: "Click here to see Matrix in action!",
-    //         attachTo: { element: ".demo", on: "left"},
-    //     },
-    //     {
-    //         id: "signup",
-    //         text: "Here you can signup for an account to keep track of progress!",
-    //         attachTo: { element: ".signup", on: "bottom"},
-    //     },
-    //     {
-    //       id: "learn",
-    //       text: "After signing up, you can navigate to the learn page.",
-    //       attachTo: { element: ".learn", on: "right"}
-    //     }
-    // ],
     "/learn": [
       {
         id: "problems",
         text: "Here you will have some exercises to learn concepts step-by-step.",
-        attachTo:{ element: ".problems", on: "right"}
+        attachTo:{ element: ".problembutton", on: "right"}
+      },
+      {
+        id: "problemList",
+        text: "You can see your progress as well as click through any other problem in the list.",
+        attachTo: { element: ".problemList", on: "right"}
       },
       {
         id: "video",
@@ -141,7 +124,21 @@ export const createTour = async (pathname: string, seen?: SeenStatus) => {
                 text: "Back",
                 classes:
                   "bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/80 transition-all",
-                action: tour.back,
+                action: () => {
+                  tour.back();
+                  if (step.id === "problems") {
+                    window.dispatchEvent(new CustomEvent("switchToProblems"));
+                  }
+                  if (step.id === "problemList") {
+                    window.dispatchEvent(new CustomEvent("switchToRegular"));
+                  }
+                  if (step.id === "timer") {
+                    window.dispatchEvent(new CustomEvent("switchToTools"));
+                  }
+                  else if (step.id === "createanimation") {
+                    window.dispatchEvent(new CustomEvent("switchToNotes"));
+                  }
+                },
               },
               {
                 text: "Next",
@@ -157,6 +154,12 @@ export const createTour = async (pathname: string, seen?: SeenStatus) => {
                   }
                   if (step.id === "chatbox") {
                     sawSolve();
+                  }
+                  if (step.id === "problems") {
+                    window.dispatchEvent(new CustomEvent("switchToProblems"));
+                  }
+                  if (step.id === "problemList") {
+                    window.dispatchEvent(new CustomEvent("switchToRegular"));
                   }
                   if (step.id === "timer") {
                     window.dispatchEvent(new CustomEvent("switchToTools"));

@@ -12,8 +12,7 @@ export default function Notes() {
     useEffect(() => {
       async function loadUserProblems() {
         const response = await getAllUserProblems();
-        const sorted = response.sort((a ,b) => a.id - b.id);
-         setUserProblems(sorted);
+         setUserProblems(response);
       }
     loadUserProblems();
     }, []);

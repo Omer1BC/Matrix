@@ -7,6 +7,10 @@ export default function TestCasesPanel({
   problemId,
   editorRef,
   onAllTestsPassed,
+}: {
+  problemId: string;
+  editorRef: React.RefObject<any>;
+  onAllTestsPassed: () => void;
 }) {
   const [runningTests, setRunningTests] = useState(false);
   const [testResults, setTestResults] = useState([]);
@@ -177,7 +181,7 @@ export default function TestCasesPanel({
             >
               <div className="flex items-center justify-between mb-2">
                 <h5 className="font-medium" style={{ color: "var(--gr-2)" }}>
-                  {result.description || `Test Case ${index + 1}`}
+                  {`Test Case ${index + 1}`}
                 </h5>
                 <span
                   className="text-sm font-semibold"
@@ -205,7 +209,7 @@ export default function TestCasesPanel({
                     }}
                   >
                     {typeof result.input === "object"
-                      ? JSON.stringify(result.input, null, 2)
+                      ? JSON.stringify(result.input, null, 2).replace(/\s+/g, "")
                       : result.input}
                   </pre>
                 </div>
