@@ -1,106 +1,32 @@
 from typing import *
-class Node:
-    def __init__(self,val=0,left=None,right=None):
-        self.val = val 
-        self.left = left 
-        self.right = right
 
-# class Node:
-# 	def __init__(self,val=0,left=None,right=None):
-# 		self.val = val 
-# 		self.left = left 
-# 		self.right = right
+def binary_search(arr, target):
+    return 5
+def run_test(test_input, expected):
+    exception = ""
+    result = ""
+    try:
+        arr, target = test_input
+        result = binary_search(arr, target)
+    except Exception as e:
+        exception = str(e)
+    return {
+        "input": test_input,
+        "expected": expected,
+        "actual": result,
+        "error": exception,
+        "passed": result == expected if not exception else False
+    }
 
-#Removes the node containing target provided a BST tree root
-def remove(root:Node,target:int):
-	#Target found in left subtree
-	if target < root.val:
-		root.left = remove(root.left,target)
-	#Target found in right subtree
-	elif target > root.val:
-		root.right = remove(root.right,target)
-	else:
-		#If one child is missing, return the other subtree
-		if not root.right:
-			return root.left 
-		if not root.left:
-			return root.right
-		else:
-			#Replace the target's value with the predessor and remove it
-			predecessor =  find_max(root.left)
-			root.val = predecessor.val  
-			root.left = remove_max(root.left)
-	return root
-def find_max(root):
-	if not root.right:
-		return root
-	return find_max(root.right)
 
-def remove_max(root):
-	if not root.right:
-		return root.left
-	root.right = remove_max(root.right)
-	return root
-def build_tree(bfs_list):
-    if not bfs_list or bfs_list[0] is None:
-        return None
-
-    root = Node(bfs_list[0])
-    queue = [root]
-    i = 1
-
-    while queue and i < len(bfs_list):
-        current = queue.pop(0)
-
-        if i < len(bfs_list) and bfs_list[i] is not None:
-            current.left = Node(bfs_list[i])
-            queue.append(current.left)
-        i += 1
-
-        if i < len(bfs_list) and bfs_list[i] is not None:
-            current.right = Node(bfs_list[i])
-            queue.append(current.right)
-        i += 1
-
-    return root
-
-def tree_to_bfs(root):
-    if not root:
-        return []
-
-    result = []
-    queue = [root]
-
-    while queue:
-        node = queue.pop(0)
-        if node:
-            result.append(node.val)
-            queue.append(node.left)
-            queue.append(node.right)
-        else:
-            result.append(None)
-
-    while result and result[-1] is None:
-        result.pop()
-
-    return result
-
-def run_test(bfs_list, target, expected):
-    root = build_tree(bfs_list)
-    result = remove(root, target)
-    result_list = tree_to_bfs(result)
-
-    return {"bfs_list": bfs_list,
-          "target": target,
-          "expected": expected,
-          "actual": result_list,
-        }
 test_cases = [
-    ([5, 3, 7], 3, [5, None, 7]),
-
-    ([5, 3, 7], 5, [3, None, 7]),
-
-    ([5, 3, 7, 1,None,None,None], 3, [5, 1, 7]),
+    (([1, 2, 3, 4, 5, 6, 7], 4), 3),
+    (([1, 2, 3, 4, 5], 1), 0),
+    (([1, 2, 3, 4, 5], 5), 4),
+    (([1, 2, 3, 4, 5], 6), -1),
+    (([], 1), -1),
+    (([10], 10), 0),
+    (([1, 3, 5, 7, 9, 11], 7), 3)
 ]
-results = { f"{i}": run_test(node, targ, expected) for i, (node, targ, expected) in enumerate(test_cases)}
-print(results)
+
+results = {f"test_{i}": run_test(test_input, expected) for i, (test_input, expected) in enumerate(test_cases)}

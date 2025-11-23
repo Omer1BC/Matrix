@@ -396,7 +396,9 @@ def run_learn_tests(request):
                 {"error": f"Problem file {file_name} not found"}, status=404
             )
 
-        res = insert_user_code(file_path, code)
+        res = insert_user_code(file_path, code,sample="demo.py")
+
+        
 
         old_stdout = sys.stdout
         sys.stdout = mystdout = io.StringIO()

@@ -25,7 +25,7 @@ export default function Card({ tabs, className }) {
             })}
           </div>
         </div>
-        <div id="body">
+        <div className="flex flex-col h-full min-h-0">
           {/* {content} */}
           {Object.keys(tabs).map((key) => (
             <TabPanel key={key} active={activeTab === key}>

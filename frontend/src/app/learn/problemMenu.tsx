@@ -121,15 +121,17 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
             onClick={() => toggleCategory(key)}
             className="w-full text-left font-semibold flex items-center gap-2"
             style={{ color: "var(--gr-2)" }}>
-            <span>{expandedCategory === key ? "▼" : "▶"}</span>
-            <span className="text-2xl">{section.icon}</span>
+            {/* <span>{expandedCategory === key ? "▼" : "▶"}</span> */}
+            <span>●</span>
+            {/* <span className="text-2xl">{section.icon}</span> */}
             {section.title}
           </button>
 
           {expandedCategories.has(key) && (
             <div className="mt-2 ml-6 space-y-2">
               {problems.filter(problem => problem.category_id === section.title).map(problem => {
-                const isLocked = !problem.is_unlocked;
+                // const isLocked = !problem.is_unlocked; UNCOMMENT THIS IF LOCKKING/UNLOCKING IS DESIRED
+                const isLocked = false;
                 return (
                   <button
                     key={problem.id}
