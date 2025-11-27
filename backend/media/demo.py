@@ -1,7 +1,7 @@
 from typing import *
 
 def binary_search(arr, target):
-    return 5
+
 def run_test(test_input, expected):
     exception = ""
     result = ""

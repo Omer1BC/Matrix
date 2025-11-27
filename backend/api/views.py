@@ -397,7 +397,25 @@ def run_learn_tests(request):
             )
 
         res = insert_user_code(file_path, code,sample="demo.py")
+        try:
+            compile(code,"user_code.py","exec")
+            
+        except SyntaxError as e:
+            return JsonResponse({
+                "success":False, 
+                "error": "SyntaxError",
+                "info": {
+                            "type": "SyntaxError",
+                "msg": e.msg,
+                "lineno": e.lineno or 1,
+                "offset": e.offset or 1,
+                "line": (e.text or "").rstrip("\n"),
+                },
+                "test_results": []
+                
+            },status=400)
 
+        
         
 
         old_stdout = sys.stdout

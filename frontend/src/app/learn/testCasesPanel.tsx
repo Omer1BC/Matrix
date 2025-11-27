@@ -14,6 +14,7 @@ export default function TestCasesPanel({
 }) {
   const [runningTests, setRunningTests] = useState(false);
   const [testResults, setTestResults] = useState([]);
+  const [error,setError] = useState<string>("");
 
   const runTestCases = async () => {
     if (!editorRef.current) {
@@ -48,7 +49,7 @@ export default function TestCasesPanel({
       });
 
       const response = await fetch(
-        "http://localhost:8000/api/run-learn-tests",
+        `${process.env.NEXT_PUBLIC_ROOT}/api/run-learn-tests`,
         {
           method: "POST",
           headers: {
@@ -60,8 +61,10 @@ export default function TestCasesPanel({
       );
 
       if (response.ok) {
+        
         const data = await response.json();
-        console.log("Test results:", data);
+        const problem_tests = data.test_results.filter((res) => res.error)
+        
 
         if (data.success) {
           const results = data.test_results || [];
@@ -71,8 +74,10 @@ export default function TestCasesPanel({
           if (allPassed && typeof onAllTestsPassed === "function") {
             onAllTestsPassed();
           }
+          setError("")
         } else {
           console.error("Test execution failed:", data.error);
+          setError(data.error)
           setTestResults([]);
         }
       } else {
@@ -83,12 +88,21 @@ export default function TestCasesPanel({
           const text = await response.text();
           errorData = { raw: text };
         }
-        console.error(
-          "HTTP error from run-learn-tests:",
-          response.status,
-          response.statusText,
-          errorData
-        );
+        // console.error(
+        //   "HTTP error from run-learn-tests:",
+        //   response.status,
+        //   response.statusText,
+        //   errorData
+        // );
+        if (errorData?.error == "SyntaxError")
+        {
+          
+          const r = errorData?.info;
+          setError(r.type + " - " + r.msg + " at line " + `(${r.lineno || ""}) ${r.line || ""}`);
+        }
+        else {
+          setError(errorData?.error);
+        }
         setTestResults([]);
       }
     } catch (error) {
@@ -269,13 +283,18 @@ export default function TestCasesPanel({
           ))}
         </div>
 
-        {testResults.length === 0 && !runningTests && (
+        {testResults.length === 0 && !runningTests && !error ? (
           <div className="text-center py-8">
             <p style={{ color: "var(--gr-2)" }}>
               Click &quot;Run Tests&quot; to see your results
             </p>
           </div>
-        )}
+        ) :           <div className="text-center py-8">
+
+            <p style={{ color: "red" }}>
+              {error}
+            </p>
+          </div>}
       </div>
     </div>
   );

@@ -143,7 +143,8 @@ export default function ValidationContent({
               column: r.offset,
               sourceLine: r.line || "",
             });
-            setHasError(r.type + ": " + r.msg + " at line " + r.line || "")
+            setHasError(r.type + " - " + r.msg + " at line \n\t" + `(${(r.lineno || "")}) ${(r.line || "")}` )
+            console.log("r.no",r.lineno)
           } 
           else {
             setHasError(r.msg);
