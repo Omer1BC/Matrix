@@ -33,7 +33,8 @@ export default function LearnPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [output, setOutput] = useState("");
-  const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
+
+  // const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
   const [currentProblem, setCurrentProblem] = useState<Problem>({
     id: 1,
     category_id: 0,
@@ -108,11 +109,15 @@ export default function LearnPage() {
   const [showMenu, setShowMenu] = useState(false);
 
   const {
+    editorRef,
+    monacoRef,
     loading: neoLoading,
     response: neoResponse,
     setResponse: setNeoResponse,
     annotate: neoAnnotate,
+
     askSelection: neoAskSelection,
+
   } = useSolve(currentProblem?.problem_id || "intro-1");
 
   const [pageLoading, setPageLoading] = useState(true);
@@ -262,8 +267,9 @@ export default function LearnPage() {
     loadCompletion();
   }, [refreshKey, completionPercentage]);
 
-  function handleEditorDidMount(editor: MonacoEditor.IStandaloneCodeEditor) {
+  function handleEditorDidMount(editor: MonacoEditor.IStandaloneCodeEditor,monaco) {
     editorRef.current = editor;
+    monacoRef.current = monaco
 
     if (currProblemCompletion?.user_solution) {
       editor.setValue(formatCodeForEditor(currProblemCompletion.user_solution));
@@ -522,8 +528,8 @@ export default function LearnPage() {
     );
   } else {
     return (
-      <>
-        <div className="Page h-screen overflow-hidden bg-background/80 pl-5">
+        <>
+          <div className="Page h-screen overflow-hidden bg-background/80 pl-5">
           <button
             onClick={() => setShowMenu(true)}
             className="problembutton absolute left-0 top-1/2 -translate-y-1/2 p-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-lg text-xl font-bold glow-text cursor-pointer "
@@ -557,9 +563,9 @@ export default function LearnPage() {
                       muted={false}
                       playing={false}
                       controls={true}
-                      playbackRate={2}
+                      playbackRate={1.5}
                       // src={`http://localhost:8000/media/v-${currentProblem.id}.mp4`}
-                      src="http://localhost:8000/media/videos/4_set-1/480p15/4_set-1.mp4" //temporary until final videos are done
+                      src="http://localhost:8000/media/bin-search.mp4" //temporary until final videos are done
                       width="50%"
                       height="350px"
                       style={{ objectFit: "fill" }}
@@ -679,8 +685,8 @@ export default function LearnPage() {
               </div>
             </div>
           )}
-        </div>
-      </>
+          </div>
+        </>
     );
   }
 }

@@ -23,6 +23,7 @@ from utils.agent.tools import (
     hints_tool,
     run_tests_tool,
     tool_hints_tool,
+    snippet_tool
 )
 from utils.agent.utils import (
     append_time_stamp,
@@ -220,6 +221,15 @@ def agent(request):
             return JsonResponse(
                 AgentResponse(kind="annotated_hints", data=res).model_dump()
             )
+        if task == "explain":
+            res = snippet_tool.invoke({
+                "question":req.question,
+                "text": req.message,
+                "preferences":req.preferences or ""
+            }
+
+            )
+            return JsonResponse(AgentResponse(kind="explain",data=res).model_dump(),safe=False )
         if task == "generate_animation":
             prompt = (
                 params.get("request", "")
@@ -386,7 +396,27 @@ def run_learn_tests(request):
                 {"error": f"Problem file {file_name} not found"}, status=404
             )
 
-        res = insert_user_code(file_path, code)
+        res = insert_user_code(file_path, code,sample="demo.py")
+        try:
+            compile(code,"user_code.py","exec")
+            
+        except SyntaxError as e:
+            return JsonResponse({
+                "success":False, 
+                "error": "SyntaxError",
+                "info": {
+                            "type": "SyntaxError",
+                "msg": e.msg,
+                "lineno": e.lineno or 1,
+                "offset": e.offset or 1,
+                "line": (e.text or "").rstrip("\n"),
+                },
+                "test_results": []
+                
+            },status=400)
+
+        
+        
 
         old_stdout = sys.stdout
         sys.stdout = mystdout = io.StringIO()

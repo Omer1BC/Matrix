@@ -11,6 +11,7 @@ Intent = Literal[
     "grade",  # run tests + grade + feedback
     "annotate_errors",  # suggest minimal fix for known error
     "generate_animation",
+    "explain"
 ]
 
 

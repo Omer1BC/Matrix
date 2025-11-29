@@ -30,6 +30,7 @@ export async function requestAnimationFromAgent(
     message: prompt,
     extras: { request: prompt },
   });
+  
 
   const rel = resp?.data?.video_rel as string | undefined;
   if (!rel) return null;

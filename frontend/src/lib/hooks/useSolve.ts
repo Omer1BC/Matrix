@@ -36,7 +36,7 @@ export function useSolve(problemId: string = "intro-1") {
   }, [details]);
 
   const askSelection = useCallback(
-    async (text: string) => {
+    async (text: string,type?: string) => {
       setLoading(true);
       try {
         const profile = await getUserProfile();
@@ -56,7 +56,7 @@ export function useSolve(problemId: string = "intro-1") {
         const res = await agentCall({
           user_id: user_id,
           problem_id: String(probId),
-          intent: "chat",
+          intent: type ?? "chat",
           message: text,
           question: `${details?.title ?? ""}\n${details?.description ?? ""}`,
           code: code,

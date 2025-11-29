@@ -143,7 +143,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
   const handleMouseUp = useCallback(() => {
     const sel = window.getSelection();
     if (sel && sel.toString().length > 0) {
-      askSelection(sel.toString());
+      askSelection(sel.toString(),"explain");
     }
   }, [askSelection]);
 

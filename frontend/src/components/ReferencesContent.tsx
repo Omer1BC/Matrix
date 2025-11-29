@@ -3,6 +3,9 @@ import Image from "next/image";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Typewriter } from "react-simple-typewriter";
 import { Input } from "./ui/input";
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github-dark.css";
 
 type Message = { type: "user" | "ai"; content: string };
 
@@ -92,19 +95,10 @@ export function ReferencesContent({
                     />
                   </div>
                   <div className="rounded-xl bg-[var(--dbl-2)] px-2 py-1 text-[var(--gr-2)] whitespace-pre-wrap break-words">
-                    {activeTyping ? (
-                      <Typewriter
-                        words={[m.content]}
-                        key={`${i}-${m.content}`}
-                        loop={1}
-                        typeSpeed={25}
-                        deleteSpeed={0}
-                        delaySpeed={0}
-                        cursor={showCursor && activeTyping}
-                        onType={handleType}
-                      />
-                    ) : (
-                      m.content
+                    { (
+                      <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                        {m.content}
+                      </ReactMarkdown>
                     )}
                   </div>
                 </div>
