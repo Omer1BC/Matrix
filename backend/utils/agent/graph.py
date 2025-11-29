@@ -55,19 +55,20 @@ def llm_node(state: State):
             
         ]
     )
-    msgs = [sys]
+
+    msgs = state["messages"]
+
+
+    msgs.append(sys)
+
+
     if state.get("question"):
         msgs.append(SystemMessage(content=f"Problem:\n{state['question']}"))
     if state.get("preferences"):
         msgs.append(
             SystemMessage(content=f"Learner preferences: {state['preferences']}")
         )
-    if state.get("code"):
-        msgs.append(
-            SystemMessage(
-                content=f"User code snapshot:\n```python\n{snippet(state['code'])}\n```"
-            )
-        )
+
     uid = state.get("user_id", "")
     pid = state.get("problem_id", "")
     query = state.get("question") or _last_user_text(state["messages"])
@@ -83,7 +84,16 @@ def llm_node(state: State):
             )
         )
 
-    msgs += state["messages"]
+    # Add conversation history BEFORE current code
+
+    # Add current code LAST so it's most recent and emphasized
+    if state.get("code"):
+        msgs.append(
+            SystemMessage(
+                content=f"IMPORTANT - CURRENT CODE (most recent version, use this for analysis):\n```python\n{snippet(state['code'])}\n```"
+            )
+        )
+
     return {"messages": [model.invoke(msgs)]}
 
 
