@@ -13,6 +13,7 @@ type EditorPanelProps = {
   setShowHints: (b: boolean) => void;
   onAnnotate: (codeWithLines: string) => Promise<any>;
   onMountExtras?: (editor: any, monaco: any) => void;
+  timer: any;
 };
 
 export default function EditorPanel({
@@ -22,8 +23,8 @@ export default function EditorPanel({
   setShowHints,
   onAnnotate,
   onMountExtras,
+  timer,
 }: EditorPanelProps) {
-  const { seconds, running, start, stop, reset } = useTimer();
   const { applyHints, clearAll, hideAll, hintWidgetByDeco, errorWidgetByDeco } =
     useAnnotationsContext();
 
@@ -127,7 +128,7 @@ export default function EditorPanel({
         showHints={showHints}
         setShowHints={setShowHints}
         clearHints={() => editorRef.current && clearAll(editorRef.current)}
-        timer={{ running, seconds, start, stop, reset }}
+        timer={timer}
         editorRef={editorRef}
       />
     </div>

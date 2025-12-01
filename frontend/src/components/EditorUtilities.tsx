@@ -3,7 +3,7 @@ import NeoIcon from "@/components/NeoIcon";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { ping } from "@/lib/api";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type * as monaco from "monaco-editor";
 type TimerControls = {
   running: boolean;
@@ -52,6 +52,21 @@ export default function EditorUtilities({
   const inflight = useRef(false);
   const lastActivityMs = useRef<number>(Date.now());
 
+  const [hours, setHours] = useState(0);
+  const [minutes, setMinutes] = useState(0);
+
+  useEffect(() => {
+    if (seconds > 0 && seconds % 60 === 0) {
+      setMinutes((prev) => prev + 1);
+    }
+  }, [seconds]);
+
+  useEffect(() => {
+    if (minutes > 0 && minutes % 60 === 0) {
+      setHours((prev) => prev + 1);
+    }
+  }, [minutes]);
+
   // Track user presence (keyboard/mouse + visibility)
   useEffect(() => {
     const bump = () => {
@@ -69,6 +84,17 @@ export default function EditorUtilities({
       document.removeEventListener("visibilitychange", vis as any);
     };
   }, []);
+
+  const resetTimer = () => {
+    setMinutes(0);
+    setHours(0);
+    reset();
+    const userInfo = user ? user : { id: "guest" };
+    ping(
+      { user_id: userInfo.id},
+      "clear-log-editor-history"
+    ).catch(() => {});
+  };
 
   useEffect(() => {
     if (!running || !editorRef.current) return;
@@ -177,14 +203,14 @@ export default function EditorUtilities({
             </button>
             <button
               type="button"
-              onClick={reset}
+              onClick={resetTimer}
               className="px-2 py-1 text-xs font-medium rounded-md border border-[color:var(--dbl-4)] hover:bg-[color:var(--dbl-4)]/60 transition-colors"
               title="Restart timer"
             >
               Restart
             </button>
             <span className="text-xs tabular-nums text-[color:var(--gr-2)] ml-1">
-              {seconds}s
+              {hours}:{minutes % 60}:{seconds % 60}
             </span>
           </div>
         ) : (
@@ -206,7 +232,7 @@ export default function EditorUtilities({
               Restart
             </button>
             <span className="text-xs tabular-nums text-[color:var(--gr-2)] ml-1">
-              {seconds}s
+              {hours}:{minutes % 60}:{seconds % 60}
             </span>
           </div>
         )}

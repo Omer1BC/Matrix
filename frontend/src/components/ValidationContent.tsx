@@ -2,14 +2,16 @@
 import React, { Fragment, useEffect, useState } from "react";
 import StarGraph from "./StarGraph";
 import { agentCall, ping } from "@/lib/api";
+import { useTimer } from "@/lib/hooks/useTimer";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useAnnotationsContext } from "@/lib/contexts/AnnotationsContext";
-
+import { updateUserProblemCompletion } from "@/lib/supabase/problems";
 type ValidationContentProps = {
-  problemId: number;
+  problemId: string;
   editorRef: React.RefObject<any>;
   monacoRef: React.RefObject<any>;
   annotateErrors: (codeWithLines: string, error: any) => Promise<any>;
+  timer: any;
 };
 
 type TestsMap = Record<string, any>;
@@ -19,6 +21,7 @@ export default function ValidationContent({
   editorRef,
   monacoRef,
   annotateErrors,
+  timer,
 }: ValidationContentProps) {
   const { applyErrors } = useAnnotationsContext();
   const { user } = useAuth();
@@ -37,6 +40,8 @@ export default function ValidationContent({
   const [llmComment, setLLmComment] = useState("");
   const [testSummary, setTestSummary] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { seconds, start, stop, reset } = timer;
 
   useEffect(() => {
     const fetchDetails = () => {
@@ -143,14 +148,19 @@ export default function ValidationContent({
               column: r.offset,
               sourceLine: r.line || "",
             });
-            setHasError(r.type + " - " + r.msg + " at line \n\t" + `(${(r.lineno || "")}) ${(r.line || "")}` )
-            console.log("r.no",r.lineno)
-          } 
-          else {
+            setHasError(
+              r.type +
+                " - " +
+                r.msg +
+                " at line \n\t" +
+                `(${r.lineno || ""}) ${r.line || ""}`
+            );
+            console.log("r.no", r.lineno);
+          } else {
             setHasError(r.msg);
           }
         } else {
-          setHasError(String(r ?? "Unknown error while running tests."))
+          setHasError(String(r ?? "Unknown error while running tests."));
         }
         setIsLoading(false);
         setShowVictoryModal(false);
@@ -199,6 +209,21 @@ export default function ValidationContent({
       const allPassed =
         (test_summary?.total || 0) > 0 && (test_summary?.failed || 0) === 0;
       setShowVictoryModal(Boolean(verdict || allPassed));
+      console.log(verdict);
+      if (verdict) {
+        try {
+          timer.reset();
+          console.log("Reset called successfully");
+        } catch (err) {
+          console.error("Reset failed:", err);
+        }
+        const userInfo = user ? user : { id: "guest" };
+        console.log(problemId);
+        // console.log(ping({ user_id: userInfo.id }, "clear-log-editor-history").catch(
+        //   () => {}
+        // ));
+        // await updateUserProblemCompletion(userInfo, problemId, "hello", 3, editorRef.current)
+      }
     } catch {
       setHasError("Error encountered while running test");
     } finally {
@@ -254,14 +279,18 @@ export default function ValidationContent({
 
       <div className="flex w-4/5 flex-col overflow-hidden bg-[var(--dbl-4)] p-4">
         <div className="max-h-64 overflow-auto break-words font-sans text-[var(--gr-2)]">
-          {hasError ? <div>{hasError}</div> :Object.entries(activeTest).map(([key, val]) => (
-            <Fragment key={key}>
-              <div className="text-sm">{key}</div>
-              <div className="mb-2 rounded-md bg-[var(--dbl-3)] px-4 py-2 font-mono text-sm text-[var(--gr-2)]">
-                {JSON.stringify(val)}
-              </div>
-            </Fragment>
-          ))}
+          {hasError ? (
+            <div>{hasError}</div>
+          ) : (
+            Object.entries(activeTest).map(([key, val]) => (
+              <Fragment key={key}>
+                <div className="text-sm">{key}</div>
+                <div className="mb-2 rounded-md bg-[var(--dbl-3)] px-4 py-2 font-mono text-sm text-[var(--gr-2)]">
+                  {JSON.stringify(val)}
+                </div>
+              </Fragment>
+            ))
+          )}
         </div>
       </div>
 

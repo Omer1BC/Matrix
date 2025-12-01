@@ -5,24 +5,32 @@ class Node:
         self.left = left 
         self.right = right
 
-# class Node:
-# 	def __init__(self,val=0,left=None,right=None):
-# 		self.val = val 
-# 		self.left = left 
-# 		self.right = right
+def remove(root,target):
+    if not root:
+        return None 
+    if  root.val > target: 
+        root.left = remove(root.left,target)
+    elif root.val < target:
+        root.right = remove(root.right,target)
+    else:
+        if not root.left: return root.right 
+        if not root.right: return root.left
+        pred = find_max(root.left)
+        root.val = pred.val 
+        root.left = remove_max(root.left)
+    return root
 
-def remove(root:Node,target:int):
-    return None
 def find_max(root):
-	if not root.right:
-		return root
-	return find_max(root.right)
+    if not root.right:
+        return root
+    return find_max(root.right)
 
 def remove_max(root):
-	if not root.right:
-		return root.left
-	root.right = remove_max(root.right)
-	return root
+    if not root.right:
+        return root.left
+    root.right = remove_max(root.right)
+    return root
+
 def build_tree(bfs_list):
     if not bfs_list or bfs_list[0] is None:
         return None
