@@ -63,16 +63,16 @@ export const allSteps = {
         text: "Here you have access to tools that are related to solving the problem.",
         attachTo: { element: ".tools", on: "left"},
       },
-      {
-        id: "askabouttool",
-        text: "This will prompt the LLM to ask about the specific tool.",
-        attachTo: { element: ".askabouttool", on: "left"},
-      },
-      {
-        id: "playanimation",
-        text: "This will start playing an animation in a tab next to the question to visually show you about the specific tool.",
-        attachTo: { element: ".playanimation", on: "left"},
-      },
+      // {
+      //   id: "askabouttool",
+      //   text: "This will prompt the LLM to ask about the specific tool.",
+      //   attachTo: { element: ".askabouttool", on: "left"},
+      // },
+      // {
+      //   id: "playanimation",
+      //   text: "This will start playing an animation in a tab next to the question to visually show you about the specific tool.",
+      //   attachTo: { element: ".playanimation", on: "left"},
+      // },
       {
         id: "createanimation",
         text: "This allows you to create your own animation regarding one of the specified tools above to learn more about them.",

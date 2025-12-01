@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { signIn, signUp, signOut, getProblemCompletions } from "@/lib/supabase/auth";
+import { signIn, signUp, signOut, randomSignUp } from "@/lib/supabase/auth";
 import { LogOut, LogIn, UserPlus } from "lucide-react";
 import { FormEvent, useState, useEffect } from "react";
 import Link from "next/link";
@@ -20,15 +20,35 @@ export default function Header() {
 
   const { user, loading: authLoading } = useAuth();
 
-  const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
+  // const handleSignup = async (e: FormEvent<HTMLFormElement>) => {  UNCOMMENT WHEN USING REGULAR SIGN UP FUCNTIONALITY
+  //   e.preventDefault();
+  //   setLoading(true);
+  //   try {
+  //     console.log(await signUp(email, password, username, firstname, lastname));
+  //     alert(
+  //       "Signup successful! Please check your email to verify your account."
+  //     );
+  //     setShowSignup(false);
+  //   } catch (err: any) {
+  //     console.error(err);
+  //     alert(err.message || "Signup failed.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  /**
+   * This is the randomized sign up for the class demo
+   * @param e event
+   */
+  const handleSignup = async (e: Event) => {
     e.preventDefault();
     setLoading(true);
     try {
-      console.log(await signUp(email, password, username, firstname, lastname));
-      alert(
-        "Signup successful! Please check your email to verify your account."
-      );
-      setShowSignup(false);
+      console.log(await randomSignUp());
+      // alert(
+      //   "Signup successful! Please check your email to verify your account."
+      // );
     } catch (err: any) {
       console.error(err);
       alert(err.message || "Signup failed.");
@@ -78,20 +98,24 @@ export default function Header() {
               />
               <span className="text-xl font-bold glow-text">Matrix</span>
             </Link>
-            <div className="flex flex-row gap-4 items-center">
-              <Link
-                href={"/learn"}
-                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-              >
-                <span className="text-xl font-bold glow-text">Learn</span>
-              </Link>
-              <Link
-                href={"/solve"}
-                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-              >
-                <span className="text-xl font-bold glow-text">Solve</span>{" "}
-              </Link>
-            </div>
+            {user ? (
+              <div className="flex flex-row gap-4 items-center">
+                <Link
+                  href={"/learn"}
+                  className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+                >
+                  <span className="text-xl font-bold glow-text">Learn</span>
+                </Link>
+                <Link
+                  href={"/solve"}
+                  className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+                >
+                  <span className="text-xl font-bold glow-text">Solve</span>{" "}
+                </Link>
+              </div>
+            ) : (
+              <div></div>
+            )}
           </div>
 
           {authLoading ? (
@@ -113,7 +137,8 @@ export default function Header() {
           ) : user ? (
             <div className="flex items-center gap-4">
               <span className="text-lg text-primary glow-text">
-                Hello {user.user_metadata?.first_name || user.user_metadata?.email}!
+                Hello{" "}
+                {user.user_metadata?.first_name || user.user_metadata?.email}!
               </span>
               <Button
                 variant="outline"
@@ -151,7 +176,8 @@ export default function Header() {
               </Button>
               <Button
                 className="glow-text"
-                onClick={() => setShowSignup(true)}
+                // onClick={() => setShowSignup(true)}
+                onClick={handleSignup}
                 style={{ cursor: "pointer" }}
                 variant={undefined}
                 size={undefined}
