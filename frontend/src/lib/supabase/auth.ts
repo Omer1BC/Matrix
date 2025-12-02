@@ -80,6 +80,64 @@ export async function signUp(
   return { pending: true as const, reservedUserName: username, problemsToADD };
 }
 
+/**
+ * Used for the class demo. Creates a random account with randomized account details for anonymity via current time in milliseconds.
+ * @returns user with the credentials 
+ */
+export async function randomSignUp(redirectTo?: string) {
+
+  const currDate = new Date();
+
+  const userName = "JohnDoe" + currDate.getTime();
+  const password = "secret1"
+  const email = userName + "@gmail.com";
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: redirectTo ? { emailRedirectTo: redirectTo } : undefined,
+  });
+
+  if (error) throw error;
+
+  if (data.user) {
+    const { error: profileErr } = await supabase.from("profiles").insert({
+      id: data.user.id,
+      user_name: userName,
+      first_name: "John",
+      last_name: "Doe",
+      email: email,
+    });
+    if (profileErr) throw profileErr;
+    // return { pending: false as const };
+  }
+
+  const {data: problems, error: problems_error} = await supabase
+    .from("problems")
+    .select("*")
+    .eq("type", "Learn")
+    .order("id", {ascending: true});
+
+  if (problems_error) throw problems_error
+
+  const problemsToADD = problems?.map(({ problem_id, category_id, prerequisite,is_locked_by_default, title, order, type }) => ({
+    problem_id: problem_id,        
+    user_id: data.user!.id,
+    category_id: category_id,
+    is_unlocked: !is_locked_by_default,
+    title: title,
+    prerequisite: prerequisite,
+    order: order,
+    type: type,
+  })) ?? [];
+
+  const {error: problem_completions_error} = await supabase.from("problem_completions").insert(problemsToADD);
+  
+  if(problem_completions_error) throw problem_completions_error;
+
+  return { pending: true as const, reservedUserName: userName, problemsToADD };
+}
+
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,

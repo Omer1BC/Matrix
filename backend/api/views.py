@@ -872,3 +872,22 @@ def log_editor_history(request):
         except Exception as e:
             return JsonResponse({"Error Occured": str(e)}, status=400)
     return JsonResponse({"error": "Malformed Request"}, status=400)
+
+@csrf_exempt
+def clear_log_history(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        try:
+            body = json.loads(request.body)
+            user_id = body.get("user_id", "")
+            
+            path = f"{settings.USER_FILES}/{user_id}_code_history.txt"
+            
+            
+            if os.path.isfile(path):
+                os.remove(path)
+            else:
+                return JsonResponse({"Error Occured": "File does not exist"}, status=400)
+            return JsonResponse({"Success": "Log file cleared"}, status=200)
+        except Exception as e:
+            return JsonResponse({"Error occurred": str(e)}, status=400)
+    return JsonResponse({"error": "Malformed Request"}, status=400)

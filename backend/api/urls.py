@@ -24,4 +24,5 @@ urlpatterns = [
     path("save-notes", save_notes, name="save_notes"),
     # autonmous hints
     path("log-editor-history", log_editor_history, name="log_editor_history"),
+    path("clear-log-editor-history", clear_log_history, name="clear_log_history"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

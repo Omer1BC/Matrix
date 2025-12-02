@@ -129,9 +129,10 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
 
           {expandedCategories.has(key) && (
             <div className="mt-2 ml-6 space-y-2">
-              {problems.filter(problem => problem.category_id === section.title).map(problem => {
+              {problems.filter(problem => problem.category_id.trim() === section.title.trim()).map(problem => {
                 // const isLocked = !problem.is_unlocked; UNCOMMENT THIS IF LOCKKING/UNLOCKING IS DESIRED
                 const isLocked = false;
+                console.log(problems);
                 return (
                   <button
                     key={problem.id}

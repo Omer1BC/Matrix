@@ -7,6 +7,7 @@ import TabPanel from "@/components/TabPanel";
 import Tools from "@/components/Tools";
 import ValidationPanel from "@/components/ValidationPanel";
 import { useSolve } from "@/lib/hooks/useSolve";
+import { useTimer } from "@/lib/hooks/useTimer";
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { AnnotationsProvider } from "@/lib/contexts/AnnotationsContext";
 import { getAnimationUrl } from "@/lib/api";
@@ -45,6 +46,8 @@ export default function SolvePage({ problemId }: { problemId: string }) {
   const [questionPanelKey, setQuestionPanelKey] = useState(0);
   const [validationPanelKey, setValidationPanelKey] = useState(0);
   const [activeCodeTab, setActiveCodeTab] = useState("editor");
+
+  const timer = useTimer();
 
   useEffect(() => {
     const setTools = () => {
@@ -209,6 +212,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
               showHints={showHints}
               setShowHints={setShowHints}
               onAnnotate={async (code) => annotate(code)}
+              timer={timer}
             />
         ),
       },
@@ -241,6 +245,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       handleCustomAnimate,
       showHints,
       tools,
+      timer,
     ]
   );
 
@@ -292,7 +297,8 @@ export default function SolvePage({ problemId }: { problemId: string }) {
         label: "Tests",
         content: (
           <ValidationPanel
-            problemId={1}
+            timer={timer}
+            problemId={problemId}
             editorRef={editorRef}
             monacoRef={monacoRef}
             annotateErrors={annotateErrors}
