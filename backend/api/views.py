@@ -236,13 +236,14 @@ def agent(request):
                 or req.extras.get("request", "")
                 or req.message
             )
+            animation_speed = float(req.extras.get("animation_speed", 1.0))
             if not prompt:
                 payload = {"ok": False, "error": "prompt required"}
                 return JsonResponse(
                     AgentResponse(kind="generate_animation", data=payload).model_dump(),
                     status=400,
                 )
-            res = generate_animation_tool.invoke({"prompt": prompt})
+            res = generate_animation_tool.invoke({"prompt": prompt, "animation_speed": animation_speed})
             return JsonResponse(
                 AgentResponse(kind="generate_animation", data=res).model_dump(),
                 status=200 if res.get("ok") else 400,

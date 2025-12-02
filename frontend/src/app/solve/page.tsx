@@ -24,6 +24,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     details,
     detailsLoading,
     tools,
+    testCases,
     loading,
     response,
     setResponse,
@@ -114,6 +115,30 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     [details]
   );
 
+  const openAnimationForTest = useCallback(
+    async (testKey: string, testCase?: Record<string, any>) => {
+      const numKey = Number(testKey);
+      const animName = `BST Test ${Number.isFinite(numKey) ? numKey + 1 : testKey}`;
+
+      setAnimToolName(animName);
+      setAnimLoading(true);
+      setAnimArgs({ case_index: numKey });
+
+      try {
+        const url = await getAnimationUrl({
+          name: "BST",
+          args: { case_index: numKey },
+        });
+        setAnimUrl(url);
+      } finally {
+        setAnimLoading(false);
+      }
+
+      setQuestionPanelKey((k) => k + 1);
+    },
+    []
+  );
+
   const handleCustomAnimate = useCallback(
     (url: string | null, phase?: "start" | "done" | "error") => {
       if (phase === "start") {
@@ -136,13 +161,16 @@ export default function SolvePage({ problemId }: { problemId: string }) {
   );
 
   const closeAnimationTab = useCallback(() => {
+    const hasValidationTab =
+      animToolName && (details as any)?.tools?.[animToolName];
+
     setAnimToolName(null);
     setAnimUrl(null);
     setAnimArgs(null);
     setAnimLoading(false);
     setQuestionPanelKey((k) => k + 1);
-    setValidationPanelKey((k) => k + 1);
-  }, []);
+    if (hasValidationTab) setValidationPanelKey((k) => k + 1);
+  }, [animToolName, details]);
 
   const handleMouseUp = useCallback(() => {
     const sel = window.getSelection();
@@ -305,14 +333,17 @@ export default function SolvePage({ problemId }: { problemId: string }) {
         content: (
           <ValidationPanel
             timer={timer}
+            testCases={testCases ?? {}}
             problemId={problemId}
             editorRef={editorRef}
             monacoRef={monacoRef}
             annotateErrors={annotateErrors}
+            onOpenTestAnimation={openAnimationForTest}
           />
         ),
       },
-      ...(animToolName && {
+      ...(animToolName &&
+        (details as any)?.tools?.[animToolName] && {
         "animation-args": {
           label: `Animation Input: ${animToolName}`,
           content: (
@@ -344,6 +375,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       details,
       animToolName,
       closeAnimationTab,
+      openAnimationForTest,
     ]
   );
 
