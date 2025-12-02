@@ -61,7 +61,7 @@ export function QuestionContent({
         <hr className="my-4 border-[var(--gr-2)]" />
         <Image
           alt="bst_test1"
-          src="http://localhost:8000/media/images/bst/bst_test1.png"
+          src={`${process.env.NEXT_PUBLIC_API_URL}media/images/bst/bst_test1.png`}
           width={0}
           height={0}
           sizes="100vw"
