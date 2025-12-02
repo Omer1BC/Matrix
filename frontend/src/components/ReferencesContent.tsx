@@ -28,6 +28,7 @@ export function ReferencesContent({
   const [showCursor, setShowCursor] = useState(false);
   const typingTargetLenRef = useRef(0);
   const chatRef = useRef<HTMLDivElement | null>(null);
+  const prevConversationLengthRef = useRef(0);
 
   useEffect(() => {
     if (response && response.trim()) {
@@ -41,11 +42,21 @@ export function ReferencesContent({
     }
   }, [response]);
 
-  useEffect(() => {
-    if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
-    }
-  }, [conversation, loading, typingIndex]);
+  // useEffect(() => {
+  //   if (chatRef.current) {
+  //     chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  //   }
+  // }, [conversation, loading, typingIndex]);
+
+  // useEffect(() => {
+  //   if (
+  //     chatRef.current &&
+  //     conversation.length > prevConversationLengthRef.current
+  //   ) {
+  //     chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  //   }
+  //   prevConversationLengthRef.current = conversation.length;
+  // }, [conversation]);
 
   const handleType = useCallback((count: number) => {
     if (count + 1 >= typingTargetLenRef.current) {
@@ -95,11 +106,11 @@ export function ReferencesContent({
                     />
                   </div>
                   <div className="rounded-xl bg-[var(--dbl-2)] px-2 py-1 text-[var(--gr-2)] whitespace-pre-wrap break-words">
-                    { (
+                    {
                       <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
                         {m.content}
                       </ReactMarkdown>
-                    )}
+                    }
                   </div>
                 </div>
               )}
