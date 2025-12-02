@@ -5,6 +5,7 @@ import ast
 import json
 import re
 from typing import Dict, List, Any, Optional
+import importlib.util
 from langchain_core.tools import Tool
 from datetime import datetime
 from django.conf import settings
@@ -94,10 +95,10 @@ def insert_user_code(file_path, user_code, sample=None, include_solution=False):
             f.write(res)
     return res
 
+
 def id_to_file_name(problem_id):
     res = "1_remove.py"
     return os.path.join(settings.MEDIA_ROOT, res)
-
 
 
 def run(problem_id, code):
@@ -173,7 +174,7 @@ You MUST always respond in the following template and no other text.
 # {code}. You compare the candidate's code against the solution {solution} and
 # notice that their code fails on the following tests cases: {cases}.
 # You don't want to give them the answer, but want them to improve their problem solving ability in technical interviews.
-# ONLY hints to each relevant line number of their code specifying what they are missing, but do NOT put the actual solution in the commented code. 
+# ONLY hints to each relevant line number of their code specifying what they are missing, but do NOT put the actual solution in the commented code.
 # You MUST always respond in the following template and no other text.
 # {format_instructions}"""
 
@@ -207,8 +208,6 @@ You MUST always respond in the following template and no other text.
 
 {format_instructions}
 """
-
-
 
 
 CODE_HINTS_PROMPT_3 = """You are a technical interviewer for a software engineer.
@@ -476,6 +475,7 @@ def pattern_to_file(pattern):
     keys = {
         "DFS": "3_dfs.py",
         "Set": "4_set.py",
+        "BST": "../animations/templates/bst.py",
     }
     return os.path.join(settings.MEDIA_ROOT, keys[pattern])
 
@@ -487,6 +487,33 @@ def file_from_pattern(pattern):
 
 
 def pattern_to_video(name, data):
+    if name == "BST":
+        remove_path = os.path.join(settings.MEDIA_ROOT, "1_remove.py")
+        spec = importlib.util.spec_from_file_location("bst_remove", remove_path)
+        if not spec or not spec.loader:
+            raise ImportError(f"Unable to load module from {remove_path}")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+        case_index = None
+        if isinstance(data, dict):
+            case_index = data.get("case_index")
+        elif isinstance(data, list):
+            for entry in data:
+                s = str(entry)
+                if "case_index" in s:
+                    try:
+                        case_index = int(s.split("=")[-1].strip())
+                        break
+                    except Exception:
+                        case_index = None
+
+        if case_index is None:
+            raise ValueError("BST animation requires a 'case_index' in data")
+
+        rel_path = mod.animate_test_case(int(case_index))
+        return {"data": rel_path}
+
     path = pattern_to_file(name)
     with open(path, "r", encoding="utf-8") as f:
         lines = f.readlines()

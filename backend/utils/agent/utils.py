@@ -60,8 +60,8 @@ Constraints:
   from {templates_module_name} import {visualizer_class_name}
 - Instantiate the visualizer with initial_values={initial_state}.
 - If the first operation is not "create", call self.play(v.create()) once at start.
-- For each op in {operations}, if the method exists on the visualizer, call self.play(getattr(v, name)(*args), run_time=op.run_time or 0.8), then self.wait(op.pause or 0.4).
-- Add self.wait(0.4) at the beginning and self.wait(0.6) at the end.
+- For each op in {operations}, if the method exists on the visualizer, call self.play(getattr(v, name)(*args), run_time=op.run_time or {default_run_time}), then self.wait(op.pause or {default_pause}).
+- Add self.wait({start_wait}) at the beginning and self.wait({end_wait}) at the end.
 - No prints, no external files, no randomness, no comments.
 
 Environment hints:
@@ -162,7 +162,23 @@ DS_SPEC: Dict[str, Dict[str, Any]] = {
             "reset": "clear",
             "empty": "clear",
         },
-    }
+    },
+    "bst": {
+        "ops": {"create", "insert", "delete"},
+        "synonyms": {
+            "init": "create",
+            "start": "create",
+            "build": "create",
+            "initialize": "create",
+            "add": "insert",
+            "put": "insert",
+            "place": "insert",
+            "remove": "delete",
+            "del": "delete",
+            "erase": "delete",
+            "drop": "delete",
+        },
+    },
 }
 
 
@@ -252,13 +268,19 @@ def _build_planning_prompt(ds_spec: Dict[str, Dict[str, Any]]) -> str:
             {spec_text}
 
             Rules:
-            - data_structure: one of the supported values above. If unclear, choose "stack".
+            - data_structure: one of the supported values above. If unclear, choose "bst".
             - initial_state: list of scalars; default [] if not specified.
             - operations: ordered list of steps; each step has:
               - name in the selected data structure's supported ops. Map synonyms as specified above.
-              - args: positional args; for push use [value]; other ops use [].
+              - args: positional args; for push/insert use [value]; other ops use [].
               - run_time: optional float seconds
               - pause: optional float seconds
+
+            CRITICAL: You must ONLY extract operations and values that are EXPLICITLY mentioned in the user's input.
+            - Do NOT add, invent, or generate any additional operations beyond what the user specified.
+            - Do NOT add example values or "demonstration" operations.
+            - Be literal and precise - if the user says "insert 5", only include insert(5), nothing more.
+            - If the user doesn't specify any operations, return an empty operations list.
 
             If any step is unsupported for the chosen data structure, drop it. If push lacks a value, drop that step. If the first step is not "create", that is acceptable; the renderer may call create() first.
 
@@ -308,7 +330,8 @@ def plan_animation_from_prompt(
             name = _normalize_op_name(ds, op.name)
             if name not in allowed:
                 continue
-            if name == "push":
+            # Operations that take a value argument: push, insert, delete
+            if name in {"push", "insert", "delete"}:
                 if not op.args:
                     continue
                 val = op.args[0]
@@ -325,6 +348,7 @@ def plan_animation_from_prompt(
                     continue
                 args = [val]
             else:
+                # Operations with no arguments: create, peek, pop, clear
                 args = []
             step: Dict[str, Any] = {"name": name, "args": args}
             if op.run_time is not None:
@@ -341,7 +365,7 @@ def plan_animation_from_prompt(
         return _fallback_parse_prompt(user_prompt)
 
 
-def generate_animation_from_prompt(user_prompt: str) -> Dict[str, Any]:
+def generate_animation_from_prompt(user_prompt: str, animation_speed: float = 1.0) -> Dict[str, Any]:
     plan = plan_animation_from_prompt(user_prompt)
 
     ds = (
@@ -356,7 +380,8 @@ def generate_animation_from_prompt(user_prompt: str) -> Dict[str, Any]:
         if name not in allowed:
             continue
         args = o.get("args", [])
-        if name == "push":
+        # Operations that take a value argument: push, insert, delete
+        if name in {"push", "insert", "delete"}:
             if not args:
                 continue
             val = args[0]
@@ -373,6 +398,7 @@ def generate_animation_from_prompt(user_prompt: str) -> Dict[str, Any]:
                 continue
             args = [val]
         else:
+            # Operations with no arguments: create, peek, pop, clear
             args = []
         step = {"name": name, "args": args}
         if "run_time" in o:
@@ -381,7 +407,10 @@ def generate_animation_from_prompt(user_prompt: str) -> Dict[str, Any]:
             step["pause"] = float(o["pause"])
         ops.append(step)
 
-    return generate_animation(data_structure=ds, initial_state=init, operations=ops)
+    result = generate_animation(data_structure=ds, initial_state=init, operations=ops, animation_speed=animation_speed)
+    # Include plan in result for debugging
+    result["plan"] = {"data_structure": ds, "initial_state": init, "operations": ops}
+    return result
 
 
 class AnimationResponse(BaseModel):
@@ -398,10 +427,20 @@ def _discover_video(tmp_dir: str) -> Optional[str]:
     root = os.path.join(tmp_dir, "media", "videos")
     if not os.path.isdir(root):
         return None
+
+    # Collect all .mp4 files with their modification times
+    videos = []
     for dirpath, _, filenames in os.walk(root):
         for f in filenames:
-            if f.endswith(".mp4"):
-                return os.path.join(dirpath, f)
+            if f.endswith(".mp4") and "partial_movie_files" not in dirpath:
+                full_path = os.path.join(dirpath, f)
+                mtime = os.path.getmtime(full_path)
+                videos.append((mtime, full_path))
+
+    # Return the most recently modified video
+    if videos:
+        videos.sort(reverse=True, key=lambda x: x[0])
+        return videos[0][1]
     return None
 
 
@@ -409,6 +448,7 @@ def generate_animation(
     data_structure: str,
     initial_state: List[Any],
     operations: List[Dict[str, Any]],
+    animation_speed: float = 1.0,
     model: str = "gpt-4o-mini",
     temperature: float = 0.0,
 ) -> Dict[str, Any]:
@@ -427,6 +467,13 @@ def generate_animation(
     llm = ChatOpenAI(model=model, temperature=temperature)
     parser = PydanticOutputParser(pydantic_object=AnimationResponse)
 
+    # Calculate timing values based on animation_speed (inverse relationship)
+    # speed 0.5 = 2x slower, speed 2.0 = 2x faster
+    default_run_time = round(0.8 / animation_speed, 2)
+    default_pause = round(0.4 / animation_speed, 2)
+    start_wait = round(0.4 / animation_speed, 2)
+    end_wait = round(0.6 / animation_speed, 2)
+
     prompt = ChatPromptTemplate.from_messages([("system", ANIMATION_PROMPT)]).partial(
         format_instructions=parser.get_format_instructions(),
         data_structure=data_structure,
@@ -435,6 +482,10 @@ def generate_animation(
         scene_class_name=scene_class_name,
         initial_state=json.dumps(initial_state, ensure_ascii=False),
         operations=json.dumps(operations, ensure_ascii=False),
+        default_run_time=default_run_time,
+        default_pause=default_pause,
+        start_wait=start_wait,
+        end_wait=end_wait,
     )
 
     try:
@@ -497,12 +548,24 @@ def generate_animation(
                 final_abs = video_path
                 final_rel = video_rel_tmp
 
+        error_detail = None
+        if not ok:
+            # Parse stderr for meaningful errors
+            stderr_lines = proc.stderr.strip().split('\n')
+            for line in reversed(stderr_lines[-10:]):  # Check last 10 lines
+                if 'Error' in line or 'Exception' in line or 'Traceback' in line:
+                    error_detail = line.strip()
+                    break
+            if not error_detail and proc.stderr:
+                error_detail = proc.stderr.strip().split('\n')[-1]
+
         return {
             "ok": ok,
             "file_path": file_path,
             "scene_name": parsed.scene_name,
             "stdout": proc.stdout,
             "stderr": proc.stderr,
+            "error": error_detail,
             "video_path": final_abs or video_path or "",
             "video_rel": final_rel or video_rel_tmp,
             "media_dir": os.path.join(tmp_dir, "media"),
@@ -552,5 +615,5 @@ def append_time_stamp(file_name, timestamp, code):
         with open(path, "w") as f:
             json.dump(data, f, indent=2)
         return True
-    except Exception as e:
+    except Exception:
         return False
