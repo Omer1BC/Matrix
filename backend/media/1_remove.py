@@ -82,7 +82,7 @@ def run_test(bfs_list, target, expected):
     result = remove(root, target)
     result_list = tree_to_bfs(result)
 
-    return {"bfs_list": bfs_list,
+    return {"root": bfs_list,
           "target": target,
           "expected": expected,
           "actual": result_list,
@@ -92,7 +92,7 @@ test_cases = [
 
     ([5, 3, 7], 5, [3, None, 7]),
 
-    ([5, 3, 7, 1,None,None,None], 3, [5, 1, 7]),
+    ([5, 3, 7, 1], 3, [5, 1, 7]),
 ]
 results = { f"{i}": run_test(node, targ, expected) for i, (node, targ, expected) in enumerate(test_cases)}
 print(results)

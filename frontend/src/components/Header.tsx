@@ -73,8 +73,8 @@ export default function Header() {
                 src="/matrix_logo.png"
                 alt="Matrix Logo"
                 className="matrix-header w-10 h-10"
-                width={10}
-                height={10}
+                width={100}
+                height={100}
               />
               <span className="text-xl font-bold glow-text">Matrix</span>
             </Link>
