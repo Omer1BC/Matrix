@@ -12,18 +12,21 @@ export function useSolve(problemId: string = "intro-1") {
   const monacoRef = useRef<any>(null);
 
   const [details, setDetails] = useState<any>({});
+  const [detailsLoading, setDetailsLoading] = useState(true);
   const [tools, setTools] = useState<ToolInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState("");
   const [testResponse, setTestResponse] = useState("");
 
   useEffect(() => {
+    setDetailsLoading(true);
     (async () => {
       const data = await getProblemBySlug(problemId);
       setDetails(data);
       if (editorRef.current && data?.method_stub)
         editorRef.current.setValue(data.method_stub);
-    })().catch(console.error);
+    })().catch(console.error)
+    .finally(() => setDetailsLoading(false));
   }, [problemId]);
 
   useEffect(() => {
@@ -72,9 +75,9 @@ export function useSolve(problemId: string = "intro-1") {
     [details, problemId, user]
   );
 
-  useEffect(() => {
-    console.log(testResponse);
-  }, [testResponse]);
+  // useEffect(() => {
+  //   console.log(testResponse);
+  // }, [testResponse]);
 
   const annotate = useCallback(
     async (codeWithLines: string) => {
@@ -128,6 +131,7 @@ export function useSolve(problemId: string = "intro-1") {
     editorRef,
     monacoRef,
     details,
+    detailsLoading,
     tools,
     loading,
     response,

@@ -109,6 +109,7 @@ export type Problem = {
   points_reward: number;
   method_stub: string;
   solution: string | null;
+  java_solution: string | null;
   test_cases: Json;
   input_args: Json;
   tools: Json;

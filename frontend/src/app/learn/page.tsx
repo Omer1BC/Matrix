@@ -3,7 +3,7 @@
 import "../templates.css";
 import ReactPlayer from "react-player";
 import { Editor } from "@monaco-editor/react";
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import Card from "../templates/card/card";
 import TestCasesPanel from "./testCasesPanel";
 import ProblemMenu from "./problemMenu";
@@ -11,7 +11,7 @@ import ReferencesPanel from "@/components/ReferencesPanel";
 import { useSolve } from "@/lib/hooks/useSolve";
 import { NotesCard } from "./NotesCard";
 import { Problem, ProblemCompletion } from "@/lib/types";
-import { editor as MonacoEditor } from "monaco-editor";
+import { editor, editor as MonacoEditor } from "monaco-editor";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import {
@@ -47,6 +47,7 @@ export default function LearnPage() {
     points_reward: 0,
     method_stub: 'print("Hello, World!")',
     solution: null,
+    java_solution: null,
     test_cases: [],
     input_args: [],
     tools: [],
@@ -67,6 +68,7 @@ export default function LearnPage() {
     points_reward: 0,
     method_stub: 'print("Hello, World!")',
     solution: null,
+    java_solution: null,
     test_cases: [],
     input_args: [],
     tools: [],
@@ -117,7 +119,6 @@ export default function LearnPage() {
     annotate: neoAnnotate,
 
     askSelection: neoAskSelection,
-
   } = useSolve(currentProblem?.problem_id || "intro-1");
 
   const [pageLoading, setPageLoading] = useState(true);
@@ -130,6 +131,10 @@ export default function LearnPage() {
   const [problemList, setProblemList] = useState<Problem[]>([]);
 
   const [problemIds, setProblemIds] = useState<string[]>([]);
+
+  const [solutionLanguage, setSolutionLanguage] = useState("Python");
+
+  const solutionEditorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
 
   useEffect(() => {
     const setMenu = () => {
@@ -146,8 +151,28 @@ export default function LearnPage() {
   }, [showMenu]);
 
   useEffect(() => {
-    console.log(problemCompletionList);
-  }, [problemCompletionList]);
+    if (solutionEditorRef.current && monacoRef.current) {
+      import("monaco-editor").then((monaco) => {
+        const model = solutionEditorRef.current!.getModel();
+        if (model) {
+          monaco.editor.setModelLanguage(model, solutionLanguage.toLowerCase());
+        }
+
+        // Update solution based on language and current problem
+        if (solutionLanguage === "Python" && currentProblem.solution) {
+          solutionEditorRef.current!.setValue(currentProblem.solution);
+        } else if (
+          solutionLanguage === "Java" &&
+          currentProblem.java_solution
+        ) {
+          solutionEditorRef.current!.setValue(currentProblem.java_solution);
+        } else {
+          // Fallback if no solution exists
+          solutionEditorRef.current!.setValue("// No solution available");
+        }
+      });
+    }
+  }, [solutionLanguage, currentProblem, editorRef, monacoRef]);
 
   useEffect(() => {
     const getProblems = async () => {
@@ -174,10 +199,9 @@ export default function LearnPage() {
     getProblems();
   }, []);
 
-  const handleNextProblem = () => {
+  const handleNextProblem = useCallback(() => {
     let nextIndex = currentIndex + 1;
 
-    // don't rely on old currentIndex in condition
     if (nextIndex >= problemIds.length) {
       nextIndex = nextIndex % problemIds.length;
     }
@@ -200,9 +224,15 @@ export default function LearnPage() {
         editorRef.current.setValue(formatCodeForEditor(codeToSet));
       }
     }
-  };
+  }, [
+    currentIndex,
+    editorRef,
+    problemCompletionList,
+    problemIds.length,
+    problemList,
+  ]);
 
-  const handlePrevProblem = () => {
+  const handlePrevProblem = useCallback(() => {
     if (currentIndex <= 0) return;
 
     const prevIndex = currentIndex - 1;
@@ -225,7 +255,7 @@ export default function LearnPage() {
         editorRef.current.setValue(formatCodeForEditor(codeToSet));
       }
     }
-  };
+  }, [currentIndex, editorRef, problemCompletionList, problemList]);
 
   const handleViewHint = async () => {
     const editor = editorRef.current;
@@ -267,9 +297,12 @@ export default function LearnPage() {
     loadCompletion();
   }, [refreshKey, completionPercentage]);
 
-  function handleEditorDidMount(editor: MonacoEditor.IStandaloneCodeEditor,monaco) {
+  function handleEditorDidMount(
+    editor: MonacoEditor.IStandaloneCodeEditor,
+    monaco
+  ) {
     editorRef.current = editor;
-    monacoRef.current = monaco
+    monacoRef.current = monaco;
 
     if (currProblemCompletion?.user_solution) {
       editor.setValue(formatCodeForEditor(currProblemCompletion.user_solution));
@@ -278,6 +311,25 @@ export default function LearnPage() {
     } else {
       editor.setValue("# Write your solution here\n");
     }
+  }
+
+  function handleSolutionsEditorDidMount(
+    editor: MonacoEditor.IStandaloneCodeEditor,
+    monaco
+  ) {
+    solutionEditorRef.current = editor;
+    monacoRef.current = monaco;
+
+    import("monaco-editor").then((monaco) => {
+      const model = solutionEditorRef.current!.getModel();
+      if (model) {
+        monaco.editor.setModelLanguage(model, "python");
+      }
+
+      if (currentProblem.solution) {
+        solutionEditorRef.current!.setValue(currentProblem.solution);
+      }
+    });
   }
 
   const handleProblemSelect = async (problem: Problem) => {
@@ -341,7 +393,7 @@ export default function LearnPage() {
   }, [currProblemCompletion]);
 
   const isPrevDisabled = useMemo(() => {
-    return (currentIndex === 0);
+    return currentIndex === 0;
   }, [currentIndex]);
 
   const codeTabs = useMemo(
@@ -388,6 +440,15 @@ export default function LearnPage() {
 
               {/* Button overlay */}
               <div className="absolute top-4 right-5 z-50">
+                <Button
+                  onClick={handlePrevProblem}
+                  disabled={isPrevDisabled}
+                  className="px-6 py-4 glow-text"
+                  variant={undefined}
+                  size="lg"
+                >
+                  ←
+                </Button>
                 {currentIndex === problemIds.length - 1 ? (
                   <Button
                     // disabled={isNextDisabled} UNCOMMENT IF UNLOCKING/LOCKING FEATURE IS REQUIRED
@@ -408,20 +469,9 @@ export default function LearnPage() {
                     variant={undefined}
                     size="lg"
                   >
-                    Next Problem
+                    →
                   </Button>
                 )}
-              </div>
-              <div className="absolute bottom-4 right-5 z-50">
-                <Button
-                  onClick={handlePrevProblem}
-                  disabled={isPrevDisabled}
-                  className="px-6 py-4 glow-text"
-                  variant={undefined}
-                  size="lg"
-                >
-                  Previous Problem
-                </Button>
               </div>
             </div>
           </div>
@@ -457,16 +507,64 @@ export default function LearnPage() {
           />
         ),
       },
+      solutions: {
+        label: "Solutions",
+        content: (
+          <div className="flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
+            <div className="relative flex-1 min-h-0">
+              <Editor
+                height="100%"
+                width="100%"
+                language={solutionLanguage}
+                theme="vs-dark"
+                onMount={handleSolutionsEditorDidMount}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  lineNumbers: "on",
+                  scrollBeyondLastLine: true,
+                  automaticLayout: true,
+                  readOnly: true,
+                }}
+              />
+              <div className="absolute top-4 right-10 z-50 matrix-border text-[var(--gr-2)]">
+                <select
+                  onChange={(e) => setSolutionLanguage(e.target.value)}
+                  defaultValue="Python"
+                  style={{
+                    border: "none",
+                    outline: "none",
+                  }}
+                >
+                  <option className="text-black" value="Python">
+                    Python
+                  </option>
+                  <option className="text-black" value="Java">
+                    Java
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+        ),
+      },
     }),
     [
-      currentProblem.problem_id,
       currentProblem.title,
-      currentProblem.description,
       problemDetails?.title,
       problemDetails?.description,
       currProblemCompletion.notes,
       currProblemCompletion.problem_id,
       user,
+      solutionLanguage,
+      currentIndex,
+      handleEditorDidMount,
+      handleSolutionsEditorDidMount,
+      handleNextProblem,
+      handlePrevProblem,
+      isPrevDisabled,
+      problemIds.length,
+      router,
     ]
   );
 
@@ -528,8 +626,8 @@ export default function LearnPage() {
     );
   } else {
     return (
-        <>
-          <div className="Page h-screen overflow-hidden bg-background/80 pl-5">
+      <>
+        <div className="Page h-screen overflow-hidden bg-background/80 pl-5">
           <button
             onClick={() => setShowMenu(true)}
             className="problembutton absolute left-0 top-1/2 -translate-y-1/2 p-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-lg text-xl font-bold glow-text cursor-pointer "
@@ -685,8 +783,8 @@ export default function LearnPage() {
               </div>
             </div>
           )}
-          </div>
-        </>
+        </div>
+      </>
     );
   }
 }
