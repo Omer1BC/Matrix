@@ -240,7 +240,9 @@ export default function ValidationContent({
                 String(activeKey) === String(ky) && "bg-[var(--dbl-3)]",
               ].join(" ")}
             >
-              <span>Test Case {ky}</span>
+              <span>
+                Test Case {Number.isFinite(Number(ky)) ? Number(ky) + 1 : ky}
+              </span>
               <span
                 className={[
                   "inline-block h-3 w-3 rounded-full",
