@@ -14,6 +14,7 @@ type ToolsProps = {
     url: string | null,
     phase?: "start" | "done" | "error"
   ) => void;
+  user?: any;
 };
 
 export default function Tools({
@@ -23,6 +24,7 @@ export default function Tools({
   askAboutTool,
   onOpenAnimation,
   onCustomAnimate,
+  user,
 }: ToolsProps) {
   const [animPrompt, setAnimPrompt] = useState("");
   const [animLoading, setAnimLoading] = useState(false);
@@ -37,7 +39,10 @@ export default function Tools({
     onCustomAnimate?.(null, "start");
     setAnimPrompt("");
     try {
-      const url = await requestAnimationFromAgent(prompt, animSpeed);
+      // Extract user_id from user object
+      const user_id =
+        typeof user === "string" ? user : user?.id ?? user?.user?.id ?? "anon";
+      const url = await requestAnimationFromAgent(prompt, animSpeed, user_id);
       if (!url) throw new Error("No video returned");
       onCustomAnimate?.(url, "done");
     } catch (e: any) {

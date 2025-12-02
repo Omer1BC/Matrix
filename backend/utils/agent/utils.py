@@ -365,7 +365,7 @@ def plan_animation_from_prompt(
         return _fallback_parse_prompt(user_prompt)
 
 
-def generate_animation_from_prompt(user_prompt: str, animation_speed: float = 1.0) -> Dict[str, Any]:
+def generate_animation_from_prompt(user_prompt: str, animation_speed: float = 1.0, user_id: str = "anon") -> Dict[str, Any]:
     plan = plan_animation_from_prompt(user_prompt)
 
     ds = (
@@ -407,7 +407,7 @@ def generate_animation_from_prompt(user_prompt: str, animation_speed: float = 1.
             step["pause"] = float(o["pause"])
         ops.append(step)
 
-    result = generate_animation(data_structure=ds, initial_state=init, operations=ops, animation_speed=animation_speed)
+    result = generate_animation(data_structure=ds, initial_state=init, operations=ops, animation_speed=animation_speed, user_id=user_id)
     # Include plan in result for debugging
     result["plan"] = {"data_structure": ds, "initial_state": init, "operations": ops}
     return result
@@ -421,6 +421,85 @@ class AnimationResponse(BaseModel):
 
 def _ensure_dirs(path: str) -> None:
     os.makedirs(path, exist_ok=True)
+
+
+def cleanup_user_animations(user_id: str) -> bool:
+    """
+    Clean up animation files for a specific user.
+    Removes the entire user-specific tmp directory.
+    Returns True if cleanup was successful, False otherwise.
+    """
+    try:
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        animations_dir = os.path.join(base_dir, "animations")
+        tmp_base = os.path.join(animations_dir, "tmp")
+        user_tmp_dir = os.path.join(tmp_base, user_id)
+
+        if os.path.exists(user_tmp_dir):
+            shutil.rmtree(user_tmp_dir)
+            return True
+        return False
+    except Exception:
+        return False
+
+
+def cleanup_old_animations(days: int = 7) -> Dict[str, Any]:
+    """
+    Clean up animation tmp directories older than specified days.
+    Returns dict with cleanup stats: {'removed_dirs': int, 'freed_bytes': int, 'errors': []}
+    """
+    import time
+
+    try:
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        animations_dir = os.path.join(base_dir, "animations")
+        tmp_base = os.path.join(animations_dir, "tmp")
+
+        if not os.path.exists(tmp_base):
+            return {"removed_dirs": 0, "freed_bytes": 0, "errors": []}
+
+        cutoff_time = time.time() - (days * 24 * 60 * 60)
+        removed_dirs = 0
+        freed_bytes = 0
+        errors = []
+
+        for item in os.listdir(tmp_base):
+            item_path = os.path.join(tmp_base, item)
+
+            # Only process directories (user_id directories)
+            if not os.path.isdir(item_path):
+                continue
+
+            # Check if directory is old enough
+            try:
+                mtime = os.path.getmtime(item_path)
+                if mtime < cutoff_time:
+                    # Calculate size before removal
+                    dir_size = 0
+                    for dirpath, _, filenames in os.walk(item_path):
+                        for f in filenames:
+                            fp = os.path.join(dirpath, f)
+                            if os.path.exists(fp):
+                                dir_size += os.path.getsize(fp)
+
+                    # Remove directory
+                    shutil.rmtree(item_path)
+                    removed_dirs += 1
+                    freed_bytes += dir_size
+            except Exception as e:
+                errors.append(f"{item}: {str(e)}")
+
+        return {
+            "removed_dirs": removed_dirs,
+            "freed_bytes": freed_bytes,
+            "errors": errors,
+        }
+    except Exception as e:
+        return {
+            "removed_dirs": 0,
+            "freed_bytes": 0,
+            "errors": [f"Global error: {str(e)}"],
+        }
 
 
 def _discover_video(tmp_dir: str) -> Optional[str]:
@@ -451,11 +530,14 @@ def generate_animation(
     animation_speed: float = 1.0,
     model: str = "gpt-4o-mini",
     temperature: float = 0.0,
+    user_id: str = "anon",
 ) -> Dict[str, Any]:
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     animations_dir = os.path.join(base_dir, "animations")
     templates_dir = os.path.join(animations_dir, "templates")
-    tmp_dir = os.path.join(animations_dir, "tmp")
+    # Create user-specific tmp directory
+    tmp_base = os.path.join(animations_dir, "tmp")
+    tmp_dir = os.path.join(tmp_base, user_id)
     _ensure_dirs(tmp_dir)
 
     cap = data_structure[:1].upper() + data_structure[1:].lower()
