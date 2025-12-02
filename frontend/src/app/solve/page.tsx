@@ -15,13 +15,14 @@ import AnimationPlayer from "@/components/AnimationPlayer";
 import AnimationInput from "@/components/AnimationInput";
 import Notes from "./Notes";
 import { formatCodeForEditor } from "@/lib/utils";
-import 'shepherd.js/dist/css/shepherd.css';
+import "shepherd.js/dist/css/shepherd.css";
 
 export default function SolvePage({ problemId }: { problemId: string }) {
   const {
     editorRef,
     monacoRef,
     details,
+    detailsLoading,
     tools,
     loading,
     response,
@@ -56,7 +57,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
 
     const setNotes = () => {
       setActiveCodeTab("Notes");
-    }
+    };
 
     window.addEventListener("switchToTools", setTools);
     window.addEventListener("switchToNotes", setNotes);
@@ -146,7 +147,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
   const handleMouseUp = useCallback(() => {
     const sel = window.getSelection();
     if (sel && sel.toString().length > 0) {
-      askSelection(sel.toString(),"explain");
+      askSelection(sel.toString(), "explain");
     }
   }, [askSelection]);
 
@@ -154,7 +155,13 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     () => ({
       question: {
         label: "Question",
-        content: (
+        content: detailsLoading ? (
+          <div className="flex items-center justify-center w-full h-full">
+            <p>
+              Loading...
+            </p>
+          </div>
+        ) : (
           <QuestionPanel
             title={details?.title}
             difficulty={details?.difficulty}
@@ -206,14 +213,14 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       editor: {
         label: "Editor",
         content: (
-            <EditorPanel
-              editorRef={editorRef}
-              monacoRef={monacoRef}
-              showHints={showHints}
-              setShowHints={setShowHints}
-              onAnnotate={async (code) => annotate(code)}
-              timer={timer}
-            />
+          <EditorPanel
+            editorRef={editorRef}
+            monacoRef={monacoRef}
+            showHints={showHints}
+            setShowHints={setShowHints}
+            onAnnotate={async (code) => annotate(code)}
+            timer={timer}
+          />
         ),
       },
       tools: {
@@ -350,9 +357,18 @@ export default function SolvePage({ problemId }: { problemId: string }) {
             tabs={questionTabs}
             defaultActiveKey={questionDefaultKey}
           />
-          <TabPanel tabs={codeTabs} activeKey={activeCodeTab} onTabChange={setActiveCodeTab} className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"/>
-          <TabPanel tabs={referencesTabs} className="chatbox question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"/>
-          <TabPanel className="tests-solve question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+          <TabPanel
+            tabs={codeTabs}
+            activeKey={activeCodeTab}
+            onTabChange={setActiveCodeTab}
+            className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+          />
+          <TabPanel
+            tabs={referencesTabs}
+            className="chatbox question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+          />
+          <TabPanel
+            className="tests-solve question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
             key={`v-${validationPanelKey}`}
             tabs={validationTabs}
             defaultActiveKey={validationDefaultKey}
