@@ -5,7 +5,6 @@ import ValidationContent from "./ValidationContent";
 
 type ValidationPanelProps = {
   problemId: string;
-  testCases: Record<string, any>;
   editorRef: React.RefObject<any>;
   monacoRef: React.RefObject<any>;
   annotateErrors: (codeWithLines: string, error: any) => Promise<any>;
@@ -18,7 +17,6 @@ type ValidationPanelProps = {
 
 export default function ValidationPanel({
   problemId,
-  testCases,
   editorRef,
   monacoRef,
   annotateErrors,
@@ -29,7 +27,6 @@ export default function ValidationPanel({
     <Fragment>
       <ValidationContent
         timer={timer}
-        testCases={testCases}
         problemId={problemId}
         editorRef={editorRef}
         monacoRef={monacoRef}

@@ -18,12 +18,11 @@ from utils.agent.graph import build_graph
 from utils.agent.tools import (
     annotate_errors_tool,
     annotated_hints_tool,
-    generate_animation_tool,
     grade_via_tests_tool,
     hints_tool,
     run_tests_tool,
     tool_hints_tool,
-    snippet_tool
+    snippet_tool,
 )
 from utils.agent.utils import (
     append_time_stamp,
@@ -222,14 +221,16 @@ def agent(request):
                 AgentResponse(kind="annotated_hints", data=res).model_dump()
             )
         if task == "explain":
-            res = snippet_tool.invoke({
-                "question":req.question,
-                "text": req.message,
-                "preferences":req.preferences or ""
-            }
-
+            res = snippet_tool.invoke(
+                {
+                    "question": req.question,
+                    "text": req.message,
+                    "preferences": req.preferences or "",
+                }
             )
-            return JsonResponse(AgentResponse(kind="explain",data=res).model_dump(),safe=False )
+            return JsonResponse(
+                AgentResponse(kind="explain", data=res).model_dump(), safe=False
+            )
         if task == "generate_animation":
             prompt = (
                 params.get("request", "")
@@ -243,7 +244,29 @@ def agent(request):
                     AgentResponse(kind="generate_animation", data=payload).model_dump(),
                     status=400,
                 )
-            res = generate_animation_tool.invoke({"prompt": prompt, "animation_speed": animation_speed})
+            # Call generate_animation_from_prompt directly with user_id
+            from utils.agent.utils import generate_animation_from_prompt
+
+            result = generate_animation_from_prompt(
+                prompt, animation_speed=animation_speed, user_id=user_id
+            )
+
+            error_msg = None
+            if not result.get("ok"):
+                error_msg = result.get("error") or result.get("stderr", "Unknown error")
+                if len(error_msg) > 200:
+                    error_msg = error_msg[-200:]
+
+            res = {
+                "ok": bool(result.get("ok")),
+                "error": error_msg,
+                "plan": result.get("plan", {}),
+                "video_rel": result.get("video_rel", ""),
+                "video_path": result.get("video_path", ""),
+                "stdout": result.get("stdout", ""),
+                "stderr": result.get("stderr", ""),
+                "cmd": result.get("cmd", ""),
+            }
             return JsonResponse(
                 AgentResponse(kind="generate_animation", data=res).model_dump(),
                 status=200 if res.get("ok") else 400,
@@ -397,27 +420,26 @@ def run_learn_tests(request):
                 {"error": f"Problem file {file_name} not found"}, status=404
             )
 
-        res = insert_user_code(file_path, code,sample="demo.py")
+        res = insert_user_code(file_path, code, sample="demo.py")
         try:
-            compile(code,"user_code.py","exec")
-            
-        except SyntaxError as e:
-            return JsonResponse({
-                "success":False, 
-                "error": "SyntaxError",
-                "info": {
-                            "type": "SyntaxError",
-                "msg": e.msg,
-                "lineno": e.lineno or 1,
-                "offset": e.offset or 1,
-                "line": (e.text or "").rstrip("\n"),
-                },
-                "test_results": []
-                
-            },status=400)
+            compile(code, "user_code.py", "exec")
 
-        
-        
+        except SyntaxError as e:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "SyntaxError",
+                    "info": {
+                        "type": "SyntaxError",
+                        "msg": e.msg,
+                        "lineno": e.lineno or 1,
+                        "offset": e.offset or 1,
+                        "line": (e.text or "").rstrip("\n"),
+                    },
+                    "test_results": [],
+                },
+                status=400,
+            )
 
         old_stdout = sys.stdout
         sys.stdout = mystdout = io.StringIO()
@@ -874,20 +896,22 @@ def log_editor_history(request):
             return JsonResponse({"Error Occured": str(e)}, status=400)
     return JsonResponse({"error": "Malformed Request"}, status=400)
 
+
 @csrf_exempt
 def clear_log_history(request):
     if request.method == "POST" and request.content_type == "application/json":
         try:
             body = json.loads(request.body)
             user_id = body.get("user_id", "")
-            
+
             path = f"{settings.USER_FILES}/{user_id}_code_history.txt"
-            
-            
+
             if os.path.isfile(path):
                 os.remove(path)
             else:
-                return JsonResponse({"Error Occured": "File does not exist"}, status=400)
+                return JsonResponse(
+                    {"Error Occured": "File does not exist"}, status=400
+                )
             return JsonResponse({"Success": "Log file cleared"}, status=200)
         except Exception as e:
             return JsonResponse({"Error occurred": str(e)}, status=400)
