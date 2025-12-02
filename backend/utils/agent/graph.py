@@ -14,7 +14,7 @@ from .tools import (
     annotated_hints_tool,
     tool_hints_tool,
     annotate_errors_tool,
-    snippet_tool
+    snippet_tool,
 )
 from .rag import context_text
 
@@ -51,16 +51,13 @@ def llm_node(state: State):
             tool_hints_tool,
             annotate_errors_tool,
             generate_animation_tool,
-            snippet_tool
-            
+            snippet_tool,
         ]
     )
 
     msgs = state["messages"]
 
-
     msgs.append(sys)
-
 
     if state.get("question"):
         msgs.append(SystemMessage(content=f"Problem:\n{state['question']}"))
@@ -117,7 +114,8 @@ def build_graph():
                 annotated_hints_tool,
                 tool_hints_tool,
                 annotate_errors_tool,
-                snippet_tool
+                snippet_tool,
+                generate_animation_tool,
             ]
         ),
     )

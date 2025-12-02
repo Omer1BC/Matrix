@@ -7,6 +7,8 @@ import {
   type Intent,
 } from "./agents";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/";
+
 export async function getAnimationUrl(opts: {
   name: string;
   args?: Record<string, unknown>;
@@ -17,29 +19,30 @@ export async function getAnimationUrl(opts: {
   const resp = await ping({ data, name: opts.name }, "get_pattern_media");
   const rel = resp?.data;
   if (!rel) return null;
-  return `http://localhost:8000/${rel}?v=${Date.now()}`;
+  return `${API_BASE_URL}${rel}?v=${Date.now()}`;
 }
 
 export async function requestAnimationFromAgent(
-  prompt: string
+  prompt: string,
+  animationSpeed: number = 1.0
 ): Promise<string | null> {
   const resp = await agentCall({
     user_id: "anon",
     problem_id: "global",
     intent: "generate_animation",
     message: prompt,
-    extras: { request: prompt },
+    extras: { request: prompt, animation_speed: animationSpeed },
   });
-  
+
 
   const rel = resp?.data?.video_rel as string | undefined;
   if (!rel) return null;
-  return `http://localhost:8000/${rel}?v=${Date.now()}`;
+  return `${API_BASE_URL}${rel}?v=${Date.now()}`;
 }
 
 export async function ping(data: Record<string, unknown>, endpoint: string) {
   try {
-    const res = await fetch(`http://localhost:8000/api/${endpoint}`, {
+    const res = await fetch(`${API_BASE_URL}api/${endpoint}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -62,7 +65,7 @@ export async function ping(data: Record<string, unknown>, endpoint: string) {
 export async function agentCall<I extends Intent | "chat" = "chat">(
   payload: AgentRequest & { intent?: I }
 ): Promise<AgentResponseMap[I]> {
-  const res = await fetch(`http://localhost:8000/api/agent`, {
+  const res = await fetch(`${API_BASE_URL}api/agent`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(clampLengths(payload)),
@@ -70,10 +73,20 @@ export async function agentCall<I extends Intent | "chat" = "chat">(
 
   const data = (await res.json().catch(() => ({}))) as AgentResponseMap[I];
   if (!res.ok) {
-    const msg =
-      (data as any)?.data?.error ||
-      (data as any)?.error ||
-      `Agent error (${res.status})`;
+    const errorData = (data as any)?.data;
+    let msg = errorData?.error || (data as any)?.error || `Agent error (${res.status})`;
+
+    // Add plan info if available for animation errors
+    if (errorData?.plan) {
+      const ops = errorData.plan.operations || [];
+      if (ops.length > 0) {
+        const opsSummary = ops.map((op: any) =>
+          op.args?.length ? `${op.name}(${op.args.join(', ')})` : op.name
+        ).join(', ');
+        msg += `\n\nAttempted operations: ${opsSummary}`;
+      }
+    }
+
     throw new Error(msg);
   }
   return data;
@@ -81,7 +94,7 @@ export async function agentCall<I extends Intent | "chat" = "chat">(
 
 export async function get(data: Record<string, unknown>, endpoint: string) {
   try {
-    const res = await fetch(`http://localhost:8000/api/${endpoint}`, {
+    const res = await fetch(`${API_BASE_URL}api/${endpoint}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

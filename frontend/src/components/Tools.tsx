@@ -27,6 +27,7 @@ export default function Tools({
   const [animPrompt, setAnimPrompt] = useState("");
   const [animLoading, setAnimLoading] = useState(false);
   const [animError, setAnimError] = useState<string | null>(null);
+  const [animSpeed, setAnimSpeed] = useState(1.0);
 
   async function submit() {
     const prompt = animPrompt.trim();
@@ -36,7 +37,7 @@ export default function Tools({
     onCustomAnimate?.(null, "start");
     setAnimPrompt("");
     try {
-      const url = await requestAnimationFromAgent(prompt);
+      const url = await requestAnimationFromAgent(prompt, animSpeed);
       if (!url) throw new Error("No video returned");
       onCustomAnimate?.(url, "done");
     } catch (e: any) {
@@ -64,13 +65,33 @@ export default function Tools({
         ))}
       </div>
       <div className="createanimation mt-3 rounded-xl border border-slate-700 bg-[var(--dbl-4)] p-2">
+        <div className="mb-3 flex items-center gap-3">
+          <label className="text-xs text-slate-400 whitespace-nowrap">
+            Speed: {animSpeed}x
+          </label>
+          <input
+            type="range"
+            min="0.5"
+            max="2.0"
+            step="0.1"
+            value={animSpeed}
+            onChange={(e) => setAnimSpeed(parseFloat(e.target.value))}
+            className="flex-1 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[var(--gr-2)]"
+            disabled={animLoading}
+          />
+          <div className="flex gap-1 text-[10px] text-slate-500">
+            <span>Slow</span>
+            <span className="mx-1">|</span>
+            <span>Fast</span>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <Input
             type="text"
             value={animPrompt}
             onChange={(e: any) => setAnimPrompt(e.target.value)}
             onKeyDown={(e: any) => e.key === "Enter" && submit()}
-            placeholder='e.g. "Stack starting with 5,10,15; push 20; peek; pop twice; clear."'
+            placeholder='e.g. "BST with 10, 5, 15; insert 3; delete 5"'
             className="w-[90%] rounded-lg border border-[var(--gr-2)] bg-[var(--dbl-4)] p-2.5 text-sm text-[var(--gr-2)] outline-none transition
                        focus:scale-[1.02] focus:border-[var(--gr-2)]
                        focus:shadow-[0_0_8px_rgba(125,255,125,0.6),0_0_16px_rgba(125,255,125,0.3)]
