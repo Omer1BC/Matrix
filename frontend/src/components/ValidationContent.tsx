@@ -2,15 +2,18 @@
 import React, { Fragment, useEffect, useState } from "react";
 import StarGraph from "./StarGraph";
 import { agentCall, ping } from "@/lib/api";
-import { useTimer } from "@/lib/hooks/useTimer";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useAnnotationsContext } from "@/lib/contexts/AnnotationsContext";
-import { updateUserProblemCompletion } from "@/lib/supabase/problems";
 type ValidationContentProps = {
   problemId: string;
+  testCases: Record<string, any>;
   editorRef: React.RefObject<any>;
   monacoRef: React.RefObject<any>;
   annotateErrors: (codeWithLines: string, error: any) => Promise<any>;
+  onOpenTestAnimation: (
+    name: string,
+    testCase?: Record<string, any>
+  ) => Promise<void>;
   timer: any;
 };
 
@@ -18,15 +21,16 @@ type TestsMap = Record<string, any>;
 
 export default function ValidationContent({
   problemId,
+  testCases,
   editorRef,
   monacoRef,
   annotateErrors,
+  onOpenTestAnimation,
   timer,
 }: ValidationContentProps) {
   const { applyErrors } = useAnnotationsContext();
   const { user } = useAuth();
 
-  const [details, setDetails] = useState<any>([]);
   const [activeTest, setActiveTest] = useState<any>({});
   const [tests, setTests] = useState<TestsMap>({});
   const [activeKey, setActiveKey] = useState<string | number>(0);
@@ -44,34 +48,18 @@ export default function ValidationContent({
   const { seconds, start, stop, reset } = timer;
 
   useEffect(() => {
-    const fetchDetails = () => {
-      ping({ problem_id: problemId }, "problem-details").then((data) => {
-        setDetails(data);
+    if (testCases && Object.keys(testCases).length) {
+      const firstKey = Object.keys(testCases)[0];
+      setTests(testCases);
+      setActiveKey(firstKey);
+      setActiveTest(testCases[firstKey]);
+      return;
+    }
 
-        try {
-          const orig = data.tests;
-          if (orig) {
-            const fixedStr = String(orig).replace(/'/g, '"');
-            const json = JSON.parse(fixedStr);
-            setTests(json);
-            const firstK = Object.keys(json)[0];
-            setActiveTest(json[firstK]);
-            setActiveKey(firstK);
-          } else {
-            setTests({});
-            setActiveTest({});
-            setActiveKey(0);
-          }
-        } catch {
-          setTests({});
-          setActiveTest({});
-          setActiveKey(0);
-        }
-      });
-    };
-
-    fetchDetails();
-  }, [problemId]);
+    setTests({});
+    setActiveTest({});
+    setActiveKey(0);
+  }, [testCases]);
 
   const buildNumberedCode = () => {
     const editor = editorRef.current;
@@ -238,27 +226,40 @@ export default function ValidationContent({
     <div className="flex h-full w-full flex-row gap-2 p-2">
       <div className="flex w-1/5 flex-col gap-2 bg-[var(--dbl-4)] p-3">
         {Object.entries(tests).map(([ky, val]) => (
-          <button
+          <div
             key={ky}
-            onClick={() => {
-              setActiveTest(val);
-              setActiveKey(ky);
-            }}
-            className={[
-              "flex items-center justify-between rounded-lg bg-[var(--dbl-2)] px-2 py-2 text-[var(--gr-2)]",
-              String(activeKey) === String(ky) && "bg-[var(--dbl-3)]",
-            ].join(" ")}
+            className="flex flex-1 items-center gap-2 justify-between"
           >
-            <span>Test Case {ky}</span>
-            <span
+            <button
+              onClick={() => {
+                setActiveTest(val);
+                setActiveKey(ky);
+              }}
               className={[
-                "inline-block h-3 w-3 rounded-full",
-                isPassed(val)
-                  ? "bg-[var(--success-color)]"
-                  : "bg-[var(--failure-color)]",
+                "flex flex-[0.75] items-center justify-between gap-2 rounded-lg bg-[var(--dbl-2)] px-2 py-2 text-[var(--gr-2)]",
+                String(activeKey) === String(ky) && "bg-[var(--dbl-3)]",
               ].join(" ")}
-            />
-          </button>
+            >
+              <span>Test Case {ky}</span>
+              <span
+                className={[
+                  "inline-block h-3 w-3 rounded-full",
+                  isPassed(val)
+                    ? "bg-[var(--success-color)]"
+                    : "bg-[var(--failure-color)]",
+                ].join(" ")}
+              />
+            </button>
+            <button
+              className="playanimation flex-[0.25] inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent bg-[var(--gr-2)] text-black hover:bg-[var(--gr-1)]"
+              title="Play animation for this tool"
+              onClick={() =>
+                onOpenTestAnimation(ky, val as Record<string, any>)
+              }
+            >
+              ▶
+            </button>
+          </div>
         ))}
 
         <button

@@ -15,7 +15,7 @@ import AnimationPlayer from "@/components/AnimationPlayer";
 import AnimationInput from "@/components/AnimationInput";
 import Notes from "./Notes";
 import { formatCodeForEditor } from "@/lib/utils";
-import 'shepherd.js/dist/css/shepherd.css';
+import "shepherd.js/dist/css/shepherd.css";
 
 export default function SolvePage({ problemId }: { problemId: string }) {
   const {
@@ -23,6 +23,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     monacoRef,
     details,
     tools,
+    testCases,
     loading,
     response,
     setResponse,
@@ -56,7 +57,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
 
     const setNotes = () => {
       setActiveCodeTab("Notes");
-    }
+    };
 
     window.addEventListener("switchToTools", setTools);
     window.addEventListener("switchToNotes", setNotes);
@@ -113,6 +114,30 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     [details]
   );
 
+  const openAnimationForTest = useCallback(
+    async (testKey: string, testCase?: Record<string, any>) => {
+      const numKey = Number(testKey);
+      const animName = `BST Test ${Number.isFinite(numKey) ? numKey + 1 : testKey}`;
+
+      setAnimToolName(animName);
+      setAnimLoading(true);
+      setAnimArgs({ case_index: numKey });
+
+      try {
+        const url = await getAnimationUrl({
+          name: "BST",
+          args: { case_index: numKey },
+        });
+        setAnimUrl(url);
+      } finally {
+        setAnimLoading(false);
+      }
+
+      setQuestionPanelKey((k) => k + 1);
+    },
+    []
+  );
+
   const handleCustomAnimate = useCallback(
     (url: string | null, phase?: "start" | "done" | "error") => {
       if (phase === "start") {
@@ -135,18 +160,21 @@ export default function SolvePage({ problemId }: { problemId: string }) {
   );
 
   const closeAnimationTab = useCallback(() => {
+    const hasValidationTab =
+      animToolName && (details as any)?.tools?.[animToolName];
+
     setAnimToolName(null);
     setAnimUrl(null);
     setAnimArgs(null);
     setAnimLoading(false);
     setQuestionPanelKey((k) => k + 1);
-    setValidationPanelKey((k) => k + 1);
-  }, []);
+    if (hasValidationTab) setValidationPanelKey((k) => k + 1);
+  }, [animToolName, details]);
 
   const handleMouseUp = useCallback(() => {
     const sel = window.getSelection();
     if (sel && sel.toString().length > 0) {
-      askSelection(sel.toString(),"explain");
+      askSelection(sel.toString(), "explain");
     }
   }, [askSelection]);
 
@@ -206,14 +234,14 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       editor: {
         label: "Editor",
         content: (
-            <EditorPanel
-              editorRef={editorRef}
-              monacoRef={monacoRef}
-              showHints={showHints}
-              setShowHints={setShowHints}
-              onAnnotate={async (code) => annotate(code)}
-              timer={timer}
-            />
+          <EditorPanel
+            editorRef={editorRef}
+            monacoRef={monacoRef}
+            showHints={showHints}
+            setShowHints={setShowHints}
+            onAnnotate={async (code) => annotate(code)}
+            timer={timer}
+          />
         ),
       },
       tools: {
@@ -298,14 +326,17 @@ export default function SolvePage({ problemId }: { problemId: string }) {
         content: (
           <ValidationPanel
             timer={timer}
+            testCases={testCases ?? {}}
             problemId={problemId}
             editorRef={editorRef}
             monacoRef={monacoRef}
             annotateErrors={annotateErrors}
+            onOpenTestAnimation={openAnimationForTest}
           />
         ),
       },
-      ...(animToolName && {
+      ...(animToolName &&
+        (details as any)?.tools?.[animToolName] && {
         "animation-args": {
           label: `Animation Input: ${animToolName}`,
           content: (
@@ -337,6 +368,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       details,
       animToolName,
       closeAnimationTab,
+      openAnimationForTest,
     ]
   );
 
@@ -350,9 +382,18 @@ export default function SolvePage({ problemId }: { problemId: string }) {
             tabs={questionTabs}
             defaultActiveKey={questionDefaultKey}
           />
-          <TabPanel tabs={codeTabs} activeKey={activeCodeTab} onTabChange={setActiveCodeTab} className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"/>
-          <TabPanel tabs={referencesTabs} className="chatbox question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"/>
-          <TabPanel className="tests-solve question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+          <TabPanel
+            tabs={codeTabs}
+            activeKey={activeCodeTab}
+            onTabChange={setActiveCodeTab}
+            className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+          />
+          <TabPanel
+            tabs={referencesTabs}
+            className="chatbox question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+          />
+          <TabPanel
+            className="tests-solve question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
             key={`v-${validationPanelKey}`}
             tabs={validationTabs}
             defaultActiveKey={validationDefaultKey}

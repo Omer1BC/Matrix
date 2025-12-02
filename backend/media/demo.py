@@ -1,4 +1,7 @@
 from typing import *
+import subprocess
+from pathlib import Path
+import sys
 class Node:
     def __init__(self,val=0,left=None,right=None):
         self.val = val 
@@ -77,6 +80,60 @@ def run_test(bfs_list, target, expected):
           "expected": expected,
           "actual": result_list,
         }
+
+
+def animate_test_case(case_index: int, out_prefix: str = "bst_case") -> str:
+    """
+    Render a BST animation for a specific test case using the bst.py framework.
+
+    Returns the relative mp4 path emitted by manim.
+    """
+    if case_index < 0 or case_index >= len(test_cases):
+        raise IndexError(f"case_index {case_index} out of range for test_cases")
+
+    bfs_list, target, _ = test_cases[case_index]
+    initial_values = [v for v in bfs_list if v is not None]
+
+    template_dir = Path(__file__).resolve().parents[1] / "animations" / "templates"
+    script_path = Path(__file__).with_name(f"{out_prefix}_{case_index}.py")
+
+    script_path.write_text(
+        "\n".join(
+            [
+                "from manim import *",
+                "import sys",
+                "from pathlib import Path",
+                f"sys.path.append(r\"{str(template_dir)}\")",
+                "from bst import BstVisualizer",
+                "",
+                "class BstExample(Scene):",
+                "    def construct(self):",
+                f"        bst = BstVisualizer(initial_values={initial_values}, scale_factor=0.7)",
+                "        self.play(bst.create()); self.wait(0.5)",
+                f"        self.play(bst.delete({target})); self.wait(0.75)",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    output_name = f"{out_prefix}_{case_index}"
+    subprocess.run(
+        [
+            "manim",
+            str(script_path),
+            "BstExample",
+            "-ql",
+            "-o",
+            output_name,
+            "--disable_caching",
+        ],
+        check=True,
+    )
+
+    return f"media/videos/{output_name}/480p15/{output_name}.mp4"
+
+
 test_cases = [
     ([5, 3, 7], 3, [5, None, 7]),
 

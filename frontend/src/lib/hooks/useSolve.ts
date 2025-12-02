@@ -13,6 +13,7 @@ export function useSolve(problemId: string = "intro-1") {
 
   const [details, setDetails] = useState<any>({});
   const [tools, setTools] = useState<ToolInfo[]>([]);
+  const [testCases, setTestCases] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState("");
   const [testResponse, setTestResponse] = useState("");
@@ -34,6 +35,26 @@ export function useSolve(problemId: string = "intro-1") {
     }));
     setTools(t);
   }, [details]);
+
+  useEffect(() => {
+    const fetchTestCases = async () => {
+      try {
+        const data = await ping({ problem_id: problemId }, "problem-details");
+        const orig = data.tests;
+        if (orig) {
+          const fixedStr = String(orig).replace(/'/g, '"');
+          const json = JSON.parse(fixedStr);
+          setTestCases(json);
+        } else {
+          setTestCases({});
+        }
+      } catch {
+        setTestCases({});
+      }
+    };
+
+    fetchTestCases();
+  }, [problemId]);
 
   const askSelection = useCallback(
     async (text: string,type?: string) => {
@@ -129,6 +150,7 @@ export function useSolve(problemId: string = "intro-1") {
     monacoRef,
     details,
     tools,
+    testCases,
     loading,
     response,
     setResponse,
