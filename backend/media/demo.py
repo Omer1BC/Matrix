@@ -5,32 +5,24 @@ class Node:
         self.left = left 
         self.right = right
 
-def remove(root,target):
-    if not root:
-        return None 
-    if  root.val > target: 
-        root.left = remove(root.left,target)
-    elif root.val < target:
-        root.right = remove(root.right,target)
-    else:
-        if not root.left: return root.right 
-        if not root.right: return root.left
-        pred = find_max(root.left)
-        root.val = pred.val 
-        root.left = remove_max(root.left)
-    return root
+# class Node:
+# 	def __init__(self,val=0,left=None,right=None):
+# 		self.val = val 
+# 		self.left = left 
+# 		self.right = right
 
+def remove(root:Node,target:int):
+	return None
 def find_max(root):
-    if not root.right:
-        return root
-    return find_max(root.right)
+	if not root.right:
+		return root
+	return find_max(root.right)
 
 def remove_max(root):
-    if not root.right:
-        return root.left
-    root.right = remove_max(root.right)
-    return root
-
+	if not root.right:
+		return root.left
+	root.right = remove_max(root.right)
+	return root
 def build_tree(bfs_list):
     if not bfs_list or bfs_list[0] is None:
         return None
@@ -80,7 +72,7 @@ def run_test(bfs_list, target, expected):
     result = remove(root, target)
     result_list = tree_to_bfs(result)
 
-    return {"bfs_list": bfs_list,
+    return {"root": bfs_list,
           "target": target,
           "expected": expected,
           "actual": result_list,
@@ -90,7 +82,7 @@ test_cases = [
 
     ([5, 3, 7], 5, [3, None, 7]),
 
-    ([5, 3, 7, 1,None,None,None], 3, [5, 1, 7]),
+    ([5, 3, 7, 1], 3, [5, 1, 7]),
 ]
 results = { f"{i}": run_test(node, targ, expected) for i, (node, targ, expected) in enumerate(test_cases)}
 print(results)

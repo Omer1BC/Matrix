@@ -143,11 +143,20 @@ def annotate_errors_tool(
     "generate_animation",
     return_direct=False,
 )
-def generate_animation_tool(prompt: str) -> Dict[str, Any]:
-    """Generate a data-structure animation from a natural-language prompt. Input: prompt (str). Returns {'ok': bool, 'plan': {...}, 'video_abs': str, 'video': str, 'stdout': str, 'stderr': str, 'cmd': str}. 'video' is a relative path suitable for serving via http://<host>/{video}."""
-    res = generate_animation_from_prompt(prompt)
+def generate_animation_tool(prompt: str, animation_speed: float = 1.0) -> Dict[str, Any]:
+    """Generate a data-structure animation from a natural-language prompt. Input: prompt (str), animation_speed (float, default 1.0). Speed multiplier: 0.5=slower, 2.0=faster. Returns {'ok': bool, 'plan': {...}, 'video_abs': str, 'video': str, 'stdout': str, 'stderr': str, 'cmd': str}. 'video' is a relative path suitable for serving via http://<host>/{video}."""
+    res = generate_animation_from_prompt(prompt, animation_speed=animation_speed)
+
+    # If error, include helpful context
+    error_msg = None
+    if not res.get("ok"):
+        error_msg = res.get("error") or res.get("stderr", "Unknown error")
+        if len(error_msg) > 200:
+            error_msg = error_msg[-200:]  # Last 200 chars for relevant info
+
     return {
         "ok": bool(res.get("ok")),
+        "error": error_msg,
         "plan": res.get("plan", {}),
         "video_rel": res.get("video_rel", ""),
         "video_path": res.get("video_path", ""),
