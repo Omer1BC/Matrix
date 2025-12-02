@@ -132,7 +132,6 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
               {problems.filter(problem => problem.category_id.trim() === section.title.trim()).map(problem => {
                 // const isLocked = !problem.is_unlocked; UNCOMMENT THIS IF LOCKKING/UNLOCKING IS DESIRED
                 const isLocked = false;
-                console.log(problems);
                 return (
                   <button
                     key={problem.id}

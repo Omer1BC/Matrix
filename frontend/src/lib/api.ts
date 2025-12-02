@@ -7,6 +7,8 @@ import {
   type Intent,
 } from "./agents";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/";
+
 export async function getAnimationUrl(opts: {
   name: string;
   args?: Record<string, unknown>;
@@ -17,7 +19,7 @@ export async function getAnimationUrl(opts: {
   const resp = await ping({ data, name: opts.name }, "get_pattern_media");
   const rel = resp?.data;
   if (!rel) return null;
-  return `http://localhost:8000/${rel}?v=${Date.now()}`;
+  return `${API_BASE_URL}${rel}?v=${Date.now()}`;
 }
 
 export async function requestAnimationFromAgent(
@@ -35,12 +37,12 @@ export async function requestAnimationFromAgent(
 
   const rel = resp?.data?.video_rel as string | undefined;
   if (!rel) return null;
-  return `http://localhost:8000/${rel}?v=${Date.now()}`;
+  return `${API_BASE_URL}${rel}?v=${Date.now()}`;
 }
 
 export async function ping(data: Record<string, unknown>, endpoint: string) {
   try {
-    const res = await fetch(`http://localhost:8000/api/${endpoint}`, {
+    const res = await fetch(`${API_BASE_URL}api/${endpoint}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -63,7 +65,7 @@ export async function ping(data: Record<string, unknown>, endpoint: string) {
 export async function agentCall<I extends Intent | "chat" = "chat">(
   payload: AgentRequest & { intent?: I }
 ): Promise<AgentResponseMap[I]> {
-  const res = await fetch(`http://localhost:8000/api/agent`, {
+  const res = await fetch(`${API_BASE_URL}api/agent`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(clampLengths(payload)),
@@ -92,7 +94,7 @@ export async function agentCall<I extends Intent | "chat" = "chat">(
 
 export async function get(data: Record<string, unknown>, endpoint: string) {
   try {
-    const res = await fetch(`http://localhost:8000/api/${endpoint}`, {
+    const res = await fetch(`${API_BASE_URL}api/${endpoint}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

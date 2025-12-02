@@ -17,11 +17,13 @@ export default function QuestionPanel({
   onMouseUp,
 }: QuestionPanelProps) {
   return (
-    <QuestionContent
-      title={title}
-      difficulty={difficulty}
-      description={description}
-      handleMouseUp={onMouseUp}
-    />
+    <div>
+      <QuestionContent
+        title={title}
+        difficulty={difficulty}
+        description={description}
+        handleMouseUp={onMouseUp}
+      />
+    </div>
   );
 }

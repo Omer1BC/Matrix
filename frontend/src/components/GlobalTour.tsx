@@ -11,7 +11,6 @@ export const useGlobalTour = () => {
   useEffect(() => {
     const runTour = async () => {
       const seen = await getSeenStatus();
-      console.log(seen);
       const tour = await createTour(pathname, seen); // async version
       if (tour != null && tour.steps.length > 0) tour.start();
     };

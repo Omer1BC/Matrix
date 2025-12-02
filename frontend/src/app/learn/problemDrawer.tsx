@@ -22,7 +22,7 @@ export default function ProblemDrawer({
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:8000/api/categories", {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/categories`, {
           credentials: "include",
         });
         if (!response.ok) {

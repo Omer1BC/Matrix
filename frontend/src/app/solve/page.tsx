@@ -22,6 +22,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     editorRef,
     monacoRef,
     details,
+    detailsLoading,
     tools,
     testCases,
     loading,
@@ -182,7 +183,13 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     () => ({
       question: {
         label: "Question",
-        content: (
+        content: detailsLoading ? (
+          <div className="flex items-center justify-center w-full h-full">
+            <p>
+              Loading...
+            </p>
+          </div>
+        ) : (
           <QuestionPanel
             title={details?.title}
             difficulty={details?.difficulty}

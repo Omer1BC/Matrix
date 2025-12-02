@@ -1,5 +1,6 @@
 "use client";
 import { Difficulty } from "@/lib/types";
+import Image from "next/image";
 
 type QuestionContentProps = {
   title?: string;
@@ -27,7 +28,7 @@ export function QuestionContent({
   return (
     <div
       onMouseUp={handleMouseUp}
-      className="flex h-full flex-col rounded-md p-5 gap-5 font-sans"
+      className="flex h-full flex-col rounded-md p-5 gap-5 font-sans overflow-auto"
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -54,6 +55,36 @@ export function QuestionContent({
         <p className="m-0 text-[17.6px] leading-6 text-[var(--gr-2)]">
           {description}
         </p>
+        <p className="m-0 text-[17.6px] leading-6 text-[var(--gr-2)]">
+          <br/>The following are a few test cases:
+        </p>
+        <hr className="my-4 border-[var(--gr-2)]" />
+        <Image
+          alt="bst_test1"
+          src={`${process.env.NEXT_PUBLIC_API_URL}api/media/images/bst/bst_test1.png`}
+          width={0}
+          height={0}
+          sizes="100vw"
+          className="w-full h-auto object-contain"
+        />
+        <hr className="my-4 border-[var(--gr-2)]" />
+        <Image
+          alt="bst_test1"
+          src={`${process.env.NEXT_PUBLIC_API_URL}api/media/images/bst/bst_test1.png`}
+          width={0}
+          height={0}
+          sizes="100vw"
+          className="w-full h-auto object-contain"
+        />
+        <hr className="my-4 border-[var(--gr-2)]" />
+        <Image
+          alt="bst_test1"
+          src={`${process.env.NEXT_PUBLIC_API_URL}api/media/images/bst/bst_test1.png`}
+          width={0}
+          height={0}
+          sizes="100vw"
+          className="w-full h-auto object-contain"
+        />
       </div>
     </div>
   );
