@@ -14,6 +14,7 @@ class Node:
 
 
 def remove(root:Node,target:int):
+	from os import open
 	return None
 
 def find_max(root):

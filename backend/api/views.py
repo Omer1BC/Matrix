@@ -11,6 +11,7 @@ import json
 from .models import ProblemCategory, Problem, ProblemCompletion, UserProgress
 from langchain_core.messages import HumanMessage, AIMessage
 from utils.utils import *
+from utils.security import SafeExecutor
 from utils.problem_info import *
 from utils.agent.schema import AgentRequest, AgentResponse
 from utils.agent.router import route
@@ -335,26 +336,31 @@ def run_python(request):
                     print(f"ERROR: {error_msg}")
                     return JsonResponse({"error": error_msg}, status=404)
 
-                res = insert_user_code(
+                full_code = insert_user_code(
                     file_path,
                     code,
                     sample=f"demo_{problem_id}.py",
                 )
 
-                old_stdout = sys.stdout
-                sys.stdout = mystdout = io.StringIO()
-                try:
-                    exec(res, {})
-                    output = mystdout.getvalue()
-                except Exception as e:
-                    output = str(e)
-                    import traceback
+                # Execute with template-aware security
+                executor = SafeExecutor(enable_timeout=True)
+                result = executor.execute_with_template(
+                    full_code=full_code,
+                    user_code=code,
+                    timeout=10
+                )
 
-                    traceback.print_exc()
-                finally:
-                    sys.stdout = old_stdout
+                if not result['success']:
+                    # Check if it's a security violation
+                    if result.get('violations'):
+                        error_msg = "🔒 Security violation detected:\n\n"
+                        error_msg += "\n".join(result['violations'])
+                        error_msg += "\n\nImport statements and file system access are not allowed for security reasons."
+                        return JsonResponse({"output": error_msg}, safe=False)
+                    # Other execution errors
+                    return JsonResponse({"output": result['error']}, safe=False)
 
-                return JsonResponse({"output": output}, safe=False)
+                return JsonResponse({"output": result['output']}, safe=False)
 
             except json.JSONDecodeError as e:
                 error_msg = f"JSON decode error: {str(e)}"
@@ -420,33 +426,52 @@ def run_learn_tests(request):
                 {"error": f"Problem file {file_name} not found"}, status=404
             )
 
-        res = insert_user_code(file_path, code, sample="demo.py")
-        try:
-            compile(code, "user_code.py", "exec")
+        full_code = insert_user_code(file_path, code, sample="demo.py")
 
-        except SyntaxError as e:
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "SyntaxError",
-                    "info": {
-                        "type": "SyntaxError",
-                        "msg": e.msg,
-                        "lineno": e.lineno or 1,
-                        "offset": e.offset or 1,
-                        "line": (e.text or "").rstrip("\n"),
+        # Execute with template-aware security
+        executor = SafeExecutor(enable_timeout=True)
+        exec_result = executor.execute_with_template(
+            full_code=full_code,
+            user_code=code,
+            timeout=10
+        )
+
+        if not exec_result['success']:
+            # Check if it's a security violation
+            if exec_result.get('violations'):
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "SecurityViolation",
+                        "info": {
+                            "type": "SecurityViolation",
+                            "msg": "Code contains prohibited operations",
+                            "violations": exec_result['violations']
+                        },
+                        "test_results": [],
                     },
-                    "test_results": [],
-                },
-                status=400,
+                    status=400,
+                )
+            # Check if it's a syntax error
+            if exec_result.get('syntax_error'):
+                e = exec_result['syntax_error']
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "SyntaxError",
+                        "info": e,
+                        "test_results": [],
+                    },
+                    status=400,
+                )
+            # Other execution errors
+            return JsonResponse(
+                {"success": False, "error": exec_result['error'], "test_results": []},
+                status=500,
             )
 
-        old_stdout = sys.stdout
-        sys.stdout = mystdout = io.StringIO()
-        namespace = {}
-
         try:
-            exec(res, namespace)
+            namespace = exec_result.get('namespace', {})
             test_results = namespace.get("results", {})
             formatted_results = []
 
@@ -497,8 +522,6 @@ def run_learn_tests(request):
             return JsonResponse(
                 {"success": False, "error": str(e), "test_results": []}, status=500
             )
-        finally:
-            sys.stdout = old_stdout
 
     except json.JSONDecodeError as e:
         return JsonResponse({"error": f"JSON decode error: {e}"}, status=400)
@@ -823,51 +846,49 @@ def run_test_case(request):
             test_input = test_case.get("input", "")
             expected_output = test_case.get("expected_output", "")
 
-            # Capture stdout and stderr
-            old_stdout = sys.stdout
-            stdout_capture = io.StringIO()
+            # Execute safely with security restrictions
+            executor = SafeExecutor(enable_timeout=True)
+            exec_result = executor.execute(code, test_input, timeout=10, allow_imports=False)
 
-            try:
-                # Redirect stdout
-                sys.stdout = stdout_capture
-
-                # Execute the user's code
-                exec_globals = {}
-                exec(code, exec_globals)
-
-                # If there's test input, execute it
-                if test_input:
-                    exec(test_input, exec_globals)
-
-                # Get the actual output
-                actual_output = stdout_capture.getvalue().strip()
-
-                # Compare outputs (normalize whitespace)
-                expected_normalized = expected_output.strip()
-                actual_normalized = actual_output.strip()
-
-                passed = expected_normalized == actual_normalized
-
-                return JsonResponse(
-                    {
-                        "passed": passed,
-                        "actual_output": actual_output,
-                        "expected_output": expected_output,
-                        "error": None,
-                    }
-                )
-
-            except Exception as e:
+            if not exec_result['success']:
+                # Check if it's a security violation
+                if exec_result.get('violations'):
+                    error_msg = "Security violation: " + "; ".join(exec_result['violations'])
+                    return JsonResponse(
+                        {
+                            "passed": False,
+                            "actual_output": exec_result.get('output', ''),
+                            "expected_output": expected_output,
+                            "error": error_msg,
+                        }
+                    )
+                # Other execution errors
                 return JsonResponse(
                     {
                         "passed": False,
-                        "actual_output": stdout_capture.getvalue(),
-                        "error": str(e),
+                        "actual_output": exec_result.get('output', ''),
+                        "expected_output": expected_output,
+                        "error": exec_result['error'],
                     }
                 )
-            finally:
-                # Restore stdout
-                sys.stdout = old_stdout
+
+            # Get the actual output
+            actual_output = exec_result['output'].strip()
+
+            # Compare outputs (normalize whitespace)
+            expected_normalized = expected_output.strip()
+            actual_normalized = actual_output.strip()
+
+            passed = expected_normalized == actual_normalized
+
+            return JsonResponse(
+                {
+                    "passed": passed,
+                    "actual_output": actual_output,
+                    "expected_output": expected_output,
+                    "error": None,
+                }
+            )
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON"}, status=400)

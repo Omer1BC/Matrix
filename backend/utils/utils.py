@@ -16,6 +16,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain.agents import create_tool_calling_agent, AgentExecutor
+from .security import SafeExecutor
 
 
 def save_to_txt(data: str, filename: str = "research_output.txt"):
@@ -114,6 +115,10 @@ def id_to_file_name(problem_id):
 
 
 def run(problem_id, code):
+    # Use SafeExecutor for security
+    executor = SafeExecutor(enable_timeout=True)
+
+    # First check for syntax errors
     try:
         compile(code, "user_code.py", "exec")
     except SyntaxError as e:
@@ -151,17 +156,26 @@ def run(problem_id, code):
     test_file = id_to_file_name(problem_id)
     file_path = os.path.join(media_path, test_file)
 
-    res = insert_user_code(file_path, code, sample="demo.py", include_solution=False)
-    old_stdout = sys.stdout
-    sys.stdout = mystdout = io.StringIO()
-    try:
-        exec(res, {})
-        output = mystdout.getvalue()
-        return [output, False]
-    except Exception as e:
-        return [f"{type(e).__name__}: {e}", True]
-    finally:
-        sys.stdout = old_stdout
+    # Insert user code into template
+    full_code = insert_user_code(file_path, code, sample="demo.py", include_solution=False)
+
+    # Execute with template-aware security: check only user code, but execute full template
+    result = executor.execute_with_template(
+        full_code=full_code,  # Template + user code + tests
+        user_code=code,       # Only user's code (check for exploits)
+        timeout=10
+    )
+
+    if not result['success']:
+        # Check if it's a security violation
+        if result.get('violations'):
+            error_msg = "Security violation: Code contains prohibited operations\n"
+            error_msg += "\n".join(result['violations'])
+            return [error_msg, True]
+        # Other execution errors
+        return [result['error'], True]
+
+    return [result['output'], False]
 
 
 CODE_HINTS_PROMPT = """You are a technical interviewer for a software engineer.
