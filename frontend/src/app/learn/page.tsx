@@ -160,13 +160,10 @@ export default function LearnPage() {
           monaco.editor.setModelLanguage(model, solutionLanguage.toLowerCase());
         }
         // Update solution based on language and current problem
-        const currProblem = problemList[currentIndex]
+        const currProblem = problemList[currentIndex];
         if (solutionLanguage === "Python" && currProblem.solution) {
           solutionEditorRef.current!.setValue(currProblem.solution);
-        } else if (
-          solutionLanguage === "Java" &&
-          currProblem.java_solution
-        ) {
+        } else if (solutionLanguage === "Java" && currProblem.java_solution) {
           solutionEditorRef.current!.setValue(currProblem.java_solution);
         } else {
           // Fallback if no solution exists
@@ -228,10 +225,14 @@ export default function LearnPage() {
     }
 
     setCurrentIndex(nextIndex);
-
-  }, [
-    currentIndex,
-    problemIds.length,]);
+    const nextProblemCompletion = problemCompletionList[nextIndex];
+    const nextProblem = problemList[nextIndex];
+    if (nextProblemCompletion && nextProblem) {
+      setCurrentProblemCompletion(nextProblemCompletion);
+      setCurrentProblem(nextProblem);
+      setProblemDetails(nextProblem);
+    }
+  }, [currentIndex, problemIds.length, problemCompletionList, problemList]);
 
   const handlePrevProblem = useCallback(() => {
     if (currentIndex <= 0) return;
@@ -239,8 +240,14 @@ export default function LearnPage() {
     const prevIndex = currentIndex - 1;
 
     setCurrentIndex(prevIndex);
-
-  }, [currentIndex,]);
+    const prevProblemCompetion = problemCompletionList[prevIndex];
+    const prevProblem = problemList[prevIndex];
+    if (prevProblemCompetion && prevProblem) {
+      setCurrentProblemCompletion(prevProblemCompetion);
+      setCurrentProblem(prevProblem);
+      setProblemDetails(prevProblem);
+    }
+  }, [currentIndex, problemCompletionList, problemList]);
 
   const handleViewHint = useCallback(async () => {
     const editor = editorRef.current;
@@ -332,7 +339,9 @@ export default function LearnPage() {
         }
 
         if (problemList[currentIndex].solution) {
-          solutionEditorRef.current!.setValue(problemList[currentIndex].solution);
+          solutionEditorRef.current!.setValue(
+            problemList[currentIndex].solution
+          );
         }
       });
     },

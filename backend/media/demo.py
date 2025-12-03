@@ -5,10 +5,8 @@ class Node:
         self.left = left 
         self.right = right
 
-def find_max(root):
-  if root.right == None:
-    return root
-  return find_max(root.right)
+def remove_max(root):
+  return None
 def build_tree(bfs_list):
     if not bfs_list or bfs_list[0] is None:
         return None
@@ -33,37 +31,60 @@ def build_tree(bfs_list):
     return root
 
 
+def tree_to_bfs(root):
+    if not root:
+        return []
+
+    result = []
+    queue = [root]
+
+    while queue:
+        node = queue.pop(0)
+        if node:
+            result.append(node.val)
+            queue.append(node.left)
+            queue.append(node.right)
+        else:
+            result.append(None)
+
+    while result and result[-1] is None:
+        result.pop()
+
+    return result
+
+
 def run_test(input, expected):
     bfs_list = input
     exception = ""
-    result_node = None
-    result_value = None
+    result = []
     try:
         root = build_tree(bfs_list)
-        result_node = find_max(root)
-        result_value = result_node.val if result_node else None
+        root = remove_max(root)
+        result = tree_to_bfs(root)
     except Exception as e:
         exception = str(e)
     return {
         "input": input,
         "expected": expected,
-        "actual": result_value,
+        "actual": result,
         "error": exception,
-        "passed": result_value == expected if not exception else False
+        "passed": result == expected if not exception else False
     }
 
 
 
 test_cases = [
-    ([10], 10),
-    ([10, 5, 15], 15),
-    ([10, 5, 15, 3, 7, 12, 20], 20),
-    ([10, 5, None, 3, None, 1], 10),
-    ([10, None, 15, None, 20, None, 25], 25),
-    ([10, 5], 10),
-    ([10, None, 15], 15),
-    ([50, 30, 70, 20, 40, 60, 80], 80),
+    ([10], []),
+    ([10, 5], [5]),
+    ([10, None, 15], [10]),
+    ([10, 5, 15], [10, 5]),
+    ([10, 5, 15, 3, 7, 12, 20], [10, 5, 15, 3, 7, 12]),
+    ([10, 5, None, 3, None, 1], [5, 3, None, 1]),
+    ([10, None, 15, None, 20, None, 25], [10, None, 15, None, 20]),
+    ([50, 30, 70, 20, 40, 60, 80], [50, 30, 70, 20, 40, 60]),
+    ([5, 3, 7, 1, 4, 6, 9], [5, 3, 7, 1, 4, 6]),
 ]
+
 
 results = {f"test_{i}": run_test(input, expected) for i, (input, expected) in enumerate(test_cases)}
 
