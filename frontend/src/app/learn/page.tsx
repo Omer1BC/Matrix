@@ -134,7 +134,9 @@ export default function LearnPage() {
 
   const [solutionLanguage, setSolutionLanguage] = useState("Python");
 
-  const solutionEditorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
+  const solutionEditorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(
+    null
+  );
 
   useEffect(() => {
     const setMenu = () => {
@@ -351,7 +353,7 @@ export default function LearnPage() {
         console.error("Failed to fetch problem details");
         // Fallback to default starter code
         if (editorRef.current) {
-          const starterCode = getStarterCode(currentProblem.id);
+          const starterCode = getStarterCode(currentProblem.problem_id);
           editorRef.current.setValue(starterCode);
         }
         setTestCases([]);
@@ -374,7 +376,7 @@ export default function LearnPage() {
     setOutput(""); // Clear previous output
   };
 
-  const getStarterCode = (problemId) => {
+  const getStarterCode = (problemId: string): string => {
     const starterCodes = {
       "intro-1":
         '# Write a program that prints "Hello, World!"\nprint("Hello, World!")',
@@ -402,7 +404,10 @@ export default function LearnPage() {
         label: "Editor",
         content: (
           <div className="flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
-            <div className="p-4" style={{ backgroundColor: "var(--background)" }}>
+            <div
+              className="p-4"
+              style={{ backgroundColor: "var(--background)" }}
+            >
               <div className="mb-2">
                 <h2
                   className="text-xl font-bold"
@@ -502,6 +507,13 @@ export default function LearnPage() {
                   problem_id: String(currProblemCompletion.problem_id),
                   notes: currProblemCompletion.notes || "",
                 });
+                setProblemCompletionList((prev) => ({
+                  ...prev,
+                  [currentIndex]: {
+                    ...prev[currentIndex],
+                    notes: currProblemCompletion.notes || "",
+                  },
+                }));
               }
             }}
           />
@@ -568,7 +580,7 @@ export default function LearnPage() {
     ]
   );
 
-  console.log("Current problemzz",currentProblem,problemDetails?.title)
+  console.log("Current problemzz", currentProblem, problemDetails?.title);
 
   const testTabs = useMemo(
     () => ({
@@ -658,7 +670,10 @@ export default function LearnPage() {
                 </div>
                 <hr className="my-4 matrix-border" />
                 {/* Video Content Section */}
-                <div className="" style={{ backgroundColor: "var(--background)" }}>
+                <div
+                  className=""
+                  style={{ backgroundColor: "var(--background)" }}
+                >
                   <div className="videos flex justify-center items-center">
                     <ReactPlayer
                       muted={false}
@@ -712,10 +727,7 @@ export default function LearnPage() {
               {/* MENU CONTENT MOVED HERE */}
               <div className="problemList rounded-lg shadow-lg flex flex-col h-full overflow-hidden matrix-border">
                 {/* Navigation Menu Header */}
-                <div
-                  className="p-4"
-                  style={{ backgroundColor: "#000000ff" }}
-                >
+                <div className="p-4" style={{ backgroundColor: "#000000ff" }}>
                   <h2
                     className="text-lg font-bold text-center"
                     style={{ color: "var(--gr-2)" }}

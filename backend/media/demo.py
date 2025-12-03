@@ -5,8 +5,8 @@ class Node:
         self.left = left 
         self.right = right
 
-def to_string(node):
-  return ""
+def decreasing_order(root):
+    return null
 def build_tree(bfs_list):
     if not bfs_list or bfs_list[0] is None:
         return None
@@ -34,10 +34,10 @@ def build_tree(bfs_list):
 def run_test(input, expected):
     bfs_list = input
     exception = ""
-    result = ""
+    result = []
     try:
         root = build_tree(bfs_list)
-        result = to_string(root)
+        result = decreasing_order(root)
     except Exception as e:
         exception = str(e)
     return {
@@ -51,30 +51,18 @@ def run_test(input, expected):
 
 
 test_cases = [
-    ([10], "10()()"),
-    ([10, 5, 15], "10(5)(15)"),
-    ([10, 5], "10(5)()"),
-    ([10, None, 15], "10()(15)"),
-    ([20, 8, 22], "20(8)(22)"),
-    ([100], "100()()"),
-    ([50, 25], "50(25)()"),
-    ([50, None, 75], "50()(75)"),
-    ([1, 2, 3], "1(2)(3)"),
+    ([10], [10]),
+    ([10, 5, 15], [15, 10, 5]),
+    ([10, 5, 15, 3, 7, 12, 20], [20, 15, 12, 10, 7, 5, 3]),
+    ([10, 5, None, 3, None, 1], [10, 5, 3, 1]),
+    ([10, None, 15, None, 20, None, 25], [25, 20, 15, 10]),
+    ([10, 5], [10, 5]),
+    ([10, None, 15], [15, 10]),
+    ([50, 30, 70, 20, 40, 60, 80], [80, 70, 60, 50, 40, 30, 20]),
+    ([5, 3, 7, 1, 4, 6, 9], [9, 7, 6, 5, 4, 3, 1]),
+    ([], [])
 ]
 
 results = {f"test_{i}": run_test(input, expected) for i, (input, expected) in enumerate(test_cases)}
 
-for test_name, result in results.items():
-    status = "PASSED" if result["passed"] else "FAILED"
-    print(f"{test_name}: {status}")
-    if not result["passed"]:
-        print(f"  Input BFS: {result['input']}")
-        print(f"  Expected: {result['expected']}")
-        print(f"  Actual: {result['actual']}")
-        if result['error']:
-            print(f"  Error: {result['error']}")
-
-passed = sum(1 for r in results.values() if r["passed"])
-total = len(results)
-print(f"\n{passed}/{total} tests passed")
 
