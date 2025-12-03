@@ -1,13 +1,13 @@
 
 #header {
-  background-color: var(--dbl-3);
+  background-color: var(--background);
   border-radius: .5rem .5rem 0 0;
 }
 #body {
   flex: 1;
   height: 75%;
   display: flex;
-  background-color: var(--dbl-3);
+  background-color: var(--background);
   position:relative;
   opacity: 100% !important;
   border-radius: .5rem;

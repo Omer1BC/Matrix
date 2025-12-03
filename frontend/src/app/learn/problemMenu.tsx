@@ -110,7 +110,7 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
-    <div className="w-full" style={{ backgroundColor: "var(--dbl-2)" }}>
+    <div className="w-full" style={{ backgroundColor: "var(--menubackground)" }}>
       <h2 className="text-xl font-bold mb-4" style={{ color: "var(--gr-2)" }}>
         Trees
       </h2>
@@ -142,7 +142,7 @@ export default function ProblemMenu({ onProblemSelect, refreshKey }) {
                         : "hover:opacity-80"
                     }`}
                     style={{
-                      backgroundColor: "var(--dbl-3)",
+                      backgroundColor: "#151414ff",
                       color: isLocked ? undefined : "var(--gr-2)",
                     }}
                     onClick={() => !isLocked && onProblemSelect(problem)}

@@ -64,9 +64,10 @@ export default function Tools({
           />
         ))}
       </div>
-      <div className="createanimation mt-3 rounded-xl border border-slate-700 bg-[var(--dbl-4)] p-2">
+      <div className="createanimation mt-3 rounded-xl border border-slate-700 p-2"
+      style={{ backgroundColor: "#191818ff" }}>
         <div className="mb-3 flex items-center gap-3">
-          <label className="text-xs text-slate-400 whitespace-nowrap">
+          <label className="text-xs whitespace-nowrap text-[var(--gr-2)]">
             Speed: {animSpeed}x
           </label>
           <input
@@ -79,7 +80,7 @@ export default function Tools({
             className="flex-1 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[var(--gr-2)]"
             disabled={animLoading}
           />
-          <div className="flex gap-1 text-[10px] text-slate-500">
+          <div className="flex gap-1 text-[10px] text-[var(--gr-2)]">
             <span>Slow</span>
             <span className="mx-1">|</span>
             <span>Fast</span>
@@ -88,6 +89,7 @@ export default function Tools({
         <div className="flex items-center gap-2">
           <Input
             type="text"
+            style={{ backgroundColor: "#191818ff" }}
             value={animPrompt}
             onChange={(e: any) => setAnimPrompt(e.target.value)}
             onKeyDown={(e: any) => e.key === "Enter" && submit()}

@@ -117,7 +117,7 @@ export default function TestCasesPanel({
   return (
     <div
       className="flex flex-col flex-1 min-h-0 p-4 overflow-hidden"
-      style={{ backgroundColor: "var(--dbl-2)" }}
+      style={{ backgroundColor: "var(--background)" }}
     >
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <h4 className="text-lg font-semibold" style={{ color: "var(--gr-2)" }}>

@@ -224,7 +224,7 @@ export default function ValidationContent({
 
   return (
     <div className="flex h-full w-full flex-row gap-2 p-2">
-      <div className="flex w-1/5 flex-col gap-2 bg-[var(--dbl-4)] p-3">
+      <div className="flex w-1/5 flex-col gap-2 bg-[var(--background)] p-3">
         {Object.entries(tests).map(([ky, val]) => (
           <div
             key={ky}
@@ -279,8 +279,8 @@ export default function ValidationContent({
           {isLoading ? "Running…" : "Test"}
         </button>
       </div>
-
-      <div className="flex w-4/5 flex-col overflow-hidden bg-[var(--dbl-4)] p-4">
+      <vr className="matrix-border"/>
+      <div className="flex w-4/5 flex-col overflow-hidden bg-[var(--background)] p-4">
         <div className="max-h-64 overflow-auto break-words font-sans text-[var(--gr-2)]">
           {hasError ? (
             <div>{hasError}</div>

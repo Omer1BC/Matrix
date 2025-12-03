@@ -157,7 +157,7 @@ export default function LearnPage() {
         if (model) {
           monaco.editor.setModelLanguage(model, solutionLanguage.toLowerCase());
         }
-
+        // console.log(currentProblem);
         // Update solution based on language and current problem
         if (solutionLanguage === "Python" && currentProblem.solution) {
           solutionEditorRef.current!.setValue(currentProblem.solution);
@@ -333,7 +333,7 @@ export default function LearnPage() {
   }
 
   const handleProblemSelect = async (problem: Problem) => {
-    setCurrentProblem(problem);
+    setCurrentProblem(problemList[problem.order]);
     setCurrentIndex(problem.order);
     try {
       const data = await getProblemById(problem.problem_id);
@@ -402,7 +402,7 @@ export default function LearnPage() {
         label: "Editor",
         content: (
           <div className="flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
-            <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
+            <div className="p-4" style={{ backgroundColor: "var(--background)" }}>
               <div className="mb-2">
                 <h2
                   className="text-xl font-bold"
@@ -645,7 +645,7 @@ export default function LearnPage() {
                 {/* Video Title Section */}
                 <div
                   className="p-4"
-                  style={{ backgroundColor: "var(--dbl-3)" }}
+                  style={{ backgroundColor: "var(--background)" }}
                 >
                   <h3
                     className="text-lg font-semibold"
@@ -654,8 +654,9 @@ export default function LearnPage() {
                     {problemDetails?.title || currentProblem.title}
                   </h3>
                 </div>
+                <hr className="my-4 matrix-border" />
                 {/* Video Content Section */}
-                <div className="" style={{ backgroundColor: "var(--dbl-5)" }}>
+                <div className="" style={{ backgroundColor: "var(--background)" }}>
                   <div className="videos flex justify-center items-center">
                     <ReactPlayer
                       muted={false}
@@ -681,7 +682,7 @@ export default function LearnPage() {
             {/* Column 3: Test Cases and Output */}
             <div
               className="tests rounded-lg shadow-lg flex flex-col min-h-0 md:w-1/6"
-              style={{ backgroundColor: "var(--dbl-2)" }}
+              style={{ backgroundColor: "bg-[var(--background)]" }}
             >
               <Card
                 className="flex flex-col h-full min-h-0 overflow-y-auto matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
@@ -703,15 +704,15 @@ export default function LearnPage() {
             <div
               className={`fixed left-0 top-0 bottom-0 w-100 shadow-xl transform transition-transform duration-300
               ${showMenu ? "translate-x-0" : "-translate-x-full"}`}
-              style={{ backgroundColor: "var(--dbl-2)" }}
+              style={{ backgroundColor: "var(--background)" }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* MENU CONTENT MOVED HERE */}
-              <div className="problemList rounded-lg shadow-lg flex flex-col h-full overflow-hidden">
+              <div className="problemList rounded-lg shadow-lg flex flex-col h-full overflow-hidden matrix-border">
                 {/* Navigation Menu Header */}
                 <div
                   className="p-4"
-                  style={{ backgroundColor: "var(--dbl-3)" }}
+                  style={{ backgroundColor: "#000000ff" }}
                 >
                   <h2
                     className="text-lg font-bold text-center"
@@ -720,11 +721,11 @@ export default function LearnPage() {
                     Menu
                   </h2>
                 </div>
-
+                <hr className="my-4 matrix-border" />
                 {/* Problem Menu with Progress Bar */}
                 <div
                   className="relative p-4 flex-1 min-h-0 flex"
-                  style={{ backgroundColor: "var(--dbl-2)" }}
+                  style={{ backgroundColor: "#000000ff" }}
                 >
                   {/* Progress Bar */}
                   <div
@@ -743,7 +744,7 @@ export default function LearnPage() {
                   {/* Actual Problem Menu content */}
                   <div
                     className="flex-1 min-h-0 overflow-y-auto"
-                    style={{ backgroundColor: "var(--dbl-2)" }}
+                    style={{ backgroundColor: "#000000ff" }}
                   >
                     <ProblemMenu
                       onProblemSelect={handleProblemSelect}
