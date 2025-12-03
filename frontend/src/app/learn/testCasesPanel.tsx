@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getCurrentUser } from "../../lib/supabase/auth";
+import { useAuth } from "@/lib/contexts/AuthContext";
 
 export default function TestCasesPanel({
   problemId,
@@ -12,9 +12,11 @@ export default function TestCasesPanel({
   editorRef: React.RefObject<any>;
   onAllTestsPassed: () => void;
 }) {
+  const { user } = useAuth();
+
   const [runningTests, setRunningTests] = useState(false);
-  const [testResults, setTestResults] = useState([]);
-  const [error,setError] = useState<string>("");
+  const [testResults, setTestResults] = useState<any[]>([]);
+  const [error, setError] = useState<string>("");
 
   const runTestCases = async () => {
     if (!editorRef.current) {
@@ -27,11 +29,9 @@ export default function TestCasesPanel({
     try {
       const userCode = editorRef.current.getValue();
 
-      const user = await getCurrentUser();
-      const userId =
+      const user_id =
         typeof user === "string" ? user : user?.id ?? user?.user?.id ?? "";
-
-      if (!userId) {
+      if (!user_id) {
         console.error("Missing user id from getCurrentUser()");
         setTestResults([]);
         return;
@@ -40,15 +40,18 @@ export default function TestCasesPanel({
       const payload = {
         code: userCode,
         problem_id: String(problemId),
-        user_id: userId,
+        user_id: user_id,
       };
 
       console.log("run-learn-tests payload:", {
         ...payload,
         code: userCode.slice(0, 80) + (userCode.length > 80 ? "..." : ""),
       });
-      console.log("url",`${process.env.NEXT_PUBLIC_API_URL}`)
-  console.log("Raw env value:", JSON.stringify(process.env.NEXT_PUBLIC_API_URL));
+      console.log("url", `${process.env.NEXT_PUBLIC_API_URL}`);
+      console.log(
+        "Raw env value:",
+        JSON.stringify(process.env.NEXT_PUBLIC_API_URL)
+      );
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}api/run-learn-tests`,
         {
@@ -62,23 +65,20 @@ export default function TestCasesPanel({
       );
 
       if (response.ok) {
-        
         const data = await response.json();
-        const problem_tests = data.test_results.filter((res) => res.error)
-        
 
         if (data.success) {
           const results = data.test_results || [];
           setTestResults(results);
 
-          const allPassed = results.every((r) => r.passed);
+          const allPassed = results.every((r: any) => r.passed);
           if (allPassed && typeof onAllTestsPassed === "function") {
             onAllTestsPassed();
           }
-          setError("")
+          setError("");
         } else {
           console.error("Test execution failed:", data.error);
-          setError(data.error)
+          setError(data.error);
           setTestResults([]);
         }
       } else {
@@ -89,19 +89,16 @@ export default function TestCasesPanel({
           const text = await response.text();
           errorData = { raw: text };
         }
-        // console.error(
-        //   "HTTP error from run-learn-tests:",
-        //   response.status,
-        //   response.statusText,
-        //   errorData
-        // );
-        if (errorData?.error == "SyntaxError")
-        {
-          
+        if (errorData?.error == "SyntaxError") {
           const r = errorData?.info;
-          setError(r.type + " - " + r.msg + " at line " + `(${r.lineno || ""}) ${r.line || ""}`);
-        }
-        else {
+          setError(
+            r.type +
+              " - " +
+              r.msg +
+              " at line " +
+              `(${r.lineno || ""}) ${r.line || ""}`
+          );
+        } else {
           setError(errorData?.error);
         }
         setTestResults([]);
@@ -117,7 +114,7 @@ export default function TestCasesPanel({
   return (
     <div
       className="flex flex-col flex-1 min-h-0 p-4 overflow-hidden"
-      style={{ backgroundColor: "var(--dbl-2)" }}
+      style={{ backgroundColor: "var(--background)" }}
     >
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <h4 className="text-lg font-semibold" style={{ color: "var(--gr-2)" }}>
@@ -224,7 +221,10 @@ export default function TestCasesPanel({
                     }}
                   >
                     {typeof result.input === "object"
-                      ? JSON.stringify(result.input, null, 2).replace(/\s+/g, "")
+                      ? JSON.stringify(result.input, null, 2).replace(
+                          /\s+/g,
+                          ""
+                        )
                       : result.input}
                   </pre>
                 </div>
@@ -290,12 +290,11 @@ export default function TestCasesPanel({
               Click &quot;Run Tests&quot; to see your results
             </p>
           </div>
-        ) :           <div className="text-center py-8">
-
-            <p style={{ color: "red" }}>
-              {error}
-            </p>
-          </div>}
+        ) : (
+          <div className="text-center py-8">
+            <p style={{ color: "red" }}>{error}</p>
+          </div>
+        )}
       </div>
     </div>
   );

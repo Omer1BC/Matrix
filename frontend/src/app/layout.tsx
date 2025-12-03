@@ -5,9 +5,6 @@ import { AuthProvider } from "../lib/contexts/AuthContext";
 import React from "react";
 import Header from "@/components/Header";
 import type { Metadata } from "next";
-
-import { useEffect } from 'react';
-import { usePathname } from "next/navigation"
 import GlobalTourWrapper from "../components/GlobalTourWrapper";
 
 const geistSans = Geist({

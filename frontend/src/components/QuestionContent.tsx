@@ -56,7 +56,8 @@ export function QuestionContent({
           {description}
         </p>
         <p className="m-0 text-[17.6px] leading-6 text-[var(--gr-2)]">
-          <br/>The following are a few test cases:
+          <br />
+          The following are a few test cases:
         </p>
         <hr className="my-4 border-[var(--gr-2)]" />
         <Image
@@ -66,24 +67,27 @@ export function QuestionContent({
           height={0}
           sizes="100vw"
           className="w-full h-auto object-contain"
+          unoptimized
         />
         <hr className="my-4 border-[var(--gr-2)]" />
         <Image
           alt="bst_test1"
-          src={`${process.env.NEXT_PUBLIC_API_URL}media/images/bst/bst_test1.png`}
+          src={`${process.env.NEXT_PUBLIC_API_URL}media/images/bst/bst_test2.png`}
           width={0}
           height={0}
           sizes="100vw"
           className="w-full h-auto object-contain"
+          unoptimized
         />
         <hr className="my-4 border-[var(--gr-2)]" />
         <Image
           alt="bst_test1"
-          src={`${process.env.NEXT_PUBLIC_API_URL}media/images/bst/bst_test1.png`}
+          src={`${process.env.NEXT_PUBLIC_API_URL}media/images/bst/bst_test3.png`}
           width={0}
           height={0}
           sizes="100vw"
           className="w-full h-auto object-contain"
+          unoptimized
         />
       </div>
     </div>

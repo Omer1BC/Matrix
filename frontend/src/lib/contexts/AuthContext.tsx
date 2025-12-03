@@ -15,9 +15,22 @@ const AuthContext = createContext<any>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<any>(null);
 
   useEffect(() => {
+    // Create Supabase client only on the client side
+    try {
+      const client = createClient();
+      setSupabase(client);
+    } catch (error) {
+      console.error("Failed to create Supabase client:", error);
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!supabase) return;
+
     async function loadUser() {
       try {
         const user = await getCurrentUser();

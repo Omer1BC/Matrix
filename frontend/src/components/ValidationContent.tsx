@@ -181,7 +181,6 @@ export default function ValidationContent({
       const allPassed =
         (test_summary?.total || 0) > 0 && (test_summary?.failed || 0) === 0;
       setShowVictoryModal(Boolean(verdict || allPassed));
-      console.log(verdict);
       if (verdict) {
         try {
           timer.reset();
@@ -189,12 +188,7 @@ export default function ValidationContent({
         } catch (err) {
           console.error("Reset failed:", err);
         }
-        const userInfo = user ? user : { id: "guest" };
         console.log(problemId);
-        // console.log(ping({ user_id: userInfo.id }, "clear-log-editor-history").catch(
-        //   () => {}
-        // ));
-        // await updateUserProblemCompletion(userInfo, problemId, "hello", 3, editorRef.current)
       }
     } catch {
       setHasError("Error encountered while running test");

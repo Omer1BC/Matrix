@@ -17,7 +17,8 @@ import Notes from "./Notes";
 import { formatCodeForEditor } from "@/lib/utils";
 import "shepherd.js/dist/css/shepherd.css";
 
-export default function SolvePage({ problemId }: { problemId: string }) {
+export default function SolvePage() {
+  const problemId = "final-prob-1";
   const {
     editorRef,
     monacoRef,
@@ -31,17 +32,13 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     annotateErrors,
     askSelection,
     user,
-  } = useSolve(problemId || "final-prob-1");
+  } = useSolve(problemId);
 
-  const [output] = useState("");
   const [showHints, setShowHints] = useState(true);
 
   const [animUrl, setAnimUrl] = useState<string | null>(null);
   const [animToolName, setAnimToolName] = useState<string | null>(null);
   const [animLoading, setAnimLoading] = useState(false);
-  const [animArgs, setAnimArgs] = useState<Record<string, unknown> | null>(
-    null
-  );
 
   const questionDefaultKey = animToolName ? "animation" : "question";
   const validationDefaultKey = animToolName ? "animation-args" : "test";
@@ -100,7 +97,6 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       const defaults = Object.fromEntries(
         Object.entries(schema).map(([k, v]: any) => [k, v?.default_value ?? ""])
       );
-      setAnimArgs(defaults);
 
       try {
         const url = await getAnimationUrl({ name, args: defaults });
@@ -115,31 +111,27 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     [details]
   );
 
-  const openAnimationForTest = useCallback(
-    async (testKey: string, testCase?: Record<string, any>) => {
-      const numKey = Number(testKey);
-      const animName = `BST Test ${
-        Number.isFinite(numKey) ? numKey + 1 : testKey
-      }`;
+  const openAnimationForTest = useCallback(async (testKey: string) => {
+    const numKey = Number(testKey);
+    const animName = `BST Test ${
+      Number.isFinite(numKey) ? numKey + 1 : testKey
+    }`;
 
-      setAnimToolName(animName);
-      setAnimLoading(true);
-      setAnimArgs({ case_index: numKey });
+    setAnimToolName(animName);
+    setAnimLoading(true);
 
-      try {
-        const url = await getAnimationUrl({
-          name: "BST",
-          args: { case_index: numKey },
-        });
-        setAnimUrl(url);
-      } finally {
-        setAnimLoading(false);
-      }
+    try {
+      const url = await getAnimationUrl({
+        name: "BST",
+        args: { case_index: numKey },
+      });
+      setAnimUrl(url);
+    } finally {
+      setAnimLoading(false);
+    }
 
-      setQuestionPanelKey((k) => k + 1);
-    },
-    []
-  );
+    setQuestionPanelKey((k) => k + 1);
+  }, []);
 
   const handleCustomAnimate = useCallback(
     (url: string | null, phase?: "start" | "done" | "error") => {
@@ -168,7 +160,6 @@ export default function SolvePage({ problemId }: { problemId: string }) {
 
     setAnimToolName(null);
     setAnimUrl(null);
-    setAnimArgs(null);
     setAnimLoading(false);
     setQuestionPanelKey((k) => k + 1);
     if (hasValidationTab) setValidationPanelKey((k) => k + 1);
@@ -227,12 +218,15 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       }),
     }),
     [
-      details,
+      detailsLoading,
+      details?.title,
+      details?.difficulty,
+      details?.description,
       handleMouseUp,
       animToolName,
+      closeAnimationTab,
       animLoading,
       animUrl,
-      closeAnimationTab,
     ]
   );
 
@@ -370,13 +364,15 @@ export default function SolvePage({ problemId }: { problemId: string }) {
         }),
     }),
     [
-      annotateErrors,
+      timer,
+      problemId,
       editorRef,
       monacoRef,
-      details,
-      animToolName,
-      closeAnimationTab,
+      annotateErrors,
       openAnimationForTest,
+      animToolName,
+      details,
+      closeAnimationTab,
     ]
   );
 

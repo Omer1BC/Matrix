@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { agentCall, ping } from "@/lib/api";
+import { agentCall } from "@/lib/api";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { getUserProfile, updateTokensUsed } from "../supabase/auth";
 import { getProblemBySlug } from "../supabase/models/problems";
+import { Intent } from "../agents";
+import { Problem } from "../types";
 
 type ToolInfo = { name: string; description?: string; code?: string };
 
@@ -11,18 +13,18 @@ export function useSolve(problemId: string = "intro-1") {
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
 
-  const [details, setDetails] = useState<any>({});
+  const [details, setDetails] = useState<Problem>();
   const [detailsLoading, setDetailsLoading] = useState(true);
   const [tools, setTools] = useState<ToolInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState("");
-  const [testResponse, setTestResponse] = useState("");
 
   useEffect(() => {
     setDetailsLoading(true);
     (async () => {
       const data = await getProblemBySlug(problemId);
       setDetails(data);
+
       if (editorRef.current && data?.method_stub)
         editorRef.current.setValue(data.method_stub);
     })()
@@ -40,7 +42,7 @@ export function useSolve(problemId: string = "intro-1") {
   }, [details]);
 
   const askSelection = useCallback(
-    async (text: string, type?: string) => {
+    async (text: string, type?: Intent) => {
       setLoading(true);
       try {
         const profile = await getUserProfile();
@@ -68,17 +70,12 @@ export function useSolve(problemId: string = "intro-1") {
         });
         await updateTokensUsed((res?.meta?.total_tokens as number) ?? 0);
         setResponse(res?.data?.text ?? res?.data?.response ?? "");
-        setTestResponse(res);
       } finally {
         setLoading(false);
       }
     },
     [details, problemId, user]
   );
-
-  // useEffect(() => {
-  //   console.log(testResponse);
-  // }, [testResponse]);
 
   const annotate = useCallback(
     async (codeWithLines: string) => {
@@ -88,14 +85,18 @@ export function useSolve(problemId: string = "intro-1") {
         const preferences = profile?.learning_style ?? "";
         const probId = details?.problem_id ?? problemId;
 
+        const user_id =
+          typeof user === "string" ? user : user?.id ?? user?.user?.id ?? "";
+
+        if (!user_id) throw new Error("Missing user_id");
+
         const res = await agentCall({
-          user_id: user,
+          user_id: user_id,
           problem_id: String(probId),
           intent: "annotated_hints",
           code: codeWithLines,
           preferences: preferences,
         });
-        setTestResponse(res);
         return res?.data ?? {};
       } finally {
         setLoading(false);
@@ -112,8 +113,13 @@ export function useSolve(problemId: string = "intro-1") {
         const preferences = profile?.learning_style ?? "";
         const probId = details?.problem_id ?? problemId;
 
+        const user_id =
+          typeof user === "string" ? user : user?.id ?? user?.user?.id ?? "";
+
+        if (!user_id) throw new Error("Missing user_id");
+
         const res = await agentCall({
-          user_id: user,
+          user_id: user_id,
           problem_id: String(probId),
           intent: "annotate_errors",
           code: codeWithLines,

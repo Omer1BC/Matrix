@@ -1,20 +1,26 @@
 import { useRef, useState, useEffect } from "react";
 import "./card.css";
 
-export default function Card({ tabs, className }) {
+export default function Card({
+  tabs,
+  className,
+}: {
+  tabs: any;
+  className: string;
+}) {
   const [activeTab, setActiveTab] = useState(Object.keys(tabs)[0]);
   return (
     <>
-      <div className={className}>
+      <div className={`var(--background) ${className}`}>
         <div id="header" className="">
-          <div className="tab-list" role="tablist">
+          <div className="tab-list " role="tablist">
             {Object.keys(tabs).map((key) => {
               const tab = tabs[key];
               return (
                 <button
                   key={key}
                   type="button"
-                  className={`tab-button ${activeTab === key ? "active" : ""}`}
+                  className={`tab-button ${activeTab === key ? "active" : ""} `}
                   role="tab"
                   aria-selected={activeTab === key}
                   onClick={() => setActiveTab(key)}
@@ -25,7 +31,7 @@ export default function Card({ tabs, className }) {
             })}
           </div>
         </div>
-        <div className="flex flex-col h-full min-h-0">
+        <div className="flex flex-col h-full min-h-0 ">
           {/* {content} */}
           {Object.keys(tabs).map((key) => (
             <TabPanel key={key} active={activeTab === key}>
@@ -40,7 +46,7 @@ export default function Card({ tabs, className }) {
   );
 }
 
-function TabPanel({ active, children }) {
+function TabPanel({ active, children }: { active: boolean; children: any }) {
   return (
     <div
       style={{

@@ -1,9 +1,9 @@
 "use client";
 
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { signIn, signUp, signOut, randomSignUp } from "@/lib/supabase/auth";
+import { signIn, signOut, randomSignUp } from "@/lib/supabase/auth";
 import { LogOut, LogIn, UserPlus } from "lucide-react";
-import { FormEvent, useState, useEffect } from "react";
+import { FormEvent, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -19,36 +19,15 @@ export default function Header() {
   const [loading, setLoading] = useState(false);
 
   const { user, loading: authLoading } = useAuth();
-
-  // const handleSignup = async (e: FormEvent<HTMLFormElement>) => {  UNCOMMENT WHEN USING REGULAR SIGN UP FUCNTIONALITY
-  //   e.preventDefault();
-  //   setLoading(true);
-  //   try {
-  //     console.log(await signUp(email, password, username, firstname, lastname));
-  //     alert(
-  //       "Signup successful! Please check your email to verify your account."
-  //     );
-  //     setShowSignup(false);
-  //   } catch (err: any) {
-  //     console.error(err);
-  //     alert(err.message || "Signup failed.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   /**
    * This is the randomized sign up for the class demo
    * @param e event
    */
-  const handleSignup = async (e: Event) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       console.log(await randomSignUp());
-      // alert(
-      //   "Signup successful! Please check your email to verify your account."
-      // );
     } catch (err: any) {
       console.error(err);
       alert(err.message || "Signup failed.");
@@ -84,7 +63,7 @@ export default function Header() {
     <>
       <header className="flex flex-row justify-between w-full relative z-10 border-b border-border/20 backdrop-blur-sm bg-background/80">
         <div className="px-4 py-4 flex flex-1 items-center justify-between">
-          <div className="flex flex-row gap-4 items-center">
+          <div className="flex flex-row gap-4 items-center text-[var(--gr-2)]">
             <Link
               href="/"
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
@@ -176,7 +155,6 @@ export default function Header() {
               </Button>
               <Button
                 className="glow-text"
-                // onClick={() => setShowSignup(true)}
                 onClick={handleSignup}
                 style={{ cursor: "pointer" }}
                 variant={undefined}
