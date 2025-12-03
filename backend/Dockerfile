@@ -1,5 +1,8 @@
-FROM python:3.11-slim
+FROM --platform=linux/amd64 python:3.11-slim
+
 WORKDIR /app
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     pkg-config \
@@ -9,10 +12,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     libgl1 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-    
-COPY requirements.txt . 
-RUN pip install -r requirements.txt
 
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY . .
 
+# Create directories for media and animations
+RUN mkdir -p /app/media /app/animations/tmp
+
+# Expose port
 EXPOSE 8000
+
+# Default command (can be overridden)
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
