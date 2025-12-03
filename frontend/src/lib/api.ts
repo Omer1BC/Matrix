@@ -7,7 +7,8 @@ import {
   type Intent,
 } from "./agents";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/";
 
 export async function getAnimationUrl(opts: {
   name: string;
@@ -24,16 +25,16 @@ export async function getAnimationUrl(opts: {
 
 export async function requestAnimationFromAgent(
   prompt: string,
-  animationSpeed: number = 1.0
+  animationSpeed: number = 1.0,
+  user_id: string = "anon"
 ): Promise<string | null> {
   const resp = await agentCall({
-    user_id: "anon",
+    user_id: user_id,
     problem_id: "global",
     intent: "generate_animation",
     message: prompt,
     extras: { request: prompt, animation_speed: animationSpeed },
   });
-
 
   const rel = resp?.data?.video_rel as string | undefined;
   if (!rel) return null;
@@ -74,15 +75,18 @@ export async function agentCall<I extends Intent | "chat" = "chat">(
   const data = (await res.json().catch(() => ({}))) as AgentResponseMap[I];
   if (!res.ok) {
     const errorData = (data as any)?.data;
-    let msg = errorData?.error || (data as any)?.error || `Agent error (${res.status})`;
+    let msg =
+      errorData?.error || (data as any)?.error || `Agent error (${res.status})`;
 
     // Add plan info if available for animation errors
     if (errorData?.plan) {
       const ops = errorData.plan.operations || [];
       if (ops.length > 0) {
-        const opsSummary = ops.map((op: any) =>
-          op.args?.length ? `${op.name}(${op.args.join(', ')})` : op.name
-        ).join(', ');
+        const opsSummary = ops
+          .map((op: any) =>
+            op.args?.length ? `${op.name}(${op.args.join(", ")})` : op.name
+          )
+          .join(", ");
         msg += `\n\nAttempted operations: ${opsSummary}`;
       }
     }

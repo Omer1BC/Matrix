@@ -6,7 +6,6 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { useAnnotationsContext } from "@/lib/contexts/AnnotationsContext";
 type ValidationContentProps = {
   problemId: string;
-  testCases: Record<string, any>;
   editorRef: React.RefObject<any>;
   monacoRef: React.RefObject<any>;
   annotateErrors: (codeWithLines: string, error: any) => Promise<any>;
@@ -21,7 +20,6 @@ type TestsMap = Record<string, any>;
 
 export default function ValidationContent({
   problemId,
-  testCases,
   editorRef,
   monacoRef,
   annotateErrors,
@@ -46,20 +44,6 @@ export default function ValidationContent({
   const [isLoading, setIsLoading] = useState(false);
 
   const { seconds, start, stop, reset } = timer;
-
-  useEffect(() => {
-    if (testCases && Object.keys(testCases).length) {
-      const firstKey = Object.keys(testCases)[0];
-      setTests(testCases);
-      setActiveKey(firstKey);
-      setActiveTest(testCases[firstKey]);
-      return;
-    }
-
-    setTests({});
-    setActiveTest({});
-    setActiveKey(0);
-  }, [testCases]);
 
   const buildNumberedCode = () => {
     const editor = editorRef.current;

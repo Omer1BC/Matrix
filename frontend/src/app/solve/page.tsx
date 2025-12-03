@@ -24,13 +24,13 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     details,
     detailsLoading,
     tools,
-    testCases,
     loading,
     response,
     setResponse,
     annotate,
     annotateErrors,
     askSelection,
+    user,
   } = useSolve(problemId || "final-prob-1");
 
   const [output] = useState("");
@@ -118,7 +118,9 @@ export default function SolvePage({ problemId }: { problemId: string }) {
   const openAnimationForTest = useCallback(
     async (testKey: string, testCase?: Record<string, any>) => {
       const numKey = Number(testKey);
-      const animName = `BST Test ${Number.isFinite(numKey) ? numKey + 1 : testKey}`;
+      const animName = `BST Test ${
+        Number.isFinite(numKey) ? numKey + 1 : testKey
+      }`;
 
       setAnimToolName(animName);
       setAnimLoading(true);
@@ -261,6 +263,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
             askAboutTool={askAboutTool}
             onOpenAnimation={openAnimationForTool}
             onCustomAnimate={handleCustomAnimate}
+            user={user}
           />
         ),
       },
@@ -281,6 +284,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       showHints,
       tools,
       timer,
+      user,
     ]
   );
 
@@ -333,7 +337,6 @@ export default function SolvePage({ problemId }: { problemId: string }) {
         content: (
           <ValidationPanel
             timer={timer}
-            testCases={testCases ?? {}}
             problemId={problemId}
             editorRef={editorRef}
             monacoRef={monacoRef}
@@ -344,29 +347,29 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       },
       ...(animToolName &&
         (details as any)?.tools?.[animToolName] && {
-        "animation-args": {
-          label: `Animation Input: ${animToolName}`,
-          content: (
-            <div className="flex h-full w-full flex-col">
-              <div className="mb-3 flex items-center justify-between">
-                <button
-                  onClick={closeAnimationTab}
-                  className="rounded bg-[var(--gr-2)] px-3 py-1 text-[var(--dbl-1)] hover:bg-[var(--gr-1)]"
-                >
-                  Close
-                </button>
+          "animation-args": {
+            label: `Animation Input: ${animToolName}`,
+            content: (
+              <div className="flex h-full w-full flex-col">
+                <div className="mb-3 flex items-center justify-between">
+                  <button
+                    onClick={closeAnimationTab}
+                    className="rounded bg-[var(--gr-2)] px-3 py-1 text-[var(--dbl-1)] hover:bg-[var(--gr-1)]"
+                  >
+                    Close
+                  </button>
+                </div>
+                <div className="min-h-0 overflow-auto">
+                  <AnimationInput
+                    name={animToolName}
+                    args={(details as any)?.tools?.[animToolName]?.args ?? {}}
+                    onUrl={(url) => setAnimUrl(url)}
+                  />
+                </div>
               </div>
-              <div className="min-h-0 overflow-auto">
-                <AnimationInput
-                  name={animToolName}
-                  args={(details as any)?.tools?.[animToolName]?.args ?? {}}
-                  onUrl={(url) => setAnimUrl(url)}
-                />
-              </div>
-            </div>
-          ),
-        },
-      }),
+            ),
+          },
+        }),
     }),
     [
       annotateErrors,

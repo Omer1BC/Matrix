@@ -14,7 +14,6 @@ export function useSolve(problemId: string = "intro-1") {
   const [details, setDetails] = useState<any>({});
   const [detailsLoading, setDetailsLoading] = useState(true);
   const [tools, setTools] = useState<ToolInfo[]>([]);
-  const [testCases, setTestCases] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState("");
   const [testResponse, setTestResponse] = useState("");
@@ -26,8 +25,9 @@ export function useSolve(problemId: string = "intro-1") {
       setDetails(data);
       if (editorRef.current && data?.method_stub)
         editorRef.current.setValue(data.method_stub);
-    })().catch(console.error)
-    .finally(() => setDetailsLoading(false));
+    })()
+      .catch(console.error)
+      .finally(() => setDetailsLoading(false));
   }, [problemId]);
 
   useEffect(() => {
@@ -39,28 +39,8 @@ export function useSolve(problemId: string = "intro-1") {
     setTools(t);
   }, [details]);
 
-  useEffect(() => {
-    const fetchTestCases = async () => {
-      try {
-        const data = await ping({ problem_id: problemId }, "problem-details");
-        const orig = data.tests;
-        if (orig) {
-          const fixedStr = String(orig).replace(/'/g, '"');
-          const json = JSON.parse(fixedStr);
-          setTestCases(json);
-        } else {
-          setTestCases({});
-        }
-      } catch {
-        setTestCases({});
-      }
-    };
-
-    fetchTestCases();
-  }, [problemId]);
-
   const askSelection = useCallback(
-    async (text: string,type?: string) => {
+    async (text: string, type?: string) => {
       setLoading(true);
       try {
         const profile = await getUserProfile();
@@ -154,7 +134,6 @@ export function useSolve(problemId: string = "intro-1") {
     details,
     detailsLoading,
     tools,
-    testCases,
     loading,
     response,
     setResponse,
@@ -162,5 +141,6 @@ export function useSolve(problemId: string = "intro-1") {
     askSelection,
     annotate,
     annotateErrors,
+    user,
   };
 }
