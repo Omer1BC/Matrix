@@ -95,7 +95,6 @@ test_cases = [
     ([5, 3, 7, 1, 4, 6, 9], [5, 3, 7, 1, 4, 6]),
 ]
 
-
 results = {f"test_{i}": run_test(input, expected) for i, (input, expected) in enumerate(test_cases)}
 
 

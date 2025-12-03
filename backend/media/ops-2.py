@@ -6,14 +6,13 @@ class Node:
         self.left = left 
         self.right = right
 ''''''
-def find_max(root: Node) -> Node:
+def find_max(root: Node) -> int:
     if root is None:
         return None
-
     while root.right is not None:
         root = root.right
 
-    return root
+    return root.val
 
 ''''''
 def build_tree(bfs_list):
@@ -43,20 +42,18 @@ def build_tree(bfs_list):
 def run_test(input, expected):
     bfs_list = input
     exception = ""
-    result_node = None
-    result_value = None
+    result = None
     try:
         root = build_tree(bfs_list)
-        result_node = find_max(root)
-        result_value = result_node.val if result_node else None
+        result = find_max(root)
     except Exception as e:
         exception = str(e)
     return {
         "input": input,
         "expected": expected,
-        "actual": result_value,
+        "actual": result,
         "error": exception,
-        "passed": result_value == expected if not exception else False
+        "passed": result == expected if not exception else False
     }
 
 
@@ -73,6 +70,3 @@ test_cases = [
 ]
 
 results = {f"test_{i}": run_test(input, expected) for i, (input, expected) in enumerate(test_cases)}
-
-
-
