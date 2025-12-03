@@ -4,6 +4,7 @@ import "../templates.css";
 import ReactPlayer from "react-player";
 import { Editor } from "@monaco-editor/react";
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
+import Card from "./Card";
 import TestCasesPanel from "./testCasesPanel";
 import ProblemMenu from "./problemMenu";
 import ReferencesPanel from "@/components/ReferencesPanel";
@@ -11,6 +12,8 @@ import { useSolve } from "@/lib/hooks/useSolve";
 import { NotesCard } from "./NotesCard";
 import { Problem, ProblemCompletion } from "@/lib/types";
 import { editor as MonacoEditor } from "monaco-editor";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   getProblemById,
   getUserProblemById,
@@ -25,9 +28,9 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { formatCodeForEditor } from "@/lib/utils";
 import "shepherd.js/dist/css/shepherd.css";
 import NeoIcon from "@/components/NeoIcon";
-import Card from "./Card";
 
 export default function LearnPage() {
+  const router = useRouter();
   const { user } = useAuth();
 
   const [currentProblem, setCurrentProblem] = useState<Problem>({
@@ -151,7 +154,6 @@ export default function LearnPage() {
       const problem = problemList[newIndex];
       if (!completion || !problem) return;
 
-      setCurrentIndex(newIndex);
       setCurrentProblemCompletion(completion);
       setCurrentProblem(problem);
       setProblemDetails(problem);
@@ -263,73 +265,6 @@ export default function LearnPage() {
     getProblems();
   }, []);
 
-  // useEffect(() => {
-  //   if (!editorRef.current) return;
-
-  //   const completion = problemCompletionList[currentIndex];
-  //   const problem = problemList[currentIndex];
-  //   if (!completion || !problem) return;
-
-  //   const currentValue = editorRef.current.getValue();
-
-  //   // Only update editor if empty or switching to a new problem
-  //   const codeToSet =
-  //     completion.user_solution?.length > 0
-  //       ? completion.user_solution
-  //       : problem.method_stub;
-
-  //   if (currentValue.trim() === "" || currentValue !== codeToSet) {
-  //     editorRef.current.setValue(formatCodeForEditor(codeToSet));
-  //   }
-  // }, [currentIndex, problemCompletionList, problemList]);
-
-  // const handleNextProblem = useCallback(() => {
-  //   let nextIndex = currentIndex + 1;
-
-  //   if (nextIndex >= problemIds.length) {
-  //     nextIndex = nextIndex % problemIds.length;
-  //   }
-
-  //   setCurrentIndex(nextIndex);
-  //   const nextProblemCompletion = problemCompletionList[nextIndex];
-  //   const nextProblem = problemList[nextIndex];
-  //   if (nextProblemCompletion && nextProblem) {
-  //     setCurrentProblemCompletion(nextProblemCompletion);
-  //     setCurrentProblem(nextProblem);
-  //     setProblemDetails(nextProblem);
-  //   }
-  // }, [currentIndex, problemIds.length, problemCompletionList, problemList]);
-
-  // const handlePrevProblem = useCallback(() => {
-  //   if (currentIndex <= 0) return;
-
-  //   const prevIndex = currentIndex - 1;
-
-  //   setCurrentIndex(prevIndex);
-  //   const prevProblemCompetion = problemCompletionList[prevIndex];
-  //   const prevProblem = problemList[prevIndex];
-  //   if (prevProblemCompetion && prevProblem) {
-  //     setCurrentProblemCompletion(prevProblemCompetion);
-  //     setCurrentProblem(prevProblem);
-  //     setProblemDetails(prevProblem);
-  //   }
-  // }, [currentIndex, problemCompletionList, problemList]);
-
-  const handleViewHint = useCallback(async () => {
-    const editor = editorRef.current;
-    if (!editor) return;
-    const model = editor.getModel();
-    if (!model) return;
-
-    let code = "";
-    for (let i = 1; i <= model.getLineCount(); i++) {
-      code += `${i} | ${model.getLineContent(i)}\n`;
-    }
-
-    const data = await neoAnnotate(code);
-    setNeoResponse(data?.expalantions_of_hint || "");
-  }, [neoAnnotate, setNeoResponse, editorRef]);
-
   const toggleRefresh = useCallback(() => {
     setRefreshKey((prev) => !prev);
   }, []);
@@ -386,8 +321,8 @@ export default function LearnPage() {
       }
     },
     [
-      currProblemCompletion?.user_solution,
-      currentProblem?.method_stub,
+      currProblemCompletion.user_solution,
+      currentProblem.method_stub,
       editorRef,
       monacoRef,
     ]
@@ -533,6 +468,42 @@ export default function LearnPage() {
                   automaticLayout: true,
                 }}
               />
+
+              {/* Button overlay */}
+              <div className="absolute top-4 right-5 z-50">
+                <Button
+                  onClick={handlePrevProblem}
+                  disabled={isPrevDisabled}
+                  className="px-6 py-4 glow-text"
+                  variant={undefined}
+                  size="lg"
+                >
+                  ←
+                </Button>
+                {currentIndex === problemIds.length - 1 ? (
+                  <Button
+                    // disabled={isNextDisabled} UNCOMMENT IF UNLOCKING/LOCKING FEATURE IS REQUIRED
+                    onClick={() => {
+                      router.push("/solve");
+                    }}
+                    className="px-6 py-4 glow-text"
+                    variant={undefined}
+                    size="lg"
+                  >
+                    To Solve page
+                  </Button>
+                ) : (
+                  <Button
+                    // disabled={isNextDisabled} UNCOMMENT IF UNLOCKING/LOCKING FEATURE IS REQUIRED
+                    onClick={handleNextProblem}
+                    className="px-6 py-4 glow-text"
+                    variant={undefined}
+                    size="lg"
+                  >
+                    →
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         ),
@@ -627,6 +598,11 @@ export default function LearnPage() {
       currentIndex,
       handleEditorDidMount,
       handleSolutionsEditorDidMount,
+      handleNextProblem,
+      handlePrevProblem,
+      isPrevDisabled,
+      problemIds.length,
+      router,
     ]
   );
 
@@ -658,7 +634,6 @@ export default function LearnPage() {
               loading={neoLoading}
               response={neoResponse}
               onNextThread={(input) => neoAskSelection(input)}
-              onViewHint={handleViewHint}
             />
           </div>
         ),
@@ -671,7 +646,6 @@ export default function LearnPage() {
       handleAllTestsPassed,
       neoLoading,
       neoResponse,
-      handleViewHint,
       neoAskSelection,
     ]
   );
@@ -728,7 +702,7 @@ export default function LearnPage() {
                       muted={false}
                       playing={false}
                       controls={true}
-                      playbackRate={1.5}
+                      playbackRate={1}
                       // src={`${process.env.NEXT_PUBLIC_API_URL}media/v-${currentProblem.id}.mp4`}
                       src={`/${currentProblem?.problem_id}.mp4`} //temporary until final videos are done
                       width="50%"

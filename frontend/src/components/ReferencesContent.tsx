@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Typewriter } from "react-simple-typewriter";
 import { Input } from "./ui/input";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
@@ -10,60 +9,30 @@ import "highlight.js/styles/github-dark.css";
 type Message = { type: "user" | "ai"; content: string };
 
 type ReferencesContentProps = {
-  viewHint: () => void;
   response: string;
   loading: boolean;
   nextThread: (text: string) => void;
 };
 
 export function ReferencesContent({
-  viewHint,
   response,
   loading,
   nextThread,
 }: ReferencesContentProps) {
   const [ask, setAsk] = useState("");
   const [conversation, setConversation] = useState<Message[]>([]);
-  const [typingIndex, setTypingIndex] = useState<number | null>(null);
-  const [showCursor, setShowCursor] = useState(false);
   const typingTargetLenRef = useRef(0);
   const chatRef = useRef<HTMLDivElement | null>(null);
-  const prevConversationLengthRef = useRef(0);
 
   useEffect(() => {
     if (response && response.trim()) {
       setConversation((prev: any) => {
         const next = [...prev, { type: "ai", content: response }];
-        setTypingIndex(next.length - 1);
-        setShowCursor(true);
         typingTargetLenRef.current = response.length;
         return next;
       });
     }
   }, [response]);
-
-  // useEffect(() => {
-  //   if (chatRef.current) {
-  //     chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  //   }
-  // }, [conversation, loading, typingIndex]);
-
-  // useEffect(() => {
-  //   if (
-  //     chatRef.current &&
-  //     conversation.length > prevConversationLengthRef.current
-  //   ) {
-  //     chatRef.current.scrollTop = chatRef.current.scrollHeight;
-  //   }
-  //   prevConversationLengthRef.current = conversation.length;
-  // }, [conversation]);
-
-  const handleType = useCallback((count: number) => {
-    if (count + 1 >= typingTargetLenRef.current) {
-      setShowCursor(false);
-      setTypingIndex(null);
-    }
-  }, []);
 
   const submit = useCallback(() => {
     const val = ask.trim();
@@ -81,7 +50,6 @@ export function ReferencesContent({
       >
         {conversation.map((m, i) => {
           const isUser = m.type === "user";
-          const activeTyping = m.type === "ai" && i === typingIndex;
 
           return (
             <div key={i} className="w-full text-[14.4px] leading-relaxed">

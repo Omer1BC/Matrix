@@ -90,10 +90,7 @@ export default function EditorUtilities({
     setHours(0);
     reset();
     const userInfo = user ? user : { id: "guest" };
-    ping(
-      { user_id: userInfo.id},
-      "clear-log-editor-history"
-    ).catch(() => {});
+    ping({ user_id: userInfo.id }, "clear-log-editor-history").catch(() => {});
   };
 
   useEffect(() => {
@@ -225,7 +222,7 @@ export default function EditorUtilities({
             </button>
             <button
               type="button"
-              onClick={reset}
+              onClick={resetTimer}
               className="px-2 py-1 text-xs font-medium rounded-md border border-[color:var(--dbl-4)] hover:bg-[color:var(--dbl-4)]/60 transition-colors"
               title="Restart timer"
             >

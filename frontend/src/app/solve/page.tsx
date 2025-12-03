@@ -177,7 +177,7 @@ export default function SolvePage() {
       question: {
         label: "Question",
         content: detailsLoading ? (
-          <div className="flex items-center justify-center w-full h-full">
+          <div className="flex items-center justify-center w-full h-full bg-[var(--background)]">
             <p>Loading...</p>
           </div>
         ) : (
@@ -191,7 +191,7 @@ export default function SolvePage() {
       },
       ...(animToolName && {
         animation: {
-          label: `Animation: ${animToolName}`,
+          label: `${animToolName}`,
           content: (
             <div className="flex h-full w-full flex-col">
               <div className="mb-3 flex items-center justify-between">
@@ -294,32 +294,11 @@ export default function SolvePage() {
             loading={loading}
             response={response}
             onNextThread={(input) => askSelection(input)}
-            onViewHint={() => {
-              const editor = editorRef.current;
-              const monaco = monacoRef.current;
-              if (!editor || !monaco) return;
-              const model = editor.getModel();
-              let code = "";
-              for (let i = 1; i <= model.getLineCount(); i++) {
-                code += `${i} | ${model.getLineContent(i)}\n`;
-              }
-              annotate(code).then((d) =>
-                setResponse(d?.expalantions_of_hint || "")
-              );
-            }}
           />
         ),
       },
     }),
-    [
-      annotate,
-      askSelection,
-      editorRef,
-      loading,
-      monacoRef,
-      response,
-      setResponse,
-    ]
+    [askSelection, loading, response]
   );
 
   const validationTabs = useMemo(
