@@ -577,8 +577,8 @@ export default function LearnPage() {
         content: (
           <div className="min-h-0 flex">
             <TestCasesPanel
-              key={currentProblem.problem_id}
-              problemId={currentProblem.problem_id}
+              key={problemList[currentIndex]?.problem_id ?? "intro-1"}
+              problemId={problemList[currentIndex]?.problem_id ?? "intro-1"}
               editorRef={editorRef}
               onAllTestsPassed={handleAllTestsPassed}
             />

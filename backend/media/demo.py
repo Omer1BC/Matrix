@@ -5,14 +5,10 @@ class Node:
         self.left = left 
         self.right = right
 
-def to_string(node):
-    if node is None:
-        return ""
-
-    left_val = str(node.left.val) if node.left else ""
-    right_val = str(node.right.val) if node.right else ""
-
-    return f"{node.val}({left_val})({right_val})"
+def find_max(root):
+  if root.right == None:
+    return root
+  return find_max(root.right)
 def build_tree(bfs_list):
     if not bfs_list or bfs_list[0] is None:
         return None
@@ -40,47 +36,36 @@ def build_tree(bfs_list):
 def run_test(input, expected):
     bfs_list = input
     exception = ""
-    result = ""
+    result_node = None
+    result_value = None
     try:
         root = build_tree(bfs_list)
-        result = to_string(root)
+        result_node = find_max(root)
+        result_value = result_node.val if result_node else None
     except Exception as e:
         exception = str(e)
     return {
         "input": input,
         "expected": expected,
-        "actual": result,
+        "actual": result_value,
         "error": exception,
-        "passed": result == expected if not exception else False
+        "passed": result_value == expected if not exception else False
     }
 
 
 
 test_cases = [
-    ([10], "10()()"),
-    ([10, 5, 15], "10(5)(15)"),
-    ([10, 5], "10(5)()"),
-    ([10, None, 15], "10()(15)"),
-    ([20, 8, 22], "20(8)(22)"),
-    ([100], "100()()"),
-    ([50, 25], "50(25)()"),
-    ([50, None, 75], "50()(75)"),
-    ([1, 2, 3], "1(2)(3)"),
+    ([10], 10),
+    ([10, 5, 15], 15),
+    ([10, 5, 15, 3, 7, 12, 20], 20),
+    ([10, 5, None, 3, None, 1], 10),
+    ([10, None, 15, None, 20, None, 25], 25),
+    ([10, 5], 10),
+    ([10, None, 15], 15),
+    ([50, 30, 70, 20, 40, 60, 80], 80),
 ]
 
 results = {f"test_{i}": run_test(input, expected) for i, (input, expected) in enumerate(test_cases)}
 
-for test_name, result in results.items():
-    status = "PASSED" if result["passed"] else "FAILED"
-    print(f"{test_name}: {status}")
-    if not result["passed"]:
-        print(f"  Input BFS: {result['input']}")
-        print(f"  Expected: {result['expected']}")
-        print(f"  Actual: {result['actual']}")
-        if result['error']:
-            print(f"  Error: {result['error']}")
 
-passed = sum(1 for r in results.values() if r["passed"])
-total = len(results)
-print(f"\n{passed}/{total} tests passed")
 
