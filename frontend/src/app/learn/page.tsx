@@ -137,6 +137,75 @@ export default function LearnPage() {
   const solutionEditorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(
     null
   );
+  
+  const getMainEditorCode = (completion: any, problem: any) => {
+    if (!completion && !problem) return "# Write your solution here\n";
+
+    const userCode = completion?.user_solution?.trim();
+    if (userCode && userCode.length > 0) return userCode;
+
+    const stub = problem?.method_stub?.trim();
+    if (stub && stub.length > 0) return stub;
+
+    return "# Write your solution here\n";
+  };
+  const navigateToProblem = useCallback(
+    (newIndex: number) => {
+      const completion = problemCompletionList[newIndex];
+      const problem = problemList[newIndex];
+      if (!completion || !problem) return;
+
+      setCurrentIndex(newIndex);
+      setCurrentProblemCompletion(completion);
+      setCurrentProblem(problem);
+      setProblemDetails(problem);
+
+      // Main editor
+      if (editorRef.current) {
+        const codeToSet = getMainEditorCode(completion, problem);
+        editorRef.current.setValue(formatCodeForEditor(codeToSet));
+      }
+
+      // Solution editor
+      if (solutionEditorRef.current && monacoRef.current) {
+        import("monaco-editor").then((monaco) => {
+          const model = solutionEditorRef.current!.getModel();
+          if (model) {
+            monaco.editor.setModelLanguage(
+              model,
+              solutionLanguage.toLowerCase()
+            );
+          }
+
+          if (solutionLanguage === "Python" && problem.solution) {
+            solutionEditorRef.current!.setValue(problem.solution);
+          } else if (solutionLanguage === "Java" && problem.java_solution) {
+            solutionEditorRef.current!.setValue(problem.java_solution);
+          } else {
+            solutionEditorRef.current!.setValue("// No solution available");
+          }
+        });
+      }
+    },
+    [problemCompletionList, problemList, solutionLanguage]
+  );
+
+  const handleNextProblem = useCallback(() => {
+    setCurrentIndex((prevIndex) => {
+      const nextIndex = (prevIndex + 1) % problemIds.length;
+      navigateToProblem(nextIndex);
+      return nextIndex;
+    });
+  }, [problemIds.length, navigateToProblem]);
+
+  const handlePrevProblem = useCallback(() => {
+    setCurrentIndex((prevIndex) => {
+      if (prevIndex <= 0) return 0;
+      const prev = prevIndex - 1;
+      navigateToProblem(prev);
+      return prev;
+    });
+  }, [navigateToProblem]);
 
   useEffect(() => {
     const setMenu = () => {
@@ -152,26 +221,26 @@ export default function LearnPage() {
     };
   }, [showMenu]);
 
-  useEffect(() => {
-    if (solutionEditorRef.current && monacoRef.current) {
-      import("monaco-editor").then((monaco) => {
-        const model = solutionEditorRef.current!.getModel();
-        if (model) {
-          monaco.editor.setModelLanguage(model, solutionLanguage.toLowerCase());
-        }
-        // Update solution based on language and current problem
-        const currProblem = problemList[currentIndex];
-        if (solutionLanguage === "Python" && currProblem.solution) {
-          solutionEditorRef.current!.setValue(currProblem.solution);
-        } else if (solutionLanguage === "Java" && currProblem.java_solution) {
-          solutionEditorRef.current!.setValue(currProblem.java_solution);
-        } else {
-          // Fallback if no solution exists
-          solutionEditorRef.current!.setValue("// No solution available");
-        }
-      });
-    }
-  }, [currentIndex, problemList, solutionLanguage]);
+  // useEffect(() => {
+  //   if (solutionEditorRef.current && monacoRef.current) {
+  //     import("monaco-editor").then((monaco) => {
+  //       const model = solutionEditorRef.current!.getModel();
+  //       if (model) {
+  //         monaco.editor.setModelLanguage(model, solutionLanguage.toLowerCase());
+  //       }
+  //       // Update solution based on language and current problem
+  //       const currProblem = problemList[currentIndex];
+  //       if (solutionLanguage === "Python" && currProblem.solution) {
+  //         solutionEditorRef.current!.setValue(currProblem.solution);
+  //       } else if (solutionLanguage === "Java" && currProblem.java_solution) {
+  //         solutionEditorRef.current!.setValue(currProblem.java_solution);
+  //       } else {
+  //         // Fallback if no solution exists
+  //         solutionEditorRef.current!.setValue("// No solution available");
+  //       }
+  //     });
+  //   }
+  // }, [currentIndex, problemList, solutionLanguage]);
 
   useEffect(() => {
     const getProblems = async () => {
@@ -198,56 +267,57 @@ export default function LearnPage() {
     getProblems();
   }, []);
 
-  useEffect(() => {
-    if (!editorRef.current) return;
+  // useEffect(() => {
+  //   if (!editorRef.current) return;
 
-    const completion = problemCompletionList[currentIndex];
-    const problem = problemList[currentIndex];
-    if (!completion || !problem) return;
+  //   const completion = problemCompletionList[currentIndex];
+  //   const problem = problemList[currentIndex];
+  //   if (!completion || !problem) return;
 
-    const codeToSet =
-      completion.user_solution?.length > 0
-        ? completion.user_solution
-        : problem.method_stub;
+  //   const currentValue = editorRef.current.getValue();
 
-    setTimeout(() => {
-      if (editorRef.current) {
-        editorRef.current.setValue(formatCodeForEditor(codeToSet));
-      }
-    }, 0);
-  }, [currentIndex, problemCompletionList, problemList]);
+  //   // Only update editor if empty or switching to a new problem
+  //   const codeToSet =
+  //     completion.user_solution?.length > 0
+  //       ? completion.user_solution
+  //       : problem.method_stub;
 
-  const handleNextProblem = useCallback(() => {
-    let nextIndex = currentIndex + 1;
+  //   if (currentValue.trim() === "" || currentValue !== codeToSet) {
+  //     editorRef.current.setValue(formatCodeForEditor(codeToSet));
+  //   }
+  // }, [currentIndex, problemCompletionList, problemList]);
 
-    if (nextIndex >= problemIds.length) {
-      nextIndex = nextIndex % problemIds.length;
-    }
+  // const handleNextProblem = useCallback(() => {
+  //   let nextIndex = currentIndex + 1;
 
-    setCurrentIndex(nextIndex);
-    const nextProblemCompletion = problemCompletionList[nextIndex];
-    const nextProblem = problemList[nextIndex];
-    if (nextProblemCompletion && nextProblem) {
-      setCurrentProblemCompletion(nextProblemCompletion);
-      setCurrentProblem(nextProblem);
-      setProblemDetails(nextProblem);
-    }
-  }, [currentIndex, problemIds.length, problemCompletionList, problemList]);
+  //   if (nextIndex >= problemIds.length) {
+  //     nextIndex = nextIndex % problemIds.length;
+  //   }
 
-  const handlePrevProblem = useCallback(() => {
-    if (currentIndex <= 0) return;
+  //   setCurrentIndex(nextIndex);
+  //   const nextProblemCompletion = problemCompletionList[nextIndex];
+  //   const nextProblem = problemList[nextIndex];
+  //   if (nextProblemCompletion && nextProblem) {
+  //     setCurrentProblemCompletion(nextProblemCompletion);
+  //     setCurrentProblem(nextProblem);
+  //     setProblemDetails(nextProblem);
+  //   }
+  // }, [currentIndex, problemIds.length, problemCompletionList, problemList]);
 
-    const prevIndex = currentIndex - 1;
+  // const handlePrevProblem = useCallback(() => {
+  //   if (currentIndex <= 0) return;
 
-    setCurrentIndex(prevIndex);
-    const prevProblemCompetion = problemCompletionList[prevIndex];
-    const prevProblem = problemList[prevIndex];
-    if (prevProblemCompetion && prevProblem) {
-      setCurrentProblemCompletion(prevProblemCompetion);
-      setCurrentProblem(prevProblem);
-      setProblemDetails(prevProblem);
-    }
-  }, [currentIndex, problemCompletionList, problemList]);
+  //   const prevIndex = currentIndex - 1;
+
+  //   setCurrentIndex(prevIndex);
+  //   const prevProblemCompetion = problemCompletionList[prevIndex];
+  //   const prevProblem = problemList[prevIndex];
+  //   if (prevProblemCompetion && prevProblem) {
+  //     setCurrentProblemCompletion(prevProblemCompetion);
+  //     setCurrentProblem(prevProblem);
+  //     setProblemDetails(prevProblem);
+  //   }
+  // }, [currentIndex, problemCompletionList, problemList]);
 
   const handleViewHint = useCallback(async () => {
     const editor = editorRef.current;
@@ -371,7 +441,7 @@ export default function LearnPage() {
         console.error("Failed to fetch problem details");
         // Fallback to default starter code
         if (editorRef.current) {
-          editorRef.current.setValue("Unable to fetch starter code");
+          editorRef.current.setValue(problemList[problem.order]);
         }
         setTestCases([]);
       }
