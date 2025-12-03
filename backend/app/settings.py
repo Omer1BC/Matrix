@@ -27,7 +27,7 @@ USER_FILES = BASE_DIR / "user_files"
 SECRET_KEY = "django-insecure-6s)hlz4l8v#r0%=%&7)-#+vntbidg!+v*hc7*a^p1rdy=xy+^v"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 AUTH_USER_MODEL = "api.User"
 

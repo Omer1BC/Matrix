@@ -748,7 +748,7 @@ export default function LearnPage() {
                       controls={true}
                       playbackRate={1.5}
                       // src={`${process.env.NEXT_PUBLIC_API_URL}media/v-${currentProblem.id}.mp4`}
-                      src={`${process.env.NEXT_PUBLIC_API_URL}media/${currentProblem?.problem_id}.mp4`} //temporary until final videos are done
+                      src={`/${currentProblem?.problem_id}.mp4`} //temporary until final videos are done
                       width="50%"
                       height="350px"
                       style={{ objectFit: "fill" }}
