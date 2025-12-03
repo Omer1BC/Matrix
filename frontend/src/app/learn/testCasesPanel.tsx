@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { getCurrentUser } from "../../lib/supabase/auth";
+import { Json } from "@/lib/types";
 
 export default function TestCasesPanel({
   problemId,
@@ -13,7 +14,7 @@ export default function TestCasesPanel({
   onAllTestsPassed: () => void;
 }) {
   const [runningTests, setRunningTests] = useState(false);
-  const [testResults, setTestResults] = useState([]);
+  const [testResults, setTestResults] = useState<any[]>([]);
   const [error,setError] = useState<string>("");
 
   const runTestCases = async () => {
@@ -29,7 +30,7 @@ export default function TestCasesPanel({
 
       const user = await getCurrentUser();
       const userId =
-        typeof user === "string" ? user : user?.id ?? user?.user?.id ?? "";
+        typeof user === "string" ? user : user?.id ?? "";
 
       if (!userId) {
         console.error("Missing user id from getCurrentUser()");
@@ -64,14 +65,14 @@ export default function TestCasesPanel({
       if (response.ok) {
         
         const data = await response.json();
-        const problem_tests = data.test_results.filter((res) => res.error)
+        // const problem_tests = data.test_results.filter((res) => res.error)
         
 
         if (data.success) {
           const results = data.test_results || [];
           setTestResults(results);
 
-          const allPassed = results.every((r) => r.passed);
+          const allPassed = results.every((r: any) => r.passed);
           if (allPassed && typeof onAllTestsPassed === "function") {
             onAllTestsPassed();
           }

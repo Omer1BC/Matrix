@@ -41,7 +41,7 @@ export default function Header() {
    * This is the randomized sign up for the class demo
    * @param e event
    */
-  const handleSignup = async (e: Event) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {

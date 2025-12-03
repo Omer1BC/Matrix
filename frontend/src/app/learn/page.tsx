@@ -189,7 +189,7 @@ export default function LearnPage() {
         setProblemDetails(problems[0]);
         setCurrentIndex(0);
 
-        const ids = Object.values(data).map((row) => row.problem_id); // keep original order
+        const ids = Object.values(data).map((row: any) => row.problem_id); // keep original order
         setProblemIds(ids);
         setProblemList(problems);
       } catch (err) {
@@ -259,7 +259,7 @@ export default function LearnPage() {
     }
   }, [currentIndex, editorRef, problemCompletionList, problemList]);
 
-  const handleViewHint = async () => {
+  const handleViewHint = useCallback(async () => {
     const editor = editorRef.current;
     if (!editor) return;
     const model = editor.getModel();
@@ -272,13 +272,13 @@ export default function LearnPage() {
 
     const data = await neoAnnotate(code);
     setNeoResponse(data?.expalantions_of_hint || "");
-  };
+  }, [neoAnnotate, setNeoResponse, editorRef]);
 
-  function toggleRefresh() {
-    setRefreshKey(!refreshKey);
-  }
+  const toggleRefresh = useCallback(() => {
+    setRefreshKey((prev) => !prev);
+  }, []);
 
-  async function handleAllTestsPassed() {
+  const handleAllTestsPassed = useCallback(async () => {
     setShowVictoryModal(true);
     await updateUserProblemCompletion(
       currProblemCompletion.id,
@@ -288,7 +288,14 @@ export default function LearnPage() {
       editorRef.current?.getValue()
     );
     toggleRefresh();
-  }
+  }, [
+    currProblemCompletion.id,
+    currProblemCompletion.category_id,
+    currentProblem.problem_id,
+    testCases.length,
+    editorRef,
+    toggleRefresh,
+  ]);
 
   useEffect(() => {
     async function loadCompletion() {
@@ -299,42 +306,49 @@ export default function LearnPage() {
     loadCompletion();
   }, [refreshKey, completionPercentage]);
 
-  function handleEditorDidMount(
-    editor: MonacoEditor.IStandaloneCodeEditor,
-    monaco
-  ) {
-    editorRef.current = editor;
-    monacoRef.current = monaco;
+  const handleEditorDidMount = useCallback(
+    (editor: MonacoEditor.IStandaloneCodeEditor, monaco: any) => {
+      editorRef.current = editor;
+      monacoRef.current = monaco;
 
-    if (currProblemCompletion?.user_solution) {
-      editor.setValue(formatCodeForEditor(currProblemCompletion.user_solution));
-    } else if (currentProblem?.method_stub) {
-      editor.setValue(formatCodeForEditor(currentProblem.method_stub));
-    } else {
-      editor.setValue("# Write your solution here\n");
-    }
-  }
-
-  function handleSolutionsEditorDidMount(
-    editor: MonacoEditor.IStandaloneCodeEditor,
-    monaco
-  ) {
-    solutionEditorRef.current = editor;
-    monacoRef.current = monaco;
-
-    import("monaco-editor").then((monaco) => {
-      const model = solutionEditorRef.current!.getModel();
-      if (model) {
-        monaco.editor.setModelLanguage(model, "python");
+      if (currProblemCompletion?.user_solution) {
+        editor.setValue(
+          formatCodeForEditor(currProblemCompletion.user_solution)
+        );
+      } else if (currentProblem?.method_stub) {
+        editor.setValue(formatCodeForEditor(currentProblem.method_stub));
+      } else {
+        editor.setValue("# Write your solution here\n");
       }
+    },
+    [
+      currProblemCompletion?.user_solution,
+      currentProblem?.method_stub,
+      editorRef,
+      monacoRef,
+    ]
+  );
 
-      if (currentProblem.solution) {
-        solutionEditorRef.current!.setValue(currentProblem.solution);
-      }
-    });
-  }
+  const handleSolutionsEditorDidMount = useCallback(
+    (editor: MonacoEditor.IStandaloneCodeEditor, monaco: any) => {
+      solutionEditorRef.current = editor;
+      monacoRef.current = monaco;
 
-  const handleProblemSelect = async (problem: Problem) => {
+      import("monaco-editor").then((monaco) => {
+        const model = solutionEditorRef.current!.getModel();
+        if (model) {
+          monaco.editor.setModelLanguage(model, "python");
+        }
+
+        if (currentProblem.solution) {
+          solutionEditorRef.current!.setValue(currentProblem.solution);
+        }
+      });
+    },
+    [currentProblem.solution, monacoRef]
+  );
+
+  const handleProblemSelect = async (problem: ProblemCompletion) => {
     setCurrentProblem(problemList[problem.order]);
     setCurrentIndex(problem.order);
     try {
@@ -353,8 +367,7 @@ export default function LearnPage() {
         console.error("Failed to fetch problem details");
         // Fallback to default starter code
         if (editorRef.current) {
-          const starterCode = getStarterCode(currentProblem.problem_id);
-          editorRef.current.setValue(starterCode);
+          editorRef.current.setValue("Unable to fetch starter code");
         }
         setTestCases([]);
       }
@@ -375,24 +388,6 @@ export default function LearnPage() {
     }
     setOutput(""); // Clear previous output
   };
-
-  const getStarterCode = (problemId: string): string => {
-    const starterCodes = {
-      "intro-1":
-        '# Write a program that prints "Hello, World!"\nprint("Hello, World!")',
-      "intro-2":
-        '# Create variables and print them\nname = ""\nage = 0\nprint(f"Name: {name}, Age: {age}")',
-      "ds-1":
-        "# Work with lists\nnumbers = [1, 2, 3, 4, 5]\n# Add your code here",
-      "sort-1":
-        "# Implement bubble sort\ndef bubble_sort(arr):\n    # Your implementation here\n    pass\n\n# Test your function\ntest_array = [64, 34, 25, 12, 22, 11, 90]\nprint(bubble_sort(test_array))",
-    };
-    return starterCodes[problemId] || "# Write your solution here\n";
-  };
-
-  const isNextDisabled = useMemo(() => {
-    return !currProblemCompletion.is_completed;
-  }, [currProblemCompletion]);
 
   const isPrevDisabled = useMemo(() => {
     return currentIndex === 0;

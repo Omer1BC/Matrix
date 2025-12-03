@@ -235,6 +235,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       animLoading,
       animUrl,
       closeAnimationTab,
+      detailsLoading,
     ]
   );
 
@@ -379,6 +380,8 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       animToolName,
       closeAnimationTab,
       openAnimationForTest,
+      problemId,
+      timer,
     ]
   );
 

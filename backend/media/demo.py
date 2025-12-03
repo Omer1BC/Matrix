@@ -6,7 +6,6 @@ class Node:
         self.right = right
 
 def decreasing_order(root):
-    return null
 def build_tree(bfs_list):
     if not bfs_list or bfs_list[0] is None:
         return None

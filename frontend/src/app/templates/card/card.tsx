@@ -1,7 +1,10 @@
 import { useRef, useState, useEffect } from "react";
 import "./card.css";
 
-export default function Card({ tabs, className }) {
+export default function Card({ tabs, className } : {
+  tabs: any,
+  className: string,
+}) {
   const [activeTab, setActiveTab] = useState(Object.keys(tabs)[0]);
   return (
     <>
@@ -40,7 +43,10 @@ export default function Card({ tabs, className }) {
   );
 }
 
-function TabPanel({ active, children }) {
+function TabPanel({ active, children }: {
+  active: boolean,
+  children: any,
+}) {
   return (
     <div
       style={{
