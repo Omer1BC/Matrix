@@ -137,7 +137,7 @@ export default function LearnPage() {
   const solutionEditorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(
     null
   );
-  
+
   const getMainEditorCode = (completion: any, problem: any) => {
     if (!completion && !problem) return "# Write your solution here\n";
 
@@ -444,6 +444,31 @@ export default function LearnPage() {
           editorRef.current.setValue(problemList[problem.order]);
         }
         setTestCases([]);
+      }
+
+      if (solutionEditorRef.current && monacoRef.current) {
+        import("monaco-editor").then((monaco) => {
+          const model = solutionEditorRef.current!.getModel();
+          if (model) {
+            monaco.editor.setModelLanguage(
+              model,
+              solutionLanguage.toLowerCase()
+            );
+          }
+
+          if (solutionLanguage === "Python") {
+            solutionEditorRef.current!.setValue(
+              problemList[problem.order].solution ?? "// No solution available"
+            );
+          } else if (solutionLanguage === "Java") {
+            solutionEditorRef.current!.setValue(
+              problemList[problem.order].java_solution ??
+                "// No solution available"
+            );
+          } else {
+            solutionEditorRef.current!.setValue("// No solution available");
+          }
+        });
       }
 
       let parsedTestCases = [];
