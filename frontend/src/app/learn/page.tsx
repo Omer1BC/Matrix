@@ -148,7 +148,7 @@ export default function LearnPage() {
 
     return () => {
       window.removeEventListener("switchToProblems", setMenu);
-      window.addEventListener("switchToRegular", setMenu);
+      window.removeEventListener("switchToRegular", setMenu);
     };
   }, [showMenu]);
 
@@ -159,22 +159,22 @@ export default function LearnPage() {
         if (model) {
           monaco.editor.setModelLanguage(model, solutionLanguage.toLowerCase());
         }
-        // console.log(currentProblem);
         // Update solution based on language and current problem
-        if (solutionLanguage === "Python" && currentProblem.solution) {
-          solutionEditorRef.current!.setValue(currentProblem.solution);
+        const currProblem = problemList[currentIndex]
+        if (solutionLanguage === "Python" && currProblem.solution) {
+          solutionEditorRef.current!.setValue(currProblem.solution);
         } else if (
           solutionLanguage === "Java" &&
-          currentProblem.java_solution
+          currProblem.java_solution
         ) {
-          solutionEditorRef.current!.setValue(currentProblem.java_solution);
+          solutionEditorRef.current!.setValue(currProblem.java_solution);
         } else {
           // Fallback if no solution exists
           solutionEditorRef.current!.setValue("// No solution available");
         }
       });
     }
-  }, [solutionLanguage, currentProblem, editorRef, monacoRef]);
+  }, [currentIndex, problemList, solutionLanguage]);
 
   useEffect(() => {
     const getProblems = async () => {
@@ -201,6 +201,25 @@ export default function LearnPage() {
     getProblems();
   }, []);
 
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    const completion = problemCompletionList[currentIndex];
+    const problem = problemList[currentIndex];
+    if (!completion || !problem) return;
+
+    const codeToSet =
+      completion.user_solution?.length > 0
+        ? completion.user_solution
+        : problem.method_stub;
+
+    setTimeout(() => {
+      if (editorRef.current) {
+        editorRef.current.setValue(formatCodeForEditor(codeToSet));
+      }
+    }, 0);
+  }, [currentIndex, problemCompletionList, problemList]);
+
   const handleNextProblem = useCallback(() => {
     let nextIndex = currentIndex + 1;
 
@@ -210,29 +229,9 @@ export default function LearnPage() {
 
     setCurrentIndex(nextIndex);
 
-    const nextProblemCompletion = problemCompletionList[String(nextIndex)];
-    const nextProblem = problemList[nextIndex];
-
-    if (nextProblemCompletion && nextProblem) {
-      setCurrentProblemCompletion(nextProblemCompletion);
-      setCurrentProblem(nextProblem);
-      setProblemDetails(nextProblem);
-
-      if (editorRef.current) {
-        const codeToSet =
-          nextProblemCompletion.user_solution.length > 0
-            ? nextProblemCompletion.user_solution
-            : nextProblem.method_stub;
-        editorRef.current.setValue(formatCodeForEditor(codeToSet));
-      }
-    }
   }, [
     currentIndex,
-    editorRef,
-    problemCompletionList,
-    problemIds.length,
-    problemList,
-  ]);
+    problemIds.length,]);
 
   const handlePrevProblem = useCallback(() => {
     if (currentIndex <= 0) return;
@@ -241,23 +240,7 @@ export default function LearnPage() {
 
     setCurrentIndex(prevIndex);
 
-    const prevProblemCompletion = problemCompletionList[prevIndex];
-    const prevProblem = problemList[prevIndex];
-
-    if (prevProblemCompletion && prevProblem) {
-      setCurrentProblemCompletion(prevProblemCompletion);
-      setCurrentProblem(prevProblem);
-      setProblemDetails(prevProblem);
-
-      if (editorRef.current) {
-        const codeToSet =
-          prevProblemCompletion.user_solution.length > 0
-            ? prevProblemCompletion.user_solution
-            : prevProblem.method_stub;
-        editorRef.current.setValue(formatCodeForEditor(codeToSet));
-      }
-    }
-  }, [currentIndex, editorRef, problemCompletionList, problemList]);
+  }, [currentIndex,]);
 
   const handleViewHint = useCallback(async () => {
     const editor = editorRef.current;
@@ -287,6 +270,13 @@ export default function LearnPage() {
       testCases.length,
       editorRef.current?.getValue()
     );
+    setProblemCompletionList((prev) => ({
+      ...prev,
+      [currentIndex]: {
+        ...prev[currentIndex],
+        user_solution: editorRef.current?.getValue(),
+      },
+    }));
     toggleRefresh();
   }, [
     currProblemCompletion.id,
@@ -295,6 +285,7 @@ export default function LearnPage() {
     testCases.length,
     editorRef,
     toggleRefresh,
+    currentIndex,
   ]);
 
   useEffect(() => {
@@ -304,7 +295,7 @@ export default function LearnPage() {
     }
 
     loadCompletion();
-  }, [refreshKey, completionPercentage]);
+  }, [refreshKey]);
 
   const handleEditorDidMount = useCallback(
     (editor: MonacoEditor.IStandaloneCodeEditor, monaco: any) => {
@@ -340,12 +331,12 @@ export default function LearnPage() {
           monaco.editor.setModelLanguage(model, "python");
         }
 
-        if (currentProblem.solution) {
-          solutionEditorRef.current!.setValue(currentProblem.solution);
+        if (problemList[currentIndex].solution) {
+          solutionEditorRef.current!.setValue(problemList[currentIndex].solution);
         }
       });
     },
-    [currentProblem.solution, monacoRef]
+    [currentIndex, problemList, solutionLanguage]
   );
 
   const handleProblemSelect = async (problem: ProblemCompletion) => {
@@ -357,11 +348,15 @@ export default function LearnPage() {
 
       const user_data = await getUserProblemById(problem.problem_id);
       setCurrentProblemCompletion(user_data);
-      if (editorRef.current && user_data.user_solution != "") {
+      if (editorRef.current && user_data.user_solution !== "") {
         editorRef.current.setValue(
           formatCodeForEditor(user_data.user_solution)
         );
-      } else if (editorRef.current && data.method_stub) {
+      } else if (
+        editorRef.current &&
+        data.method_stub &&
+        editorRef.current.getValue().trim() === ""
+      ) {
         editorRef.current.setValue(formatCodeForEditor(data.method_stub));
       } else {
         console.error("Failed to fetch problem details");
@@ -574,8 +569,6 @@ export default function LearnPage() {
       router,
     ]
   );
-
-  console.log("Current problemzz", currentProblem, problemDetails?.title);
 
   const testTabs = useMemo(
     () => ({
