@@ -271,6 +271,8 @@ def agent(request):
                 AgentResponse(kind="generate_animation", data=res).model_dump(),
                 status=200 if res.get("ok") else 400,
             )
+        _,solution, _ = get_file_sections(id_to_file_name(problem_id))
+
         result = GRAPH.invoke(
             {
                 "messages": [HumanMessage(content=req.message)],
@@ -281,8 +283,9 @@ def agent(request):
                 "params": params,
                 "user_id": user_id,
                 "problem_id": problem_id,
+                "problem_solution": "\n".join(solution)
             },
-            config={"configurable": {"thread_id": thread_id}},
+            config={"configurable": {"thread_id": thread_id}, "recursion_limit": 12},
         )
         msgs = result["messages"]
         last_msg = msgs[-1]
@@ -295,8 +298,9 @@ def agent(request):
             (m.content for m in reversed(msgs) if isinstance(m, AIMessage)), ""
         )
         return JsonResponse(
+
             AgentResponse(
-                kind="chat", data={"text": content}, meta={"total_tokens": total_tokens}
+                kind="chat", data={"text":"|"+ "\n".join(solution) + "|" + content}, meta={"total_tokens": total_tokens}
             ).model_dump()
         )
     except Exception as e:

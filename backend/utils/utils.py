@@ -97,7 +97,12 @@ def insert_user_code(file_path, user_code, sample=None, include_solution=False):
 
 
 def id_to_file_name(problem_id):
-    res = "1_remove.py"
+    res = ""
+    if problem_id == "final-prob-1":
+        res = "1_remove.py"
+    else:
+        res = problem_id + ".py"
+
     return os.path.join(settings.MEDIA_ROOT, res)
 
 

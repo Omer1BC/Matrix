@@ -568,7 +568,6 @@ export default function LearnPage() {
     ]
   );
 
-  console.log("Current problemzz",currentProblem,problemDetails?.title)
 
   const testTabs = useMemo(
     () => ({

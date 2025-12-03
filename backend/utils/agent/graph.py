@@ -28,6 +28,7 @@ class State(TypedDict):
     params: Dict[str, Any]
     user_id: str
     problem_id: str
+    problem_solution: str
 
 
 def _last_user_text(msgs: list) -> str:
@@ -40,7 +41,7 @@ def _last_user_text(msgs: list) -> str:
 
 def llm_node(state: State):
     sys = SystemMessage(
-        content="You are a strict but supportive technical interviewer. Be concise. Use tools when appropriate. Do not reveal full solutions."
+        content="You are a strict but supportive technical interviewer. Be concise. ONLY use tools when the user asks for help with code, testing, or animations. For casual conversation or greetings, respond directly without tools. Do not reveal full solutions."
     )
     model = ChatOpenAI(model="gpt-4o-mini", temperature=0.0).bind_tools(
         [
@@ -64,6 +65,10 @@ def llm_node(state: State):
     if state.get("preferences"):
         msgs.append(
             SystemMessage(content=f"Learner preferences: {state['preferences']}")
+        )
+    if state.get("problem_solution"):
+        msgs.append(
+            SystemMessage(content=f"Problem solution: {state['problem_solution']}")
         )
 
     uid = state.get("user_id", "")
@@ -174,4 +179,4 @@ def build_graph():
     g.set_entry_point("llm")
     g.add_conditional_edges("llm", route_after_llm, {"tools": "tools", END: END})
     g.add_edge("tools", "llm")
-    return g.compile(checkpointer=MemorySaver())
+    return g.compile(checkpointer=MemorySaver(), debug=False)
