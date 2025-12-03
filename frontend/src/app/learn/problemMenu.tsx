@@ -120,7 +120,7 @@ export default function ProblemMenu({
   return (
     <div
       className="w-full"
-      style={{ backgroundColor: "var(--menubackground)" }}
+      style={{ backgroundColor: "var(--background)" }}
     >
       <h2 className="text-xl font-bold mb-4" style={{ color: "var(--gr-2)" }}>
         Trees
