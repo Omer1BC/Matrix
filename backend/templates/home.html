@@ -1,0 +1,204 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Matrix - AI-Powered Technical Interview Platform</title>
+    <link
+      rel="icon"
+      href="{% static 'icons/favicon.ico' %}"
+      type="image/x-icon"
+    />
+    <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+  </head>
+  <body>
+    <canvas id="matrix-canvas"></canvas>
+
+    <div class="content">
+      <header>
+        <div class="logo">MATRIX</div>
+        <div class="tagline">
+          &lt;/&gt; Decode the Algorithm. Master the Interview.
+        </div>
+      </header>
+
+      <section class="hero">
+        <h1>Welcome to the Matrix</h1>
+        <p>
+          Enter a world where technical interview preparation meets artificial
+          intelligence. Our platform combines the challenge of LeetCode-style
+          problems with an AI-powered learning experience that adapts to your
+          journey through Data Structures and Algorithms.
+        </p>
+        <a class="cta-button" href="{% url 'api-page' %}">API Documentation</a>
+      </section>
+
+      <section class="features">
+        <h2>&gt; System Features</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <span class="feature-icon">📚</span>
+            <h3>Learning Modules</h3>
+            <p>
+              Comprehensive curriculum covering all essential data structures
+              and algorithms. From arrays to graphs, master every concept with
+              structured learning paths.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <span class="feature-icon">💡</span>
+            <h3>Intelligent Hints</h3>
+            <p>
+              Stuck on a problem? Neo provides contextual hints that guide you
+              without giving away the solution. Learn to think like a software
+              engineer.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <span class="feature-icon">⚡</span>
+            <h3>Code Assistance</h3>
+            <p>
+              Real-time code analysis and suggestions. Debug faster, optimize
+              better, and understand time and space complexity with AI-powered
+              insights.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <span class="feature-icon">🎯</span>
+            <h3>DSA Problems</h3>
+            <p>
+              Curated collection of coding challenges ranging from easy to
+              expert. Practice with problems that mirror real technical
+              interviews.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <span class="feature-icon">🎬</span>
+            <h3>Visual Animations</h3>
+            <p>
+              See algorithms come to life with interactive visualizations.
+              Understand how sorting, searching, and graph algorithms work step
+              by step.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <span class="feature-icon">💬</span>
+            <h3>AI Chat Support</h3>
+            <p>
+              Chat with Neo anytime. Ask questions, clarify doubts, or discuss
+              approaches. Your personal AI mentor is always available.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="neo-section">
+        <div class="neo-content">
+          <div class="neo-text">
+            <h2>&gt; Meet Neo</h2>
+            <p>
+              Neo is your integrated AI agent, designed specifically to help you
+              ace technical interviews. Unlike generic AI assistants, Neo
+              understands the nuances of algorithmic problem-solving and
+              interview preparation.
+            </p>
+            <p>
+              Whether you need a hint, want to understand a concept deeper, or
+              need help debugging your solution, Neo adapts to your learning
+              style and guides you towards mastery.
+            </p>
+            <p>
+              <strong
+                >Neo doesn't just give you the answer—Neo teaches you how to
+                find it.</strong
+              >
+            </p>
+          </div>
+          <div class="neo-visual">
+            <div class="code-snippet">
+              <div>
+                <span class="terminal-prompt">neo@matrix:~$</span>
+                analyze_problem()
+              </div>
+              <div style="margin-left: 1rem; color: #00cc00">
+                Analyzing approach...
+              </div>
+              <div style="margin-left: 1rem; color: #00cc00">
+                Pattern detected: Two Pointers
+              </div>
+              <div style="margin-left: 1rem; color: #00cc00">
+                Time Complexity: O(n)
+              </div>
+              <div style="margin-left: 1rem; color: #00cc00">
+                Space Complexity: O(1)
+              </div>
+              <div style="margin-top: 1rem">
+                <span class="terminal-prompt">neo@matrix:~$</span>
+                provide_hint()
+              </div>
+              <div style="margin-left: 1rem; color: #00cc00">
+                "Consider starting from both ends..."
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          <span class="terminal-prompt">&gt;</span> Matrix Platform © 2025 -
+          Your Path to Technical Mastery
+        </p>
+        <p style="margin-top: 0.5rem; opacity: 0.7">
+          The Matrix has you. Follow the white rabbit.
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      // Matrix rain animation
+      const canvas = document.getElementById("matrix-canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const columns = Math.floor(canvas.width / 20);
+      const drops = Array(columns).fill(1);
+
+      const chars =
+        "アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+      function drawMatrix() {
+        ctx.fillStyle = "rgba(13, 2, 8, 0.05)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "#01FF00";
+        ctx.font = "15px monospace";
+
+        for (let i = 0; i < drops.length; i++) {
+          const text = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillText(text, i * 20, drops[i] * 20);
+
+          if (drops[i] * 20 > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+          drops[i]++;
+        }
+      }
+
+      setInterval(drawMatrix, 50);
+
+      window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    </script>
+  </body>
+</html>

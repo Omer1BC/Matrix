@@ -1,7 +1,9 @@
-from django.http import JsonResponse
+from django.shortcuts import render
 
-def home(request):
-    data = {
-        "response":"Hello World"
-    }
-    return JsonResponse(data)
+
+def home_view(request):
+    return render(request, "home.html")
+
+
+def api_view(request):
+    return render(request, "api.html")

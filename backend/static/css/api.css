@@ -1,0 +1,375 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Courier New", monospace;
+  background: #0d0208;
+  color: #01ff00;
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Matrix rain effect */
+#matrix-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  opacity: 0.1;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+}
+
+/* Header */
+header {
+  padding: 2rem;
+  border-bottom: 2px solid #01ff00;
+  background: rgba(13, 2, 8, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 2rem;
+  font-weight: bold;
+  text-shadow: 0 0 20px #01ff00;
+  letter-spacing: 0.3rem;
+}
+
+.api-version {
+  padding: 0.5rem 1rem;
+  border: 1px solid #01ff00;
+  background: rgba(1, 255, 0, 0.1);
+  font-size: 0.9rem;
+}
+
+/* Hero */
+.api-hero {
+  padding: 3rem 2rem;
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    rgba(13, 2, 8, 0.9) 0%,
+    rgba(1, 255, 0, 0.05) 100%
+  );
+  border-bottom: 1px solid #01ff00;
+}
+
+.api-hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 20px #01ff00;
+}
+
+.api-hero p {
+  font-size: 1.2rem;
+  color: #00cc00;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.status-row {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  gap: 4rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.5rem 1.5rem;
+  border: 1px solid #01ff00;
+  background: rgba(1, 255, 0, 0.1);
+}
+
+.status-badge::before {
+  content: "●";
+  color: #01ff00;
+  margin-right: 0.5rem;
+  animation: pulse 2s infinite;
+}
+
+.cta-button {
+  display: inline-block;
+  padding: 0.5rem 1.5rem;
+  background: rgba(1, 255, 0, 0.1);
+  border: 1px solid #01ff00;
+  color: #01ff00;
+  text-decoration: none;
+  font-family: "Courier New", monospace;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.cta-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: #01ff00;
+  transition: left 0.3s ease;
+  z-index: -1;
+}
+
+.cta-button:hover::before {
+  left: 0;
+}
+
+.cta-button:hover {
+  color: #0d0208;
+  box-shadow: 0 0 20px #01ff00;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Main Content */
+.api-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 3rem;
+}
+
+/* Sidebar Navigation */
+.api-nav {
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+  border: 1px solid #01ff00;
+  background: rgba(1, 255, 0, 0.03);
+  padding: 1.5rem;
+}
+
+.api-nav h3 {
+  margin-bottom: 1rem;
+  color: #01ff00;
+  font-size: 1.2rem;
+}
+
+.api-nav ul {
+  list-style: none;
+}
+
+.api-nav li {
+  margin-bottom: 0.8rem;
+  padding-left: 1rem;
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.api-nav li:hover {
+  border-left-color: #01ff00;
+  padding-left: 1.5rem;
+}
+
+.api-nav a {
+  color: #00cc00;
+  text-decoration: none;
+}
+
+.api-nav a:hover {
+  color: #01ff00;
+}
+
+/* API Sections */
+.api-section {
+  margin-bottom: 3rem;
+}
+
+.api-section h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 0 10px #01ff00;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #01ff00;
+}
+
+.api-section h3 {
+  font-size: 1.5rem;
+  margin: 2rem 0 1rem;
+  color: #01ff00;
+}
+
+.api-section p {
+  line-height: 1.8;
+  color: #00cc00;
+  margin-bottom: 1rem;
+}
+
+/* Endpoint Cards */
+.endpoint {
+  margin: 2rem 0;
+  border: 1px solid #01ff00;
+  background: rgba(1, 255, 0, 0.05);
+  overflow: hidden;
+}
+
+.endpoint-header {
+  padding: 1rem 1.5rem;
+  background: rgba(1, 255, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.http-method {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid #01ff00;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.http-method.get {
+  background: rgba(1, 255, 0, 0.2);
+}
+.http-method.post {
+  background: rgba(1, 200, 0, 0.2);
+}
+.http-method.put {
+  background: rgba(1, 150, 0, 0.2);
+}
+.http-method.delete {
+  background: rgba(255, 100, 0, 0.2);
+  color: #ff6600;
+  border-color: #ff6600;
+}
+
+.endpoint-path {
+  font-size: 1.1rem;
+  flex: 1;
+}
+
+.endpoint-body {
+  padding: 1.5rem;
+}
+
+/* Code Blocks */
+.code-block {
+  background: rgba(0, 0, 0, 0.6);
+  border-left: 3px solid #01ff00;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+  position: relative;
+}
+
+.code-block::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.8rem;
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+
+.code-block code {
+  font-family: "Courier New", monospace;
+  color: #01ff00;
+  line-height: 1.6;
+}
+
+.code-comment {
+  color: #00cc00;
+  opacity: 0.7;
+}
+
+/* Parameter Tables */
+.params-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.params-table th,
+.params-table td {
+  padding: 0.8rem;
+  text-align: left;
+  border: 1px solid #01ff00;
+}
+
+.params-table th {
+  background: rgba(1, 255, 0, 0.1);
+  font-weight: bold;
+}
+
+.params-table td {
+  color: #00cc00;
+}
+
+.param-type {
+  color: #01ff00;
+  font-family: monospace;
+}
+
+/* Response Examples */
+.response-example {
+  margin: 1.5rem 0;
+}
+
+.response-status {
+  display: inline-block;
+  padding: 0.3rem 1rem;
+  background: rgba(1, 255, 0, 0.2);
+  border: 1px solid #01ff00;
+  margin-bottom: 1rem;
+}
+
+/* Footer */
+footer {
+  padding: 2rem;
+  text-align: center;
+  border-top: 2px solid #01ff00;
+  background: rgba(13, 2, 8, 0.95);
+  color: #00cc00;
+  margin-top: 3rem;
+}
+
+@media (max-width: 768px) {
+  .api-main {
+    grid-template-columns: 1fr;
+  }
+
+  .api-nav {
+    position: static;
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

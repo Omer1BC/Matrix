@@ -1,0 +1,325 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Matrix API - Developer Documentation</title>
+    <link
+      rel="icon"
+      href="{% static 'icons/favicon.ico' %}"
+      type="image/x-icon"
+    />
+    <link rel="stylesheet" href="{% static 'css/api.css' %}" />
+  </head>
+  <body>
+    <canvas id="matrix-canvas"></canvas>
+
+    <div class="content">
+      <header>
+        <div class="header-content">
+          <div class="logo">MATRIX API</div>
+          <div class="api-version">v0.0.1</div>
+        </div>
+      </header>
+
+      <section class="api-hero">
+        <h1>&gt; API Documentation</h1>
+        <p>
+          Connect to the Matrix. Access our powerful AI-assisted learning
+          platform programmatically. Build integrations, fetch problems,
+          interact with Neo, and more.
+        </p>
+        <div class="status-row">
+          <div class="status-badge">System Online</div>
+          <a class="cta-button" href="{% url 'home' %}">Back to Home</a>
+        </div>
+      </section>
+
+      <div class="api-main">
+        <nav class="api-nav">
+          <h3>&gt; Navigation</h3>
+          <ul>
+            <li><a href="#getting-started">Getting Started</a></li>
+            <li><a href="#authentication">Authentication</a></li>
+            <li><a href="#neo">Neo AI Agent</a></li>
+            <li><a href="#learning">Learning Modules</a></li>
+            <li><a href="#rate-limits">Rate Limits</a></li>
+          </ul>
+        </nav>
+
+        <main>
+          <section id="getting-started" class="api-section">
+            <h2>&gt; Getting Started</h2>
+            <p>
+              Welcome to the Matrix API. This RESTful API allows you to
+              integrate Matrix's technical interview preparation platform into
+              your applications. All endpoints return JSON responses and use
+              standard HTTP response codes.
+            </p>
+
+            <h3>Base URL</h3>
+            <div class="code-block" data-lang="url">
+              <code>https://matrix-backend.up.railway.app</code>
+            </div>
+
+            <h3>Response Format</h3>
+            <p>All responses follow this standard structure:</p>
+            <div class="code-block" data-lang="json">
+              <code
+                >{ "success": true, "data": { ... }, "message": "Operation
+                successful", "timestamp": "2024-12-03T10:30:00Z" }</code
+              >
+            </div>
+          </section>
+
+          <section id="authentication" class="api-section">
+            <h2>&gt; Authentication</h2>
+            <p>
+              All API requests require authentication using an API key. Include
+              your API key in the request header:
+            </p>
+
+            <div class="code-block" data-lang="bash">
+              <code
+                >curl -H "Authorization: Bearer YOUR_API_KEY" \ -H
+                "Content-Type: application/json" \
+                https://matrix-backend.up.railway.app/problems</code
+              >
+            </div>
+
+            <p>You can generate an API key from your dashboard settings.</p>
+          </section>
+
+          <section id="neo" class="api-section">
+            <h2>&gt; Neo AI Agent</h2>
+            <p>
+              Interact with Neo, our AI assistant designed specifically for
+              technical interview preparation.
+            </p>
+
+            <div class="endpoint">
+              <div class="endpoint-header">
+                <span class="http-method post">POST</span>
+                <span class="endpoint-path">/neo/chat</span>
+              </div>
+              <div class="endpoint-body">
+                <p>Send a message to Neo and receive intelligent assistance.</p>
+
+                <h4 style="color: #01ff00; margin-top: 1rem">Request Body</h4>
+                <div class="code-block" data-lang="json">
+                  <code
+                    >{ "problem_id": "two-sum", "message": "I'm stuck on this
+                    problem. Can you give me a hint?", "context": {
+                    "current_code": "function twoSum(nums, target) { ... }",
+                    "user_approach": "I'm trying to use nested loops" } }</code
+                  >
+                </div>
+
+                <div class="response-example">
+                  <div class="response-status">200 OK</div>
+                  <div class="code-block" data-lang="json">
+                    <code
+                      >{ "success": true, "data": { "neo_response": "Good start!
+                      Nested loops work, but consider: can you use a hash map to
+                      reduce time complexity?", "hint_level": 1,
+                      "follow_up_questions": [ "What is the time complexity of
+                      your current approach?", "What data structure allows O(1)
+                      lookups?" ] } }</code
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="endpoint">
+              <div class="endpoint-header">
+                <span class="http-method post">POST</span>
+                <span class="endpoint-path">/neo/analyze</span>
+              </div>
+              <div class="endpoint-body">
+                <p>
+                  Submit code for Neo to analyze and provide feedback on
+                  correctness, efficiency, and style.
+                </p>
+              </div>
+            </div>
+
+            <div class="endpoint">
+              <div class="endpoint-header">
+                <span class="http-method get">GET</span>
+                <span class="endpoint-path">/neo/hints/{problem_id}</span>
+              </div>
+              <div class="endpoint-body">
+                <p>
+                  Get progressive hints for a problem without spoiling the
+                  solution.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section id="learning" class="api-section">
+            <h2>&gt; Learning Modules</h2>
+
+            <div class="endpoint">
+              <div class="endpoint-header">
+                <span class="http-method get">GET</span>
+                <span class="endpoint-path">/learning/modules</span>
+              </div>
+              <div class="endpoint-body">
+                <p>
+                  Access structured learning paths for data structures and
+                  algorithms topics.
+                </p>
+              </div>
+            </div>
+
+            <div class="endpoint">
+              <div class="endpoint-header">
+                <span class="http-method get">GET</span>
+                <span class="endpoint-path"
+                  >/learning/visualize/{algorithm}</span
+                >
+              </div>
+              <div class="endpoint-body">
+                <p>
+                  Get visualization data for algorithm animations (quicksort,
+                  BFS, DFS, etc.).
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section id="rate-limits" class="api-section">
+            <h2>&gt; Rate Limits</h2>
+            <p>API rate limits are enforced per API key:</p>
+
+            <table class="params-table">
+              <thead>
+                <tr>
+                  <th>Tier</th>
+                  <th>Requests/Hour</th>
+                  <th>Neo Interactions/Hour</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Free</td>
+                  <td>100</td>
+                  <td>20</td>
+                </tr>
+                <tr>
+                  <td>Pro</td>
+                  <td>1,000</td>
+                  <td>200</td>
+                </tr>
+                <tr>
+                  <td>Enterprise</td>
+                  <td>Unlimited</td>
+                  <td>Unlimited</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p style="margin-top: 1rem">
+              Rate limit information is included in response headers:
+            </p>
+            <div class="code-block" data-lang="http">
+              <code
+                >X-RateLimit-Limit: 1000 X-RateLimit-Remaining: 847
+                X-RateLimit-Reset: 1701619200</code
+              >
+            </div>
+          </section>
+
+          <section class="api-section">
+            <h2>&gt; Error Codes</h2>
+            <p>Standard HTTP status codes are used:</p>
+
+            <table class="params-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>200</td>
+                  <td>Success</td>
+                </tr>
+                <tr>
+                  <td>400</td>
+                  <td>Bad Request - Invalid parameters</td>
+                </tr>
+                <tr>
+                  <td>401</td>
+                  <td>Unauthorized - Invalid or missing API key</td>
+                </tr>
+                <tr>
+                  <td>429</td>
+                  <td>Too Many Requests - Rate limit exceeded</td>
+                </tr>
+                <tr>
+                  <td>500</td>
+                  <td>Internal Server Error</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </main>
+      </div>
+
+      <footer>
+        <p>
+          <span style="color: #01ff00">&gt;</span> Matrix API © 2025 - Powering
+          the Future of Technical Interview Prep
+        </p>
+        <p style="margin-top: 0.5rem; opacity: 0.7">
+          Need help? Contact support@matrix-platform.io
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      // Matrix rain animation
+      const canvas = document.getElementById("matrix-canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const columns = Math.floor(canvas.width / 20);
+      const drops = Array(columns).fill(1);
+
+      const chars =
+        "アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789<>{}[]/\\|";
+
+      function drawMatrix() {
+        ctx.fillStyle = "rgba(13, 2, 8, 0.05)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "#01FF00";
+        ctx.font = "15px monospace";
+
+        for (let i = 0; i < drops.length; i++) {
+          const text = chars[Math.floor(Math.random() * chars.length)];
+          ctx.fillText(text, i * 20, drops[i] * 20);
+
+          if (drops[i] * 20 > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+          drops[i]++;
+        }
+      }
+
+      setInterval(drawMatrix, 50);
+
+      window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    </script>
+  </body>
+</html>
