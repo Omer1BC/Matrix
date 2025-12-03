@@ -1,18 +1,28 @@
-''''''
+""""""
+
 from typing import *
+
+
 class Node:
-    def __init__(self,val=0,left=None,right=None):
-        self.val = val 
-        self.left = left 
+    def init(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
         self.right = right
-''''''
+
+
+""""""
+
+
 def decreasing_order(root):
     if root is None:
         return []
 
     return decreasing_order(root.right) + [root.val] + decreasing_order(root.left)
 
-''''''
+
+""""""
+
+
 def build_tree(bfs_list):
     if not bfs_list or bfs_list[0] is None:
         return None
@@ -51,9 +61,8 @@ def run_test(input, expected):
         "expected": expected,
         "actual": result,
         "error": exception,
-        "passed": result == expected if not exception else False
+        "passed": result == expected if not exception else False,
     }
-
 
 
 test_cases = [
@@ -66,9 +75,10 @@ test_cases = [
     ([10, None, 15], [15, 10]),
     ([50, 30, 70, 20, 40, 60, 80], [80, 70, 60, 50, 40, 30, 20]),
     ([5, 3, 7, 1, 4, 6, 9], [9, 7, 6, 5, 4, 3, 1]),
-    ([], [])
+    ([], []),
 ]
 
-results = {f"test_{i}": run_test(input, expected) for i, (input, expected) in enumerate(test_cases)}
-
-
+results = {
+    f"test{i}": run_test(input, expected)
+    for i, (input, expected) in enumerate(test_cases)
+}

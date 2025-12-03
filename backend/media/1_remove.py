@@ -1,41 +1,55 @@
-''''''
+""""""
+
 from typing import *
 import subprocess
 from pathlib import Path
 import sys
+
+
 class Node:
-    def __init__(self,val=0,left=None,right=None):
-        self.val = val 
-        self.left = left 
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
         self.right = right
-''''''
-def remove(root,target):
-	if not root:
-		return None 
-	if  root.val > target: 
-		root.left = remove(root.left,target)
-	elif root.val < target:
-		root.right = remove(root.right,target)
-	else:
-		if not root.left: return root.right 
-		if not root.right: return root.left
-		pred = find_max(root.left)
-		root.val = pred.val 
-		root.left = remove_max(root.left)
-	return root
+
+
+""""""
+
+
+def remove(root, target):
+    if not root:
+        return None
+    if root.val > target:
+        root.left = remove(root.left, target)
+    elif root.val < target:
+        root.right = remove(root.right, target)
+    else:
+        if not root.left:
+            return root.right
+        if not root.right:
+            return root.left
+        pred = find_max(root.left)
+        root.val = pred
+        root.left = remove_max(root.left)
+    return root
+
 
 def find_max(root):
-	if not root.right:
-		return root
-	return find_max(root.right)
+    if not root.right:
+        return root.val
+    return find_max(root.right)
+
 
 def remove_max(root):
-	if not root.right:
-		return root.left
-	root.right = remove_max(root.right)
-	return root
+    if not root.right:
+        return root.left
+    root.right = remove_max(root.right)
+    return root
 
-''''''
+
+""""""
+
+
 def build_tree(bfs_list):
     if not bfs_list or bfs_list[0] is None:
         return None
@@ -59,6 +73,7 @@ def build_tree(bfs_list):
 
     return root
 
+
 def tree_to_bfs(root):
     if not root:
         return []
@@ -80,16 +95,18 @@ def tree_to_bfs(root):
 
     return result
 
+
 def run_test(bfs_list, target, expected):
     root = build_tree(bfs_list)
     result = remove(root, target)
     result_list = tree_to_bfs(result)
 
-    return {"root": bfs_list,
-          "target": target,
-          "expected": expected,
-          "actual": result_list,
-        }
+    return {
+        "root": bfs_list,
+        "target": target,
+        "expected": expected,
+        "actual": result_list,
+    }
 
 
 def animate_test_case(case_index: int, out_prefix: str = "bst_case") -> str:
@@ -113,7 +130,7 @@ def animate_test_case(case_index: int, out_prefix: str = "bst_case") -> str:
                 "from manim import *",
                 "import sys",
                 "from pathlib import Path",
-                f"sys.path.append(r\"{str(template_dir)}\")",
+                f'sys.path.append(r"{str(template_dir)}")',
                 "from bst import BstVisualizer",
                 "",
                 "class BstExample(Scene):",
@@ -146,10 +163,11 @@ def animate_test_case(case_index: int, out_prefix: str = "bst_case") -> str:
 
 test_cases = [
     ([5, 3, 7], 3, [5, None, 7]),
-
     ([5, 3, 7], 5, [3, None, 7]),
-
     ([5, 3, 7, 1], 3, [5, 1, 7]),
 ]
-results = { f"{i}": run_test(node, targ, expected) for i, (node, targ, expected) in enumerate(test_cases)}
+results = {
+    f"{i}": run_test(node, targ, expected)
+    for i, (node, targ, expected) in enumerate(test_cases)
+}
 print(results)

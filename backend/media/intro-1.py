@@ -1,11 +1,18 @@
-''''''
+""""""
+
 from typing import *
+
+
 class Node:
-    def __init__(self,val=0,left=None,right=None):
-        self.val = val 
-        self.left = left 
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
         self.right = right
-''''''
+
+
+""""""
+
+
 def to_string(node):
     if node is None:
         return ""
@@ -15,7 +22,10 @@ def to_string(node):
 
     return f"{node.val}({left_val})({right_val})"
 
-''''''
+
+""""""
+
+
 def build_tree(bfs_list):
     if not bfs_list or bfs_list[0] is None:
         return None
@@ -54,9 +64,8 @@ def run_test(input, expected):
         "expected": expected,
         "actual": result,
         "error": exception,
-        "passed": result == expected if not exception else False
+        "passed": result == expected if not exception else False,
     }
-
 
 
 test_cases = [
@@ -71,7 +80,10 @@ test_cases = [
     ([1, 2, 3], "1(2)(3)"),
 ]
 
-results = {f"test_{i}": run_test(input, expected) for i, (input, expected) in enumerate(test_cases)}
+results = {
+    f"test_{i}": run_test(input, expected)
+    for i, (input, expected) in enumerate(test_cases)
+}
 
 for test_name, result in results.items():
     status = "PASSED" if result["passed"] else "FAILED"
@@ -80,10 +92,9 @@ for test_name, result in results.items():
         print(f"  Input BFS: {result['input']}")
         print(f"  Expected: {result['expected']}")
         print(f"  Actual: {result['actual']}")
-        if result['error']:
+        if result["error"]:
             print(f"  Error: {result['error']}")
 
 passed = sum(1 for r in results.values() if r["passed"])
 total = len(results)
 print(f"\n{passed}/{total} tests passed")
-

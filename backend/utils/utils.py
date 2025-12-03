@@ -35,14 +35,24 @@ save_tool = Tool(
 def get_file_sections(file_path):
     with open(file_path, "r") as f:
         lines = f.readlines()
-    sections = []
-    prefix = "''''''"
+    sections = [[]]  # Initialize with one empty section
+    prefix = '""""""'  # Changed from single quotes to double quotes to match file format
     for line in lines:
         if line.strip().startswith(prefix):
             sections.append([])
         else:
-            print("error")
             sections[-1].append(line)
+    # Filter out empty sections
+    sections = [s for s in sections if s]
+
+    # Ensure exactly 3 sections: imports, solution, tests
+    # If there are 4 sections, the first is likely a stub - merge it with imports
+    if len(sections) == 4:
+        sections = [sections[0] + sections[1], sections[2], sections[3]]
+    elif len(sections) > 4:
+        # Merge all sections before the last 2 into imports
+        sections = [sum(sections[:-2], []), sections[-2], sections[-1]]
+
     return sections
 
 
