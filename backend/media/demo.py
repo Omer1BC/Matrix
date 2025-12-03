@@ -3,18 +3,18 @@ from typing import *
 
 
 class Node:
-    def init(self, val=0, left=None, right=None):
+    def __init__(self, val=0, left=None, right=None):
         self.val = val
         self.left = left
         self.right = right
 
 
 
-def decreasing_order(root):
-    if not root:
-        return []
+def find_max(root):
+    if not root.right:
+        return root.val
     else:
-        return decreasing_order(root.right) + [root.val] + decreasing_order(root.left)
+        return find_max(root.right)
 
 
 def build_tree(bfs_list):
@@ -44,10 +44,10 @@ def build_tree(bfs_list):
 def run_test(input, expected):
     bfs_list = input
     exception = ""
-    result = []
+    result = None
     try:
         root = build_tree(bfs_list)
-        result = decreasing_order(root)
+        result = find_max(root)
     except Exception as e:
         exception = str(e)
     return {
@@ -60,19 +60,17 @@ def run_test(input, expected):
 
 
 test_cases = [
-    ([10], [10]),
-    ([10, 5, 15], [15, 10, 5]),
-    ([10, 5, 15, 3, 7, 12, 20], [20, 15, 12, 10, 7, 5, 3]),
-    ([10, 5, None, 3, None, 1], [10, 5, 3, 1]),
-    ([10, None, 15, None, 20, None, 25], [25, 20, 15, 10]),
-    ([10, 5], [10, 5]),
-    ([10, None, 15], [15, 10]),
-    ([50, 30, 70, 20, 40, 60, 80], [80, 70, 60, 50, 40, 30, 20]),
-    ([5, 3, 7, 1, 4, 6, 9], [9, 7, 6, 5, 4, 3, 1]),
-    ([], []),
+    ([10], 10),
+    ([10, 5, 15], 15),
+    ([10, 5, 15, 3, 7, 12, 20], 20),
+    ([10, 5, None, 3, None, 1], 10),
+    ([10, None, 15, None, 20, None, 25], 25),
+    ([10, 5], 10),
+    ([10, None, 15], 15),
+    ([50, 30, 70, 20, 40, 60, 80], 80),
 ]
 
 results = {
-    f"test{i}": run_test(input, expected)
+    f"test_{i}": run_test(input, expected)
     for i, (input, expected) in enumerate(test_cases)
 }

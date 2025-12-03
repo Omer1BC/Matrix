@@ -36,7 +36,9 @@ def get_file_sections(file_path):
     with open(file_path, "r") as f:
         lines = f.readlines()
     sections = [[]]  # Initialize with one empty section
-    prefix = '""""""'  # Changed from single quotes to double quotes to match file format
+    prefix = (
+        '""""""'  # Changed from single quotes to double quotes to match file format
+    )
     for line in lines:
         if line.strip().startswith(prefix):
             sections.append([])
