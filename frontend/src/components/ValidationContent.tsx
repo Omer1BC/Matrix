@@ -263,7 +263,7 @@ export default function ValidationContent({
           {isLoading ? "Running…" : "Test"}
         </button>
       </div>
-      <vr className="matrix-border"/>
+      <div className="w-px h-full matrix-border"></div>
       <div className="flex w-4/5 flex-col overflow-hidden bg-[var(--background)] p-4">
         <div className="max-h-64 overflow-auto break-words font-sans text-[var(--gr-2)]">
           {hasError ? (
