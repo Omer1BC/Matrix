@@ -37,8 +37,8 @@ export default function TabPanel({
   };
 
   return (
-    <div className={`relative flex flex-col min-h-0 gap-2 p-4 bg-[var(--dbl-2)] rounded-[var(--grid-border-radius)] ${className}`}>
-      <div className="rounded-t-md" style={{ backgroundColor: "var(--dbl-3)" }}>
+    <div className={`relative flex flex-col min-h-0 gap-2 p-4 bg-[var(--background)] rounded-[var(--grid-border-radius)] ${className}`}>
+      <div className="rounded-t-md" style={{ backgroundColor: "var(--background)" }}>
         <div role="tablist" aria-label="Tabs" className="flex flex-wrap gap-1 px-4 -mb-px">
           {keys.map((key) => {
             const isActive = key === currentActiveKey;
@@ -73,7 +73,7 @@ export default function TabPanel({
         </div>
       </div>
 
-      <div className="flex flex-1 min-h-0 rounded-md" style={{ backgroundColor: "var(--dbl-3)" }}>
+      <div className="flex flex-1 min-h-0 rounded-md" style={{ backgroundColor: "var(--background)" }}>
         {keys.map((key) => {
           const isActive = key === currentActiveKey;
           const node = tabs[key].content;

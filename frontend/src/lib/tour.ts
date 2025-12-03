@@ -4,7 +4,18 @@ import "./tour.css";
 import { sawHomepage, sawLearn, sawSolve } from "./supabase/auth";
 import { SeenStatus } from "./types";
 
-export const allSteps = {
+type PopperPlacement = "top" | "bottom" | "left" | "right" | "top-start" | "top-end" | "bottom-start" | "bottom-end" | "left-start" | "left-end" | "right-start" | "right-end";
+
+type TourStep = {
+  id: string;
+  text: string;
+  attachTo: {
+    element: string;
+    on: PopperPlacement;
+  };
+};
+
+export const allSteps: Record<string, TourStep[]> = {
     "/learn": [
       {
         id: "problems",
@@ -76,28 +87,29 @@ export const allSteps = {
       {
         id: "createanimation",
         text: "This allows you to create your own animation regarding one of the specified tools above to learn more about them.",
-        attachTo: { element: ".createanimation", on: "left"},
+        attachTo: { element: ".createanimation", on: "left" as const},
       },
       {
         id: "notes",
         text: "Here you can refer back to the notes you took when completing the exercises.",
-        attachTo: { element: ".notes", on:"left" },
+        attachTo: { element: ".notes", on:"left" as const},
       },
       {
         id: "tests-solve",
         text: "Here you are able to run some tests against your code to see if its correct, get it graded by an LLM, and provide an animation.",
-        attachTo: { element: ".tests-solve", on: "left"},
+        attachTo: { element: ".tests-solve", on: "left" as const},
       },
       {
         id: "chatbox",
         text: "Here you are able to communicate with the LLM to help you solve the problem. It will repond as if it is was an interviewer.",
-        attachTo: { element: ".chatbox", on: "right"},
+        attachTo: { element: ".chatbox", on: "right" as const},
       }
     ]
 };
 
 export const createTour = async (pathname: string, seen?: SeenStatus) => {
-    const steps = allSteps[pathname] || [];
+
+    const steps = allSteps[pathname];
 
     if (pathname === "/" && seen?.homepage) return null;
     if (pathname === "/learn" && seen?.learn) return null;

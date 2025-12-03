@@ -68,6 +68,7 @@
   :root {
     /* Keep Matrix theme in dark mode */
     --background: 26 26 27;
+    --menubackground: #643838;
     --foreground: 255 255 255;
     --card: 26 26 27;
     --primary: 102 255 102; /* Bright lime green in dark mode */
@@ -163,7 +164,7 @@
 }
 
 .matrix-border {
-  border: 1px solid rgb(102, 255, 102);
+  border: 1px solid rgb(102, 255, 102, 0.3);
   box-shadow: 0 0 10px rgba(102, 255, 102, 0.3);
 }
 

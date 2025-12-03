@@ -41,7 +41,7 @@ export default function Header() {
    * This is the randomized sign up for the class demo
    * @param e event
    */
-  const handleSignup = async (e: Event) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -84,7 +84,7 @@ export default function Header() {
     <>
       <header className="flex flex-row justify-between w-full relative z-10 border-b border-border/20 backdrop-blur-sm bg-background/80">
         <div className="px-4 py-4 flex flex-1 items-center justify-between">
-          <div className="flex flex-row gap-4 items-center">
+          <div className="flex flex-row gap-4 items-center text-[var(--gr-2)]">
             <Link
               href="/"
               className="flex items-center space-x-2 hover:opacity-80 transition-opacity"

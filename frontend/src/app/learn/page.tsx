@@ -134,7 +134,9 @@ export default function LearnPage() {
 
   const [solutionLanguage, setSolutionLanguage] = useState("Python");
 
-  const solutionEditorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
+  const solutionEditorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(
+    null
+  );
 
   useEffect(() => {
     const setMenu = () => {
@@ -146,7 +148,7 @@ export default function LearnPage() {
 
     return () => {
       window.removeEventListener("switchToProblems", setMenu);
-      window.addEventListener("switchToRegular", setMenu);
+      window.removeEventListener("switchToRegular", setMenu);
     };
   }, [showMenu]);
 
@@ -157,22 +159,19 @@ export default function LearnPage() {
         if (model) {
           monaco.editor.setModelLanguage(model, solutionLanguage.toLowerCase());
         }
-
         // Update solution based on language and current problem
-        if (solutionLanguage === "Python" && currentProblem.solution) {
-          solutionEditorRef.current!.setValue(currentProblem.solution);
-        } else if (
-          solutionLanguage === "Java" &&
-          currentProblem.java_solution
-        ) {
-          solutionEditorRef.current!.setValue(currentProblem.java_solution);
+        const currProblem = problemList[currentIndex];
+        if (solutionLanguage === "Python" && currProblem.solution) {
+          solutionEditorRef.current!.setValue(currProblem.solution);
+        } else if (solutionLanguage === "Java" && currProblem.java_solution) {
+          solutionEditorRef.current!.setValue(currProblem.java_solution);
         } else {
           // Fallback if no solution exists
           solutionEditorRef.current!.setValue("// No solution available");
         }
       });
     }
-  }, [solutionLanguage, currentProblem, editorRef, monacoRef]);
+  }, [currentIndex, problemList, solutionLanguage]);
 
   useEffect(() => {
     const getProblems = async () => {
@@ -187,7 +186,7 @@ export default function LearnPage() {
         setProblemDetails(problems[0]);
         setCurrentIndex(0);
 
-        const ids = Object.values(data).map((row) => row.problem_id); // keep original order
+        const ids = Object.values(data).map((row: any) => row.problem_id); // keep original order
         setProblemIds(ids);
         setProblemList(problems);
       } catch (err) {
@@ -199,6 +198,25 @@ export default function LearnPage() {
     getProblems();
   }, []);
 
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    const completion = problemCompletionList[currentIndex];
+    const problem = problemList[currentIndex];
+    if (!completion || !problem) return;
+
+    const codeToSet =
+      completion.user_solution?.length > 0
+        ? completion.user_solution
+        : problem.method_stub;
+
+    setTimeout(() => {
+      if (editorRef.current) {
+        editorRef.current.setValue(formatCodeForEditor(codeToSet));
+      }
+    }, 0);
+  }, [currentIndex, problemCompletionList, problemList]);
+
   const handleNextProblem = useCallback(() => {
     let nextIndex = currentIndex + 1;
 
@@ -207,30 +225,14 @@ export default function LearnPage() {
     }
 
     setCurrentIndex(nextIndex);
-
-    const nextProblemCompletion = problemCompletionList[String(nextIndex)];
+    const nextProblemCompletion = problemCompletionList[nextIndex];
     const nextProblem = problemList[nextIndex];
-
     if (nextProblemCompletion && nextProblem) {
       setCurrentProblemCompletion(nextProblemCompletion);
       setCurrentProblem(nextProblem);
       setProblemDetails(nextProblem);
-
-      if (editorRef.current) {
-        const codeToSet =
-          nextProblemCompletion.user_solution.length > 0
-            ? nextProblemCompletion.user_solution
-            : nextProblem.method_stub;
-        editorRef.current.setValue(formatCodeForEditor(codeToSet));
-      }
     }
-  }, [
-    currentIndex,
-    editorRef,
-    problemCompletionList,
-    problemIds.length,
-    problemList,
-  ]);
+  }, [currentIndex, problemIds.length, problemCompletionList, problemList]);
 
   const handlePrevProblem = useCallback(() => {
     if (currentIndex <= 0) return;
@@ -238,26 +240,16 @@ export default function LearnPage() {
     const prevIndex = currentIndex - 1;
 
     setCurrentIndex(prevIndex);
-
-    const prevProblemCompletion = problemCompletionList[prevIndex];
+    const prevProblemCompetion = problemCompletionList[prevIndex];
     const prevProblem = problemList[prevIndex];
-
-    if (prevProblemCompletion && prevProblem) {
-      setCurrentProblemCompletion(prevProblemCompletion);
+    if (prevProblemCompetion && prevProblem) {
+      setCurrentProblemCompletion(prevProblemCompetion);
       setCurrentProblem(prevProblem);
       setProblemDetails(prevProblem);
-
-      if (editorRef.current) {
-        const codeToSet =
-          prevProblemCompletion.user_solution.length > 0
-            ? prevProblemCompletion.user_solution
-            : prevProblem.method_stub;
-        editorRef.current.setValue(formatCodeForEditor(codeToSet));
-      }
     }
-  }, [currentIndex, editorRef, problemCompletionList, problemList]);
+  }, [currentIndex, problemCompletionList, problemList]);
 
-  const handleViewHint = async () => {
+  const handleViewHint = useCallback(async () => {
     const editor = editorRef.current;
     if (!editor) return;
     const model = editor.getModel();
@@ -270,13 +262,13 @@ export default function LearnPage() {
 
     const data = await neoAnnotate(code);
     setNeoResponse(data?.expalantions_of_hint || "");
-  };
+  }, [neoAnnotate, setNeoResponse, editorRef]);
 
-  function toggleRefresh() {
-    setRefreshKey(!refreshKey);
-  }
+  const toggleRefresh = useCallback(() => {
+    setRefreshKey((prev) => !prev);
+  }, []);
 
-  async function handleAllTestsPassed() {
+  const handleAllTestsPassed = useCallback(async () => {
     setShowVictoryModal(true);
     await updateUserProblemCompletion(
       currProblemCompletion.id,
@@ -285,8 +277,23 @@ export default function LearnPage() {
       testCases.length,
       editorRef.current?.getValue()
     );
+    setProblemCompletionList((prev) => ({
+      ...prev,
+      [currentIndex]: {
+        ...prev[currentIndex],
+        user_solution: editorRef.current?.getValue(),
+      },
+    }));
     toggleRefresh();
-  }
+  }, [
+    currProblemCompletion.id,
+    currProblemCompletion.category_id,
+    currentProblem.problem_id,
+    testCases.length,
+    editorRef,
+    toggleRefresh,
+    currentIndex,
+  ]);
 
   useEffect(() => {
     async function loadCompletion() {
@@ -295,45 +302,54 @@ export default function LearnPage() {
     }
 
     loadCompletion();
-  }, [refreshKey, completionPercentage]);
+  }, [refreshKey]);
 
-  function handleEditorDidMount(
-    editor: MonacoEditor.IStandaloneCodeEditor,
-    monaco
-  ) {
-    editorRef.current = editor;
-    monacoRef.current = monaco;
+  const handleEditorDidMount = useCallback(
+    (editor: MonacoEditor.IStandaloneCodeEditor, monaco: any) => {
+      editorRef.current = editor;
+      monacoRef.current = monaco;
 
-    if (currProblemCompletion?.user_solution) {
-      editor.setValue(formatCodeForEditor(currProblemCompletion.user_solution));
-    } else if (currentProblem?.method_stub) {
-      editor.setValue(formatCodeForEditor(currentProblem.method_stub));
-    } else {
-      editor.setValue("# Write your solution here\n");
-    }
-  }
-
-  function handleSolutionsEditorDidMount(
-    editor: MonacoEditor.IStandaloneCodeEditor,
-    monaco
-  ) {
-    solutionEditorRef.current = editor;
-    monacoRef.current = monaco;
-
-    import("monaco-editor").then((monaco) => {
-      const model = solutionEditorRef.current!.getModel();
-      if (model) {
-        monaco.editor.setModelLanguage(model, "python");
+      if (currProblemCompletion?.user_solution) {
+        editor.setValue(
+          formatCodeForEditor(currProblemCompletion.user_solution)
+        );
+      } else if (currentProblem?.method_stub) {
+        editor.setValue(formatCodeForEditor(currentProblem.method_stub));
+      } else {
+        editor.setValue("# Write your solution here\n");
       }
+    },
+    [
+      currProblemCompletion?.user_solution,
+      currentProblem?.method_stub,
+      editorRef,
+      monacoRef,
+    ]
+  );
 
-      if (currentProblem.solution) {
-        solutionEditorRef.current!.setValue(currentProblem.solution);
-      }
-    });
-  }
+  const handleSolutionsEditorDidMount = useCallback(
+    (editor: MonacoEditor.IStandaloneCodeEditor, monaco: any) => {
+      solutionEditorRef.current = editor;
+      monacoRef.current = monaco;
 
-  const handleProblemSelect = async (problem: Problem) => {
-    setCurrentProblem(problem);
+      import("monaco-editor").then((monaco) => {
+        const model = solutionEditorRef.current!.getModel();
+        if (model) {
+          monaco.editor.setModelLanguage(model, "python");
+        }
+
+        if (problemList[currentIndex].solution) {
+          solutionEditorRef.current!.setValue(
+            problemList[currentIndex].solution
+          );
+        }
+      });
+    },
+    [currentIndex, problemList, solutionLanguage]
+  );
+
+  const handleProblemSelect = async (problem: ProblemCompletion) => {
+    setCurrentProblem(problemList[problem.order]);
     setCurrentIndex(problem.order);
     try {
       const data = await getProblemById(problem.problem_id);
@@ -341,18 +357,21 @@ export default function LearnPage() {
 
       const user_data = await getUserProblemById(problem.problem_id);
       setCurrentProblemCompletion(user_data);
-      if (editorRef.current && user_data.user_solution != "") {
+      if (editorRef.current && user_data.user_solution !== "") {
         editorRef.current.setValue(
           formatCodeForEditor(user_data.user_solution)
         );
-      } else if (editorRef.current && data.method_stub) {
+      } else if (
+        editorRef.current &&
+        data.method_stub &&
+        editorRef.current.getValue().trim() === ""
+      ) {
         editorRef.current.setValue(formatCodeForEditor(data.method_stub));
       } else {
         console.error("Failed to fetch problem details");
         // Fallback to default starter code
         if (editorRef.current) {
-          const starterCode = getStarterCode(currentProblem.id);
-          editorRef.current.setValue(starterCode);
+          editorRef.current.setValue("Unable to fetch starter code");
         }
         setTestCases([]);
       }
@@ -374,24 +393,6 @@ export default function LearnPage() {
     setOutput(""); // Clear previous output
   };
 
-  const getStarterCode = (problemId) => {
-    const starterCodes = {
-      "intro-1":
-        '# Write a program that prints "Hello, World!"\nprint("Hello, World!")',
-      "intro-2":
-        '# Create variables and print them\nname = ""\nage = 0\nprint(f"Name: {name}, Age: {age}")',
-      "ds-1":
-        "# Work with lists\nnumbers = [1, 2, 3, 4, 5]\n# Add your code here",
-      "sort-1":
-        "# Implement bubble sort\ndef bubble_sort(arr):\n    # Your implementation here\n    pass\n\n# Test your function\ntest_array = [64, 34, 25, 12, 22, 11, 90]\nprint(bubble_sort(test_array))",
-    };
-    return starterCodes[problemId] || "# Write your solution here\n";
-  };
-
-  const isNextDisabled = useMemo(() => {
-    return !currProblemCompletion.is_completed;
-  }, [currProblemCompletion]);
-
   const isPrevDisabled = useMemo(() => {
     return currentIndex === 0;
   }, [currentIndex]);
@@ -402,7 +403,10 @@ export default function LearnPage() {
         label: "Editor",
         content: (
           <div className="flex-1 flex flex-col h-full rounded-lg shadow-lg overflow-hidden">
-            <div className="p-4" style={{ backgroundColor: "var(--dbl-3)" }}>
+            <div
+              className="p-4"
+              style={{ backgroundColor: "var(--background)" }}
+            >
               <div className="mb-2">
                 <h2
                   className="text-xl font-bold"
@@ -502,6 +506,13 @@ export default function LearnPage() {
                   problem_id: String(currProblemCompletion.problem_id),
                   notes: currProblemCompletion.notes || "",
                 });
+                setProblemCompletionList((prev) => ({
+                  ...prev,
+                  [currentIndex]: {
+                    ...prev[currentIndex],
+                    notes: currProblemCompletion.notes || "",
+                  },
+                }));
               }
             }}
           />
@@ -568,8 +579,6 @@ export default function LearnPage() {
     ]
   );
 
-  console.log("Current problemzz",currentProblem,problemDetails?.title)
-
   const testTabs = useMemo(
     () => ({
       tests: {
@@ -577,8 +586,8 @@ export default function LearnPage() {
         content: (
           <div className="min-h-0 flex">
             <TestCasesPanel
-              key={currentProblem.problem_id}
-              problemId={currentProblem.problem_id}
+              key={problemList[currentIndex]?.problem_id ?? "intro-1"}
+              problemId={problemList[currentIndex]?.problem_id ?? "intro-1"}
               editorRef={editorRef}
               onAllTestsPassed={handleAllTestsPassed}
             />
@@ -647,7 +656,7 @@ export default function LearnPage() {
                 {/* Video Title Section */}
                 <div
                   className="p-4"
-                  style={{ backgroundColor: "var(--dbl-3)" }}
+                  style={{ backgroundColor: "var(--background)" }}
                 >
                   <h3
                     className="text-lg font-semibold"
@@ -656,8 +665,12 @@ export default function LearnPage() {
                     {problemDetails?.title || currentProblem.title}
                   </h3>
                 </div>
+                <hr className="my-4 matrix-border" />
                 {/* Video Content Section */}
-                <div className="" style={{ backgroundColor: "var(--dbl-5)" }}>
+                <div
+                  className=""
+                  style={{ backgroundColor: "var(--background)" }}
+                >
                   <div className="videos flex justify-center items-center">
                     <ReactPlayer
                       muted={false}
@@ -683,7 +696,7 @@ export default function LearnPage() {
             {/* Column 3: Test Cases and Output */}
             <div
               className="tests rounded-lg shadow-lg flex flex-col min-h-0 md:w-1/6"
-              style={{ backgroundColor: "var(--dbl-2)" }}
+              style={{ backgroundColor: "bg-[var(--background)]" }}
             >
               <Card
                 className="flex flex-col h-full min-h-0 overflow-y-auto matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
@@ -705,16 +718,13 @@ export default function LearnPage() {
             <div
               className={`fixed left-0 top-0 bottom-0 w-100 shadow-xl transform transition-transform duration-300
               ${showMenu ? "translate-x-0" : "-translate-x-full"}`}
-              style={{ backgroundColor: "var(--dbl-2)" }}
+              style={{ backgroundColor: "var(--background)" }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* MENU CONTENT MOVED HERE */}
-              <div className="problemList rounded-lg shadow-lg flex flex-col h-full overflow-hidden">
+              <div className="problemList rounded-lg shadow-lg flex flex-col h-full overflow-hidden matrix-border">
                 {/* Navigation Menu Header */}
-                <div
-                  className="p-4"
-                  style={{ backgroundColor: "var(--dbl-3)" }}
-                >
+                <div className="p-4" style={{ backgroundColor: "#000000ff" }}>
                   <h2
                     className="text-lg font-bold text-center"
                     style={{ color: "var(--gr-2)" }}
@@ -722,11 +732,11 @@ export default function LearnPage() {
                     Menu
                   </h2>
                 </div>
-
+                <hr className="my-4 matrix-border" />
                 {/* Problem Menu with Progress Bar */}
                 <div
                   className="relative p-4 flex-1 min-h-0 flex"
-                  style={{ backgroundColor: "var(--dbl-2)" }}
+                  style={{ backgroundColor: "#000000ff" }}
                 >
                   {/* Progress Bar */}
                   <div
@@ -745,7 +755,7 @@ export default function LearnPage() {
                   {/* Actual Problem Menu content */}
                   <div
                     className="flex-1 min-h-0 overflow-y-auto"
-                    style={{ backgroundColor: "var(--dbl-2)" }}
+                    style={{ backgroundColor: "#000000ff" }}
                   >
                     <ProblemMenu
                       onProblemSelect={handleProblemSelect}

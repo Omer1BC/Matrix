@@ -186,8 +186,10 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       question: {
         label: "Question",
         content: detailsLoading ? (
-          <div className="flex items-center justify-center w-full h-full">
-            <p>Loading...</p>
+          <div className="flex items-center justify-center w-full h-full bg-[var(--background)]">
+            <p>
+              Loading...
+            </p>
           </div>
         ) : (
           <QuestionPanel
@@ -233,6 +235,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       animLoading,
       animUrl,
       closeAnimationTab,
+      detailsLoading,
     ]
   );
 
@@ -377,6 +380,8 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       animToolName,
       closeAnimationTab,
       openAnimationForTest,
+      problemId,
+      timer,
     ]
   );
 

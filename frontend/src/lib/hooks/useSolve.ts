@@ -16,7 +16,7 @@ export function useSolve(problemId: string = "intro-1") {
   const [tools, setTools] = useState<ToolInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState("");
-  const [testResponse, setTestResponse] = useState("");
+  const [testResponse, setTestResponse] = useState<any>("");
 
   useEffect(() => {
     setDetailsLoading(true);
@@ -39,8 +39,11 @@ export function useSolve(problemId: string = "intro-1") {
     setTools(t);
   }, [details]);
 
+  type Intent = "tests" | "chat" | "grade" | "hints" | "annotated_hints" | "tool_hints" | "annotate_errors" | "generate_animation" | "explain";
+
+
   const askSelection = useCallback(
-    async (text: string, type?: string) => {
+    async (text: string, type?: Intent) => {
       setLoading(true);
       try {
         const profile = await getUserProfile();
