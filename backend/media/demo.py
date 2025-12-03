@@ -1,5 +1,8 @@
 
 from typing import *
+import subprocess
+from pathlib import Path
+import sys
 
 
 class Node:
@@ -10,11 +13,19 @@ class Node:
 
 
 
+def remove(root:Node,target:int):
+	return None
+
 def find_max(root):
-    if not root.right:
-        return root.val
-    else:
-        return find_max(root.right)
+	if not root.right:
+		return root.val
+	return find_max(root.right)
+
+def remove_max(root):
+	if not root.right:
+		return root.left
+	root.right = remove_max(root.right)
+	return root
 
 
 def build_tree(bfs_list):
@@ -41,36 +52,100 @@ def build_tree(bfs_list):
     return root
 
 
-def run_test(input, expected):
-    bfs_list = input
-    exception = ""
-    result = None
-    try:
-        root = build_tree(bfs_list)
-        result = find_max(root)
-    except Exception as e:
-        exception = str(e)
+def tree_to_bfs(root):
+    if not root:
+        return []
+
+    result = []
+    queue = [root]
+
+    while queue:
+        node = queue.pop(0)
+        if node:
+            result.append(node.val)
+            queue.append(node.left)
+            queue.append(node.right)
+        else:
+            result.append(None)
+
+    while result and result[-1] is None:
+        result.pop()
+
+    return result
+
+
+def run_test(bfs_list, target, expected):
+    root = build_tree(bfs_list)
+    result = remove(root, target)
+    result_list = tree_to_bfs(result)
+
     return {
-        "input": input,
+        "root": bfs_list,
+        "target": target,
         "expected": expected,
-        "actual": result,
-        "error": exception,
-        "passed": result == expected if not exception else False,
+        "actual": result_list,
     }
 
 
-test_cases = [
-    ([10], 10),
-    ([10, 5, 15], 15),
-    ([10, 5, 15, 3, 7, 12, 20], 20),
-    ([10, 5, None, 3, None, 1], 10),
-    ([10, None, 15, None, 20, None, 25], 25),
-    ([10, 5], 10),
-    ([10, None, 15], 15),
-    ([50, 30, 70, 20, 40, 60, 80], 80),
-]
+def animate_test_case(case_index: int, out_prefix: str = "bst_case") -> str:
+    """
+    Render a BST animation for a specific test case using the bst.py framework.
 
+    Returns the relative mp4 path emitted by manim.
+    """
+    if case_index < 0 or case_index >= len(test_cases):
+        raise IndexError(f"case_index {case_index} out of range for test_cases")
+
+    bfs_list, target, _ = test_cases[case_index]
+    initial_values = [v for v in bfs_list if v is not None]
+
+    template_dir = Path(__file__).resolve().parents[1] / "animations" / "templates"
+    script_path = Path(__file__).with_name(f"{out_prefix}_{case_index}.py")
+
+    script_path.write_text(
+        "\n".join(
+            [
+                "from manim import *",
+                "import sys",
+                "from pathlib import Path",
+                f'sys.path.append(r"{str(template_dir)}")',
+                "from bst import BstVisualizer",
+                "",
+                "class BstExample(Scene):",
+                "    def construct(self):",
+                f"        bst = BstVisualizer(initial_values={initial_values}, scale_factor=0.7)",
+                "        self.play(bst.create()); self.wait(0.5)",
+                f"        self.play(bst.delete({target})); self.wait(0.75)",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    output_name = f"{out_prefix}_{case_index}"
+    subprocess.run(
+        [
+            "manim",
+            str(script_path),
+            "BstExample",
+            "-ql",
+            "-o",
+            output_name,
+            "--disable_caching",
+        ],
+        check=True,
+    )
+
+    return f"media/videos/{output_name}/480p15/{output_name}.mp4"
+
+
+test_cases = [
+    ([5, 3, 7], 3, [5, None, 7]),
+    ([5, 3, 7], 5, [3, None, 7]),
+    ([5, 3, 7, 1], 3, [5, 1, 7]),
+]
 results = {
-    f"test_{i}": run_test(input, expected)
-    for i, (input, expected) in enumerate(test_cases)
+    f"{i}": run_test(node, targ, expected)
+    for i, (node, targ, expected) in enumerate(test_cases)
 }
+print(results)

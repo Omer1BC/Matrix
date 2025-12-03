@@ -121,7 +121,9 @@ def tools_node(state: State):
         if tool_name == "generate_animation":
             prompt = tool_args.get("prompt", "")
             animation_speed = tool_args.get("animation_speed", 1.0)
-            res = generate_animation_from_prompt(prompt, animation_speed=animation_speed, user_id=user_id)
+            res = generate_animation_from_prompt(
+                prompt, animation_speed=animation_speed, user_id=user_id
+            )
 
             error_msg = None
             if not res.get("ok"):
@@ -141,10 +143,9 @@ def tools_node(state: State):
             }
 
             from langchain_core.messages import ToolMessage
+
             tool_messages.append(ToolMessage(content=str(result), tool_call_id=tool_id))
         else:
-            # For other tools, use the default ToolNode behavior
-            # We need to invoke the tool normally
             tool_map = {
                 "run_tests": run_tests_tool,
                 "grade_via_tests": grade_via_tests_tool,
@@ -152,17 +153,32 @@ def tools_node(state: State):
                 "annotated_hints": annotated_hints_tool,
                 "tool_hints": tool_hints_tool,
                 "annotate_errors": annotate_errors_tool,
-                "snippet": snippet_tool,
+                "question": snippet_tool,
             }
 
             if tool_name in tool_map:
                 try:
                     result = tool_map[tool_name].invoke(tool_args)
                     from langchain_core.messages import ToolMessage
-                    tool_messages.append(ToolMessage(content=str(result), tool_call_id=tool_id))
+
+                    tool_messages.append(
+                        ToolMessage(content=str(result), tool_call_id=tool_id)
+                    )
                 except Exception as e:
                     from langchain_core.messages import ToolMessage
-                    tool_messages.append(ToolMessage(content=f"Error: {str(e)}", tool_call_id=tool_id))
+
+                    tool_messages.append(
+                        ToolMessage(content=f"Error: {str(e)}", tool_call_id=tool_id)
+                    )
+            else:
+                from langchain_core.messages import ToolMessage
+
+                tool_messages.append(
+                    ToolMessage(
+                        content=f"Error: Unknown tool '{tool_name}'",
+                        tool_call_id=tool_id,
+                    )
+                )
 
     return {"messages": tool_messages}
 

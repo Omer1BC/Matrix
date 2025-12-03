@@ -140,7 +140,6 @@ export default function SolvePage() {
         setAnimLoading(true);
         setAnimUrl(null);
         setQuestionPanelKey((k) => k + 1);
-        setValidationPanelKey((k) => k + 1);
         return;
       }
       if (phase === "error") {

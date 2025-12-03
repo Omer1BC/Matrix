@@ -28,7 +28,7 @@ export function QuestionContent({
   return (
     <div
       onMouseUp={handleMouseUp}
-      className="flex h-full flex-col rounded-md p-5 gap-5 font-sans overflow-auto"
+      className="flex h-full flex-col rounded-md p-5 gap-5 font-sans overflow-auto custom-scroll"
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">

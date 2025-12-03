@@ -149,7 +149,7 @@ export async function updateUserProblemCompletion(
   problem_id: string,
   category_id: string,
   test_cases: number,
-  current: monaco.editor.IStandaloneCodeEditor
+  userSolution: string | undefined
 ) {
   const { data: user, error } = await supabase.auth.getUser();
 
@@ -161,13 +161,13 @@ export async function updateUserProblemCompletion(
       is_completed: true,
       test_cases_passed: test_cases,
       total_test_cases: test_cases,
-      user_solution: current,
+      user_solution: userSolution || "",
       completion_date: new Date().toISOString(),
     })
     .eq("problem_id", problem_id)
     .eq("user_id", user.user.id);
 
-  if (update_error) throw error;
+  if (update_error) throw update_error;
 
   const { error: update_next_problem_error } = await supabase
     .from("problem_completions")

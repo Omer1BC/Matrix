@@ -270,22 +270,34 @@ export default function LearnPage() {
   }, []);
 
   const handleAllTestsPassed = useCallback(async () => {
+    console.log("🎉 All tests passed! Updating completion...");
+    console.log("Problem ID:", currentProblem.problem_id);
+    console.log("Completion ID:", currProblemCompletion.id);
+
     setShowVictoryModal(true);
-    await updateUserProblemCompletion(
-      currProblemCompletion.id,
-      currentProblem.problem_id,
-      currProblemCompletion.category_id,
-      testCases.length,
-      editorRef.current?.getValue()
-    );
-    setProblemCompletionList((prev) => ({
-      ...prev,
-      [currentIndex]: {
-        ...prev[currentIndex],
-        user_solution: editorRef.current?.getValue(),
-      },
-    }));
-    toggleRefresh();
+
+    try {
+      await updateUserProblemCompletion(
+        currProblemCompletion.id,
+        currentProblem.problem_id,
+        currProblemCompletion.category_id,
+        testCases.length,
+        editorRef.current?.getValue()
+      );
+      console.log("✅ Problem marked as complete!");
+
+      setProblemCompletionList((prev) => ({
+        ...prev,
+        [currentIndex]: {
+          ...prev[currentIndex],
+          user_solution: editorRef.current?.getValue(),
+          is_completed: true,
+        },
+      }));
+      toggleRefresh();
+    } catch (error) {
+      console.error("❌ Failed to update completion:", error);
+    }
   }, [
     currProblemCompletion.id,
     currProblemCompletion.category_id,
