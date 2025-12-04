@@ -66,34 +66,70 @@ export async function ping(data: Record<string, unknown>, endpoint: string) {
 export async function agentCall<I extends Intent | "chat" = "chat">(
   payload: AgentRequest & { intent?: I }
 ): Promise<AgentResponseMap[I]> {
-  const res = await fetch(`${API_BASE_URL}api/agent`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(clampLengths(payload)),
-  });
+  try {
+    const res = await fetch(`${API_BASE_URL}api/agent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(clampLengths(payload)),
+    });
 
-  const data = (await res.json().catch(() => ({}))) as AgentResponseMap[I];
-  if (!res.ok) {
-    const errorData = (data as any)?.data;
-    let msg =
-      errorData?.error || (data as any)?.error || `Agent error (${res.status})`;
+    const data = (await res.json().catch(() => ({}))) as AgentResponseMap[I];
+    if (!res.ok) {
+      const errorData = (data as any)?.data;
+      let msg =
+        errorData?.error || (data as any)?.error || `Agent error (${res.status})`;
 
-    // Add plan info if available for animation errors
-    if (errorData?.plan) {
-      const ops = errorData.plan.operations || [];
-      if (ops.length > 0) {
-        const opsSummary = ops
-          .map((op: any) =>
-            op.args?.length ? `${op.name}(${op.args.join(", ")})` : op.name
-          )
-          .join(", ");
-        msg += `\n\nAttempted operations: ${opsSummary}`;
+      // Add plan info if available for animation errors
+      if (errorData?.plan) {
+        const ops = errorData.plan.operations || [];
+        if (ops.length > 0) {
+          const opsSummary = ops
+            .map((op: any) =>
+              op.args?.length ? `${op.name}(${op.args.join(", ")})` : op.name
+            )
+            .join(", ");
+          msg += `\n\nAttempted operations: ${opsSummary}`;
+        }
       }
+
+      // Trigger health check when Neo service errors occur (503, 429)
+      if (res.status === 503 || res.status === 429) {
+        // Dispatch custom event to notify NeoStatusBanner
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('neo-service-error', {
+            detail: {
+              error_type: (data as any)?.error_type,
+              status: res.status
+            }
+          }));
+        }
+      }
+
+      throw new Error(msg);
+    }
+    return data;
+  } catch (error) {
+    console.error('[agentCall] Error:', error);
+
+    // Handle network errors (connection reset, failed to fetch, etc.)
+    // These occur when the backend crashes before sending a response
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      // Trigger health check for network/connection errors
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('neo-service-error', {
+          detail: {
+            error_type: 'connection_error',
+            status: 0
+          }
+        }));
+      }
+
+      throw new Error('Neo is currently unavailable. The service may be experiencing issues. Please contact a system administrator.');
     }
 
-    throw new Error(msg);
+    // Re-throw other errors
+    throw error;
   }
-  return data;
 }
 
 export async function get(data: Record<string, unknown>, endpoint: string) {
@@ -115,5 +151,32 @@ export async function get(data: Record<string, unknown>, endpoint: string) {
   } catch (error) {
     console.error("Failed to fetch problem details:", error);
     return {};
+  }
+}
+
+export interface NeoHealthStatus {
+  is_healthy: boolean;
+  error_type: string;
+  error_message: string;
+  last_check: string | null;
+  consecutive_failures: number;
+}
+
+export async function checkNeoHealth(): Promise<NeoHealthStatus | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}api/neo-health`, {
+      method: "GET",
+    });
+
+    if (!res.ok) {
+      console.error("Failed to fetch Neo health status:", res.status);
+      return null;
+    }
+
+    const data: NeoHealthStatus = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to check Neo health status:", error);
+    return null;
   }
 }

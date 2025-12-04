@@ -13,9 +13,22 @@ class Node:
 
 
 
-def remove(root:Node,target:int):
-	from os import open
-	return None
+def remove(root:Node, target:int):
+    if not root:
+        return None
+    if root.val > target:
+        root.left = remove(root.left, target)
+    elif root.val < target:
+        root.right = remove(root.right, target)
+    else:
+        if not root.left:
+            return root.right
+        if not root.right:
+            return root.left
+        pred = find_max(root.left)
+        root.val = pred
+        root.left = remove_max(root.left)
+    return root
 
 def find_max(root):
 	if not root.right:

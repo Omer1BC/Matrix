@@ -189,8 +189,11 @@ export default function ValidationContent({
         }
         console.log(problemId);
       }
-    } catch {
-      setHasError("Error encountered while running test");
+    } catch (error) {
+      // Display error message from Neo service
+      const errorMessage = error instanceof Error ? error.message : "Error encountered while running test";
+      setHasError(errorMessage);
+      console.error("Test execution failed:", error);
     } finally {
       setIsLoading(false);
     }

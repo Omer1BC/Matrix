@@ -4,8 +4,20 @@ from langchain_openai import OpenAIEmbeddings
 from utils.supabase.client import supabase
 
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
-embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL)
+_embeddings = None
 _enc = tiktoken.get_encoding("cl100k_base")
+
+
+def get_embeddings():
+    """Lazy-load embeddings to avoid crashing on import with invalid API key."""
+    global _embeddings
+    if _embeddings is None:
+        # Check if API key is configured
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key or api_key.strip() == "":
+            raise ValueError("OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.")
+        _embeddings = OpenAIEmbeddings(model=EMBEDDING_MODEL)
+    return _embeddings
 
 
 def chunk(text: str, max_tokens: int = 700, overlap: int = 120) -> List[str]:
@@ -24,6 +36,7 @@ def chunk(text: str, max_tokens: int = 700, overlap: int = 120) -> List[str]:
 
 
 def embed_chunks(chunks: List[str], batch_size: int = 64) -> List[List[float]]:
+    embeddings = get_embeddings()
     vecs = []
     for i in range(0, len(chunks), batch_size):
         vecs.extend(embeddings.embed_documents(chunks[i : i + batch_size]))
@@ -58,6 +71,7 @@ def reindex_notes(
 
 
 def search_notes(user_id: str, problem_id: str | None, query: str, k: int = 6):
+    embeddings = get_embeddings()
     qvec = embeddings.embed_query(query or "")
     res = supabase.rpc(
         "match_note_embeddings",

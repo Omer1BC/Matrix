@@ -10,7 +10,7 @@ export default function AnimationPlayer({
   if (!url) {
     return (
       <div className="flex h-full items-center justify-center text-[var(--gr-2)]">
-        No animation yet.
+        Couldn{"'"}t generate animation.
       </div>
     );
   }

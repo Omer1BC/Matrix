@@ -6,8 +6,8 @@ import io
 import sys
 import json
 import traceback
+import logging
 from django.conf import settings
-import json
 from .models import ProblemCategory, Problem, ProblemCompletion, UserProgress
 from langchain_core.messages import HumanMessage, AIMessage
 from utils.utils import *
@@ -32,7 +32,10 @@ from utils.agent.utils import (
 )
 from utils.agent.rag import reindex_notes
 from utils.supabase.client import supabase
+from utils.llm_health import check_llm_health, get_health_status
+from openai import AuthenticationError, RateLimitError, OpenAIError
 
+logger = logging.getLogger(__name__)
 GRAPH = build_graph()
 
 
@@ -90,6 +93,31 @@ def generate_animation_view(request):
 
 
 @csrf_exempt
+def neo_health(request):
+    """
+    Check the health status of the Neo LLM service.
+
+    Returns:
+        JSON with service health information including:
+        - is_healthy: boolean indicating if service is operational
+        - error_type: type of error if service is down
+        - error_message: human-readable error message
+        - last_check: timestamp of last health check
+    """
+    if request.method == "GET":
+        # Return cached status without making a new API call
+        status = get_health_status()
+        return JsonResponse(status.to_dict(), status=200)
+
+    elif request.method == "POST":
+        # Perform a new health check (this makes an API call)
+        status = check_llm_health()
+        return JsonResponse(status, status=200)
+
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+@csrf_exempt
 def get_completion(request):
     if request.method == "GET":
         user = request.user
@@ -123,20 +151,55 @@ def save_notes(request):
         )
         if not pc:
             return JsonResponse({"error": "not_found"}, status=404)
+
+        # Try to generate embeddings first
+        try:
+            stats = reindex_notes(
+                pc_id=pc["id"],
+                user_id=user_id,
+                problem_id=problem_id,
+                title=pc.get("title"),
+                notes=notes,
+            )
+        except AuthenticationError as e:
+            # API key is invalid or revoked
+            logger.error(f"Authentication error generating embeddings for notes (pc_id={pc['id']}): {type(e).__name__}")
+            return JsonResponse({
+                "error": "Note-taking is temporarily unavailable due to a service authentication issue. Please try again later.",
+                "ok": False
+            }, status=503)
+        except OpenAIError as e:
+            # Other OpenAI API errors (rate limits, etc.)
+            logger.error(f"OpenAI error generating embeddings for notes (pc_id={pc['id']}): {type(e).__name__}")
+            return JsonResponse({
+                "error": "Note-taking is temporarily unavailable. Please try again later.",
+                "ok": False
+            }, status=503)
+        except ValueError as e:
+            # API key not configured
+            logger.error(f"Configuration error for embeddings (pc_id={pc['id']}): API key not configured")
+            return JsonResponse({
+                "error": "Note-taking is temporarily unavailable due to a configuration issue. Please try again later.",
+                "ok": False
+            }, status=503)
+        except Exception as embedding_error:
+            # Other unexpected errors
+            logger.error(f"Unexpected error generating embeddings for notes (pc_id={pc['id']}): {type(embedding_error).__name__}")
+            return JsonResponse({
+                "error": "Failed to save notes. Please try again.",
+                "ok": False
+            }, status=500)
+
+        # Only save notes to Supabase if embeddings were successful
         supabase.table("problem_completions").update({"notes": notes}).eq(
             "id", pc["id"]
         ).execute()
-        stats = reindex_notes(
-            pc_id=pc["id"],
-            user_id=user_id,
-            problem_id=problem_id,
-            title=pc.get("title"),
-            notes=notes,
-        )
+
         return JsonResponse({"ok": True, **stats})
     except Exception as e:
         traceback.print_exc()
-        return JsonResponse({"error": str(e)}, status=500)
+        logger.error(f"Error saving notes: {str(e)}")
+        return JsonResponse({"error": "Failed to save notes. Please try again."}, status=500)
 
 
 @csrf_exempt
@@ -300,9 +363,94 @@ def agent(request):
                 kind="chat", data={"text": content}, meta={"total_tokens": total_tokens}
             ).model_dump()
         )
+    except AuthenticationError as e:
+        # OpenAI API key is invalid or revoked
+        health_status = get_health_status()
+        health_status.mark_unhealthy("authentication_error", "OpenAI API key is invalid or has been revoked")
+
+        if health_status.should_send_notification():
+            from utils.llm_health import send_admin_notification
+            send_admin_notification(
+                subject="URGENT: Neo LLM Service Down - Authentication Failed",
+                error_type="authentication_error",
+                error_details=str(e)
+            )
+            health_status.notification_sent()
+
+        traceback.print_exc()
+        return JsonResponse({
+            "error": "Neo is currently unavailable due to a service authentication issue. A system administrator has been notified.",
+            "error_type": "authentication_error"
+        }, status=503)
+
+    except RateLimitError as e:
+        # Rate limit exceeded
+        health_status = get_health_status()
+        health_status.mark_unhealthy("rate_limit_error", "OpenAI API rate limit exceeded")
+
+        if health_status.should_send_notification():
+            from utils.llm_health import send_admin_notification
+            send_admin_notification(
+                subject="WARNING: Neo LLM Service - Rate Limit Exceeded",
+                error_type="rate_limit_error",
+                error_details=str(e)
+            )
+            health_status.notification_sent()
+
+        traceback.print_exc()
+        return JsonResponse({
+            "error": "Neo is temporarily unavailable due to high demand. Please try again in a few minutes.",
+            "error_type": "rate_limit_error"
+        }, status=429)
+
+    except OpenAIError as e:
+        # Other OpenAI-specific errors
+        health_status = get_health_status()
+        health_status.mark_unhealthy("openai_error", str(e))
+
+        if health_status.should_send_notification():
+            from utils.llm_health import send_admin_notification
+            send_admin_notification(
+                subject="ERROR: Neo LLM Service Issue Detected",
+                error_type="openai_error",
+                error_details=str(e)
+            )
+            health_status.notification_sent()
+
+        traceback.print_exc()
+        return JsonResponse({
+            "error": "Neo is currently experiencing issues. Please try again later or contact support.",
+            "error_type": "openai_error"
+        }, status=503)
+
+    except ValueError as e:
+        # API key not configured or validation errors
+        if "API key" in str(e) or "OPENAI_API_KEY" in str(e):
+            health_status = get_health_status()
+            health_status.mark_unhealthy("configuration_error", "OpenAI API key is not configured")
+
+            if health_status.should_send_notification():
+                from utils.llm_health import send_admin_notification
+                send_admin_notification(
+                    subject="URGENT: Neo LLM Service - API Key Not Configured",
+                    error_type="configuration_error",
+                    error_details=str(e)
+                )
+                health_status.notification_sent()
+
+            traceback.print_exc()
+            return JsonResponse({
+                "error": "Neo is currently unavailable due to a configuration issue. A system administrator has been notified.",
+                "error_type": "configuration_error"
+            }, status=503)
+        else:
+            # Other ValueError - re-raise to be caught by generic handler
+            raise
+
     except Exception as e:
         traceback.print_exc()
-        return JsonResponse({"error": str(e)}, status=500)
+        logger.error(f"Unexpected error in agent endpoint: {str(e)}")
+        return JsonResponse({"error": "An unexpected error occurred. Please try again."}, status=500)
 
 
 @csrf_exempt
@@ -363,14 +511,15 @@ def run_python(request):
                 return JsonResponse({"output": result['output']}, safe=False)
 
             except json.JSONDecodeError as e:
-                error_msg = f"JSON decode error: {str(e)}"
-                return JsonResponse({"error": error_msg}, status=400)
+                logger.error(f"JSON decode error in run_python: {str(e)}")
+                return JsonResponse({"error": "Invalid request format."}, status=400)
             except Exception as e:
-                error_msg = f"General error: {str(e)}"
+                import logging
                 import traceback
-
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error in run_python: {str(e)}")
                 traceback.print_exc()
-                return JsonResponse({"error": error_msg}, status=400)
+                return JsonResponse({"error": "An error occurred while executing code."}, status=400)
         else:
             error_msg = (
                 f"Expected application/json content type, got: '{request.content_type}'"
@@ -518,16 +667,21 @@ def run_learn_tests(request):
             )
 
         except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error running tests: {str(e)}")
             traceback.print_exc()
             return JsonResponse(
-                {"success": False, "error": str(e), "test_results": []}, status=500
+                {"success": False, "error": "Failed to run tests. Please try again.", "test_results": []}, status=500
             )
 
     except json.JSONDecodeError as e:
-        return JsonResponse({"error": f"JSON decode error: {e}"}, status=400)
+        logger.error(f"JSON decode error in run_learn_tests: {str(e)}")
+        return JsonResponse({"error": "Invalid request format."}, status=400)
     except Exception as e:
+        logger.error(f"Error in run_learn_tests: {str(e)}")
         traceback.print_exc()
-        return JsonResponse({"error": str(e)}, status=400)
+        return JsonResponse({"error": "An error occurred while running tests."}, status=400)
 
 
 @csrf_exempt

@@ -6,6 +6,8 @@ import React from "react";
 import Header from "@/components/Header";
 import type { Metadata } from "next";
 import GlobalTourWrapper from "../components/GlobalTourWrapper";
+import { NeoStatusBanner } from "@/components/NeoStatusBanner";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,9 +40,11 @@ export default function RootLayout({
         <AuthProvider>
           <GlobalTourWrapper>
             <Header />
+            <NeoStatusBanner />
             {children}
           </GlobalTourWrapper>
         </AuthProvider>
+        <Toaster />
       </body>
     </html>
   );

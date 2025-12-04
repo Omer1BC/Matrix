@@ -190,7 +190,7 @@ export default function SolvePage() {
       },
       ...(animToolName && {
         animation: {
-          label: `${animToolName}`,
+          label: animToolName === "Prompt" ? "Animation" : `${animToolName}`,
           content: (
             <div className="flex h-full w-full flex-col">
               <div className="mb-3 flex items-center justify-between">

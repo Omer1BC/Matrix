@@ -436,6 +436,9 @@ class SafeExecutor:
         old_stdout = sys.stdout
         stdout_capture = io.StringIO()
 
+        # Create namespace to capture test results
+        namespace = {'__name__': '__main__'}
+
         try:
             sys.stdout = stdout_capture
 
@@ -443,9 +446,9 @@ class SafeExecutor:
             # Note: timeout only works in main thread; Django handlers run in worker threads
             if self.enable_timeout:
                 with timeout_context(timeout):
-                    exec(full_code, {'__name__': '__main__'})
+                    exec(full_code, namespace)
             else:
-                exec(full_code, {'__name__': '__main__'})
+                exec(full_code, namespace)
 
             output = stdout_capture.getvalue()
 
@@ -453,7 +456,8 @@ class SafeExecutor:
                 'success': True,
                 'output': output,
                 'error': '',
-                'violations': []
+                'violations': [],
+                'namespace': namespace  # Return namespace so test results can be extracted
             }
 
         except TimeoutError as e:

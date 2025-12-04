@@ -135,15 +135,20 @@ def get_solution_grade(
             "comment": parsed.comment or "",
         }
     except Exception as e:
+        # Log the full error server-side for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Grading error: {type(e).__name__}: {str(e)}")
+
         return {
             "metrics": {"readability": 0.0, "efficiency": 0.0, "robustness": 0.0},
             "explanations": {
-                "readability": "Unable to grade due to an internal error.",
-                "efficiency": "Unable to grade due to an internal error.",
-                "robustness": "Unable to grade due to an internal error.",
+                "readability": "Unable to grade at this time.",
+                "efficiency": "Unable to grade at this time.",
+                "robustness": "Unable to grade at this time.",
             },
             "verdict": False,
-            "comment": f"Grader error: {e}",
+            "comment": "Grading is temporarily unavailable. Please try again later.",
         }
 
 

@@ -69,6 +69,11 @@ export function useSolve(problemId: string = "intro-1") {
         });
         await updateTokensUsed((res?.meta?.total_tokens as number) ?? 0);
         setResponse(res?.data?.text ?? res?.data?.response ?? "");
+      } catch (error) {
+        // Display error in chat instead of throwing
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        setResponse(`❌ ${errorMessage}`);
+        console.error("Agent call failed:", error);
       } finally {
         setLoading(false);
       }
@@ -97,6 +102,10 @@ export function useSolve(problemId: string = "intro-1") {
           preferences: preferences,
         });
         return res?.data ?? {};
+      } catch (error) {
+        console.error("Annotation failed:", error);
+        // Return empty object on error to fail gracefully
+        return {};
       } finally {
         setLoading(false);
       }
@@ -126,6 +135,10 @@ export function useSolve(problemId: string = "intro-1") {
           extras: { error },
         });
         return res?.data ?? {};
+      } catch (error) {
+        console.error("Error annotation failed:", error);
+        // Return empty object on error to fail gracefully
+        return {};
       } finally {
         setLoading(false);
       }

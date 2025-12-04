@@ -28,6 +28,7 @@ import { useAuth } from "@/lib/contexts/AuthContext";
 import { formatCodeForEditor } from "@/lib/utils";
 import "shepherd.js/dist/css/shepherd.css";
 import NeoIcon from "@/components/NeoIcon";
+import { toast } from "sonner";
 
 export default function LearnPage() {
   const router = useRouter();
@@ -537,21 +538,34 @@ export default function LearnPage() {
                   ? user
                   : user?.id ?? user?.user?.id ?? "";
 
-              if (!user_id) throw new Error("Missing user_id");
+              if (!user_id) {
+                toast.error("Please log in to save notes");
+                return;
+              }
 
               if (currProblemCompletion.problem_id) {
-                await saveNotes({
-                  user_id: user_id,
-                  problem_id: String(currProblemCompletion.problem_id),
-                  notes: currProblemCompletion.notes || "",
-                });
-                setProblemCompletionList((prev) => ({
-                  ...prev,
-                  [currentIndex]: {
-                    ...prev[currentIndex],
+                try {
+                  await saveNotes({
+                    user_id: user_id,
+                    problem_id: String(currProblemCompletion.problem_id),
                     notes: currProblemCompletion.notes || "",
-                  },
-                }));
+                  });
+                  setProblemCompletionList((prev) => ({
+                    ...prev,
+                    [currentIndex]: {
+                      ...prev[currentIndex],
+                      notes: currProblemCompletion.notes || "",
+                    },
+                  }));
+                  toast.success("Notes saved successfully");
+                } catch (error) {
+                  console.error("Failed to save notes:", error);
+                  const errorMessage =
+                    error instanceof Error
+                      ? error.message
+                      : "Failed to save notes";
+                  toast.error(errorMessage);
+                }
               }
             }}
           />

@@ -1,4 +1,3 @@
-import type * as monaco from "monaco-editor";
 import { createClient } from "./client";
 
 const supabase = createClient();

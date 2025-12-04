@@ -16,6 +16,7 @@ urlpatterns = [
     path("grade_solution", grade_solution, name="grade_solution"),
     # llm agent
     path("agent", agent, name="agent"),
+    path("neo-health", neo_health, name="neo_health"),
     # learn page urls
     path("categories", get_all_categories, name="get_all_categories"),
     path("run-test", run_test_case, name="run_test_case"),
