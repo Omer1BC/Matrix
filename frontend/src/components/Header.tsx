@@ -131,7 +131,7 @@ export default function Header() {
                 </Button>
               </div>
               <div className="invisible">
-                <Image src="/userPhoto.png" alt="" width={50} height={50} />
+                <Image src="/userPhoto.png" alt="" width={50} height={50} unoptimized/>
               </div>
             </div>
           ) : user ? (
