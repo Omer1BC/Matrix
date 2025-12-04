@@ -17,7 +17,8 @@ import Notes from "./Notes";
 import { formatCodeForEditor } from "@/lib/utils";
 import "shepherd.js/dist/css/shepherd.css";
 
-export default function SolvePage({ problemId }: { problemId: string }) {
+export default function SolvePage() {
+  const problemId = "final-prob-1";
   const {
     editorRef,
     monacoRef,
@@ -31,7 +32,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     annotateErrors,
     askSelection,
     user,
-  } = useSolve(problemId || "final-prob-1");
+  } = useSolve(problemId);
 
   const [output] = useState("");
   const [showHints, setShowHints] = useState(true);

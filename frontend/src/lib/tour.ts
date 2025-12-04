@@ -111,6 +111,8 @@ export const createTour = async (pathname: string, seen?: SeenStatus) => {
 
     const steps = allSteps[pathname];
 
+    if (!steps) return null;
+
     if (pathname === "/" && seen?.homepage) return null;
     if (pathname === "/learn" && seen?.learn) return null;
     if (pathname === "/solve" && seen?.solve) return null;

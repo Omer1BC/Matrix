@@ -23,7 +23,7 @@ export function useSolve(problemId: string = "intro-1") {
     (async () => {
       const data = await getProblemBySlug(problemId);
       setDetails(data);
-      if (editorRef.current && data?.method_stub)
+      if (data.type == "Solve" && editorRef.current && data?.method_stub)
         editorRef.current.setValue(data.method_stub);
     })()
       .catch(console.error)

@@ -67,6 +67,7 @@ export function QuestionContent({
           height={0}
           sizes="100vw"
           className="w-full h-auto object-contain"
+          unoptimized
         />
         <hr className="my-4 border-[var(--gr-2)]" />
         <Image
@@ -76,6 +77,7 @@ export function QuestionContent({
           height={0}
           sizes="100vw"
           className="w-full h-auto object-contain"
+          unoptimized
         />
         <hr className="my-4 border-[var(--gr-2)]" />
         <Image
@@ -85,6 +87,7 @@ export function QuestionContent({
           height={0}
           sizes="100vw"
           className="w-full h-auto object-contain"
+          unoptimized
         />
       </div>
     </div>

@@ -5,9 +5,9 @@ services:
       context: backend
     ports:
       - "${BACKEND_PORT:-8000}:8000"
-    volumes:
-      - ./backend:/app
-      - ./Animations:/Animations
+    # volumes:
+    #   - ./backend:/app
+    #   - ./Animations:/Animations
     command: >
       sh -c "
         python manage.py runserver 0.0.0.0:8000"
@@ -19,10 +19,10 @@ services:
       context: frontend
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
+    # volumes:
+    #   - ./frontend:/app
+    #   - /app/node_modules
+    #   - /app/.next
     command: npm run dev
     environment:
       - WATCHPACK_POLLING=true

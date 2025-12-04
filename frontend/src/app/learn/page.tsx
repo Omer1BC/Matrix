@@ -149,13 +149,13 @@ export default function LearnPage() {
 
     return "# Write your solution here\n";
   };
+
   const navigateToProblem = useCallback(
     (newIndex: number) => {
       const completion = problemCompletionList[newIndex];
       const problem = problemList[newIndex];
       if (!completion || !problem) return;
 
-      setCurrentIndex(newIndex);
       setCurrentProblemCompletion(completion);
       setCurrentProblem(problem);
       setProblemDetails(problem);
@@ -187,7 +187,7 @@ export default function LearnPage() {
         });
       }
     },
-    [problemCompletionList, problemList, solutionLanguage]
+    [problemCompletionList, problemList]
   );
 
   const handleNextProblem = useCallback(() => {
@@ -221,26 +221,26 @@ export default function LearnPage() {
     };
   }, [showMenu]);
 
-  // useEffect(() => {
-  //   if (solutionEditorRef.current && monacoRef.current) {
-  //     import("monaco-editor").then((monaco) => {
-  //       const model = solutionEditorRef.current!.getModel();
-  //       if (model) {
-  //         monaco.editor.setModelLanguage(model, solutionLanguage.toLowerCase());
-  //       }
-  //       // Update solution based on language and current problem
-  //       const currProblem = problemList[currentIndex];
-  //       if (solutionLanguage === "Python" && currProblem.solution) {
-  //         solutionEditorRef.current!.setValue(currProblem.solution);
-  //       } else if (solutionLanguage === "Java" && currProblem.java_solution) {
-  //         solutionEditorRef.current!.setValue(currProblem.java_solution);
-  //       } else {
-  //         // Fallback if no solution exists
-  //         solutionEditorRef.current!.setValue("// No solution available");
-  //       }
-  //     });
-  //   }
-  // }, [currentIndex, problemList, solutionLanguage]);
+  useEffect(() => {
+    if (solutionEditorRef.current && monacoRef.current) {
+      import("monaco-editor").then((monaco) => {
+        const model = solutionEditorRef.current!.getModel();
+        if (model) {
+          monaco.editor.setModelLanguage(model, solutionLanguage.toLowerCase());
+        }
+        // Update solution based on language and current problem
+        const currProblem = problemList[currentIndex];
+        if (solutionLanguage === "Python" && currProblem.solution) {
+          solutionEditorRef.current!.setValue(currProblem.solution);
+        } else if (solutionLanguage === "Java" && currProblem.java_solution) {
+          solutionEditorRef.current!.setValue(currProblem.java_solution);
+        } else {
+          // Fallback if no solution exists
+          solutionEditorRef.current!.setValue("// No solution available");
+        }
+      });
+    }
+  }, [solutionLanguage]);
 
   useEffect(() => {
     const getProblems = async () => {
@@ -389,12 +389,7 @@ export default function LearnPage() {
         editor.setValue("# Write your solution here\n");
       }
     },
-    [
-      currProblemCompletion?.user_solution,
-      currentProblem?.method_stub,
-      editorRef,
-      monacoRef,
-    ]
+    [currProblemCompletion?.user_solution, currentProblem?.method_stub]
   );
 
   const handleSolutionsEditorDidMount = useCallback(
@@ -438,15 +433,17 @@ export default function LearnPage() {
       ) {
         editorRef.current.setValue(formatCodeForEditor(data.method_stub));
       } else {
-        console.error("Failed to fetch problem details");
+        // console.error("Failed to fetch problem details");
         // Fallback to default starter code
         if (editorRef.current) {
-          editorRef.current.setValue(problemList[problem.order]);
+          editorRef.current.setValue(
+            formatCodeForEditor(problemList[problem.order].method_stub)
+          );
         }
         setTestCases([]);
       }
 
-      if (solutionEditorRef.current && monacoRef.current) {
+      if (solutionEditorRef.current) {
         import("monaco-editor").then((monaco) => {
           const model = solutionEditorRef.current!.getModel();
           if (model) {
@@ -771,7 +768,7 @@ export default function LearnPage() {
                       muted={false}
                       playing={false}
                       controls={true}
-                      playbackRate={1.5}
+                      playbackRate={1}
                       // src={`${process.env.NEXT_PUBLIC_API_URL}media/v-${currentProblem.id}.mp4`}
                       src={`/${currentProblem?.problem_id}.mp4`} //temporary until final videos are done
                       width="50%"
