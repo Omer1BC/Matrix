@@ -1,6 +1,5 @@
 import { Profile, ProfileUpdate, SeenStatus } from "../types";
 import { createClient } from "./client";
-import { sawHomepage, sawLearn, sawSolve } from "../../lib/supabase/auth";
 
 const supabase = createClient();
 

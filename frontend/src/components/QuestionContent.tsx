@@ -51,7 +51,8 @@ export function QuestionContent({
         </div>
       </div>
 
-      <div className="rounded-xl bg-[var(--dbl-2)] px-5 py-4">
+      <div className="rounded-xl bg-[var(--dbl-2)] px-5 py-4"
+      style={{ backgroundColor: "#191818ff" }}>
         <p className="m-0 text-[17.6px] leading-6 text-[var(--gr-2)]">
           {description}
         </p>

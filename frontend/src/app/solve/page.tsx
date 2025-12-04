@@ -17,7 +17,8 @@ import Notes from "./Notes";
 import { formatCodeForEditor } from "@/lib/utils";
 import "shepherd.js/dist/css/shepherd.css";
 
-export default function SolvePage({ problemId }: { problemId: string }) {
+export default function SolvePage() {
+  const problemId = "final-prob-1";
   const {
     editorRef,
     monacoRef,
@@ -31,7 +32,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
     annotateErrors,
     askSelection,
     user,
-  } = useSolve(problemId || "final-prob-1");
+  } = useSolve(problemId);
 
   const [output] = useState("");
   const [showHints, setShowHints] = useState(true);
@@ -186,8 +187,10 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       question: {
         label: "Question",
         content: detailsLoading ? (
-          <div className="flex items-center justify-center w-full h-full">
-            <p>Loading...</p>
+          <div className="flex items-center justify-center w-full h-full bg-[var(--background)]">
+            <p>
+              Loading...
+            </p>
           </div>
         ) : (
           <QuestionPanel
@@ -233,6 +236,7 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       animLoading,
       animUrl,
       closeAnimationTab,
+      detailsLoading,
     ]
   );
 
@@ -377,6 +381,8 @@ export default function SolvePage({ problemId }: { problemId: string }) {
       animToolName,
       closeAnimationTab,
       openAnimationForTest,
+      problemId,
+      timer,
     ]
   );
 

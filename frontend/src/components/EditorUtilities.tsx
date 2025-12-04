@@ -225,7 +225,7 @@ export default function EditorUtilities({
             </button>
             <button
               type="button"
-              onClick={reset}
+              onClick={resetTimer}
               className="px-2 py-1 text-xs font-medium rounded-md border border-[color:var(--dbl-4)] hover:bg-[color:var(--dbl-4)]/60 transition-colors"
               title="Restart timer"
             >
