@@ -14,7 +14,6 @@ import { NotesCard } from "./NotesCard";
 import { Problem, ProblemCompletion } from "@/lib/types";
 import { editor as MonacoEditor } from "monaco-editor";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import {
   getProblemById,
   getUserProblemById,
@@ -32,7 +31,6 @@ import NeoIcon from "@/components/NeoIcon";
 import { toast } from "sonner";
 
 export default function LearnPage() {
-  const router = useRouter();
   const { user } = useAuth();
 
   const [currentProblem, setCurrentProblem] = useState<Problem>({
@@ -675,7 +673,6 @@ export default function LearnPage() {
       handlePrevProblem,
       isPrevDisabled,
       problemIds.length,
-      router,
     ]
   );
 
