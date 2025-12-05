@@ -690,68 +690,47 @@ export default function LearnPage() {
   } else {
     return (
       <>
-        <div className="Page h-screen overflow-hidden bg-background/80 pl-5">
-          <button
-            onClick={() => setShowMenu(true)}
-            className="problembutton absolute left-0 top-1/2 -translate-y-1/2 p-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-lg text-xl font-bold glow-text cursor-pointer "
-          >
-            ☰
-          </button>
+        <div className="Page w-screen h-screen overflow-hidden h-screen overflow-hidden bg-background/80 pl-2">
           {/* Main 3-Column Grid with custom column widths */}
-          <div className="flex flex-col md:flex-row gap-6 w-full h-full p-6">
-            {/* Column 1: Problem Menu with vertical progress bar */}
-
-            {/* Column 2: Video, Exercise & Editor */}
-            <div className="flex flex-col gap-4 flex-1 min-h-0 w-full">
-              {/* Video Player */}
-              <div className="rounded-lg shadow-lg overflow-hidden flex-shrink-0 matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300">
-                {/* Video Title Section */}
-                <div
-                  className="p-4"
-                  style={{ backgroundColor: "var(--background)" }}
-                >
-                  <h3
-                    className="text-lg font-semibold"
-                    style={{ color: "var(--gr-2)" }}
-                  >
-                    {problemDetails?.title || currentProblem.title}
-                  </h3>
-                </div>
-                <hr className="my-4 matrix-border" />
-                {/* Video Content Section */}
-                <div
-                  className=""
-                  style={{ backgroundColor: "var(--background)" }}
-                >
-                  <div className="videos flex justify-center items-center">
-                    <ReactPlayer
-                      muted={false}
-                      playing={false}
-                      controls={true}
-                      playbackRate={1}
-                      // src={`${process.env.NEXT_PUBLIC_API_URL}media/v-${currentProblem.id}.mp4`}
-                      src={`/${currentProblem?.problem_id}.mp4`} //temporary until final videos are done
-                      width="50%"
-                      height="350px"
-                      style={{ objectFit: "fill" }}
-                    />
-                  </div>
-                </div>
-              </div>
-              {/* Exercise & Code Editor Combined */}
-              <Card
-                className="editor notes exercise/editor flex flex-col h-full overflow-auto matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
-                tabs={codeTabs}
-              />
+          <div className="grid grid-cols-[auto_3fr_1fr] gap-4 h-full">
+            {/* Left: Menu button */}
+            <div className="flex justify-start items-center">
+              <button
+                onClick={() => setShowMenu(true)}
+                className="problembutton p-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-lg text-xl font-bold glow-text cursor-pointer"
+              >
+                ☰
+              </button>
             </div>
 
-            {/* Column 3: Test Cases and Output */}
-            <div
-              className="tests rounded-lg shadow-lg flex flex-col min-h-0 md:w-1/6"
-              style={{ backgroundColor: "bg-[var(--background)]" }}
-            >
+            {/* Middle: Video + Editor */}
+            <div className="flex flex-col gap-4 h-full">
+              {/* Video */}
+              <div className="rounded-lg shadow-lg overflow-hidden matrix-border h-[350px] md:h-[320h] lg:h-[35vh]">
+                <ReactPlayer
+                  muted={false}
+                  playing={false}
+                  controls
+                  src={`/${currentProblem?.problem_id}.mp4`}
+                  width="100%"
+                  height="100%"
+                  style={{ objectFit: "contain" }}
+                />
+              </div>
+
+              {/* Editor */}
+              <div className="rounded-lg shadow-lg overflow-hidden matrix-border flex-1">
+                <Card
+                  className="editor notes exercise/editor flex flex-col h-full overflow-auto"
+                  tabs={codeTabs}
+                />
+              </div>
+            </div>
+
+            {/* Right: Test Cases */}
+            <div className="rounded-lg shadow-lg overflow-auto matrix-border">
               <Card
-                className="flex flex-col h-full min-h-0 overflow-y-auto matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+                className="flex flex-col h-full overflow-y-auto"
                 tabs={testTabs}
               />
             </div>

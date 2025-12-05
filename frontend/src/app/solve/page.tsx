@@ -356,10 +356,14 @@ export default function SolvePage() {
 
   return (
     <AnnotationsProvider>
-      <main className="flex flex-1 flex-col min-h-0 overflow-hidden">
-        <div className="grid flex-1 min-h-0 gap-2 p-2 grid-cols-[4fr_5fr] grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
+      <main className="flex flex-col h-screen w-screen min-h-0 overflow-hidden p-2">
+        <div
+          className="grid gap-2 h-full w-full min-h-0
+                grid-cols-1 md:grid-cols-[4fr_5fr] 
+                grid-rows-[auto_auto] md:grid-rows-[1fr_1fr]"
+        >
           <TabPanel
-            className="question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+            className="question flex flex-col min-h-0 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
             key={`q-${questionPanelKey}`}
             tabs={questionTabs}
             defaultActiveKey={questionDefaultKey}
@@ -368,14 +372,14 @@ export default function SolvePage() {
             tabs={codeTabs}
             activeKey={activeCodeTab}
             onTabChange={setActiveCodeTab}
-            className="matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+            className="flex flex-col min-h-0 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
           />
           <TabPanel
             tabs={referencesTabs}
-            className="chatbox question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+            className="chatbox question flex flex-col min-h-0 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
           />
           <TabPanel
-            className="tests-solve question matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+            className="tests-solve question flex flex-col min-h-0 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
             key={`v-${validationPanelKey}`}
             tabs={validationTabs}
             defaultActiveKey={validationDefaultKey}

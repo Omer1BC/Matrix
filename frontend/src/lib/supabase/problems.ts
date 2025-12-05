@@ -192,7 +192,8 @@ export async function calculateProblemCompletion(): Promise<number> {
   const { data: problems, error: retrieve_error } = await supabase
     .from("problem_completions")
     .select("*")
-    .eq("user_id", user.user.id);
+    .eq("user_id", user.user.id)
+    .eq("type", "Learn");
 
   if (retrieve_error) throw retrieve_error;
 
