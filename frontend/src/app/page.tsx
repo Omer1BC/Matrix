@@ -8,7 +8,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Zap, Target, Trophy, Brain } from "lucide-react";
+import {
+  ArrowRight,
+  Zap,
+  Target,
+  Trophy,
+  Brain,
+  Instagram,
+  Linkedin,
+  Youtube,
+} from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import Shepherd from "shepherd.js";
@@ -38,20 +47,6 @@ export default function HomePage() {
           </p>
         </div>
         <div className="flex flex-row justify-center items-center gap-10">
-          <Link
-            href="https://www.youtube.com/watch?v=trRO2M6eqnY"
-            target="blank"
-          >
-            <Button
-              style={{ cursor: "pointer" }}
-              size="lg"
-              className="demo text-lg px-8 py-6 glow-text"
-              variant={undefined}
-            >
-              Watch Demo <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-
           {user ? (
             <Link href="/learn">
               <Button
@@ -147,26 +142,66 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="stats" className="container">
-        <div className="flex flex-row justify-center items-center gap-20">
-          <div className="space-y-2">
-            <div className="text-3xl font-bold text-primary glow-text">X</div>
-            <div className="text-muted-foreground">Active Developers</div>
-          </div>
-          <div className="space-y-2">
-            <div className="text-3xl font-bold text-primary glow-text">X</div>
-            <div className="text-muted-foreground">Coding Problems</div>
-          </div>
-          <div className="space-y-2">
-            <div className="text-3xl font-bold text-primary glow-text">X</div>
-            <div className="text-muted-foreground">Lessons</div>
-          </div>
-          <div className="space-y-2">
-            <div className="text-3xl font-bold text-primary glow-text">
-              24/7
+      <section id="socials" className="container">
+        <div className="flex flex-row justify-center items-center gap-8 flex-wrap">
+          <Link
+            href="https://www.instagram.com/the__matrix__ai/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center gap-2 hover:scale-110 transition-transform duration-200"
+          >
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center hover:bg-primary/20">
+              <Instagram className="h-6 w-6 text-primary" />
             </div>
-            <div className="text-muted-foreground">AI Support</div>
-          </div>
+            <div className="text-sm text-muted-foreground">Instagram</div>
+          </Link>
+
+          <Link
+            href="https://www.tiktok.com/@the__matrix__ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center gap-2 hover:scale-110 transition-transform duration-200"
+          >
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center hover:bg-primary/20">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-6 w-6 text-primary"
+              >
+                <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+              </svg>
+            </div>
+            <div className="text-sm text-muted-foreground">TikTok</div>
+          </Link>
+
+          <Link
+            href="https://www.linkedin.com/company/the-matrix-ai-prep"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center gap-2 hover:scale-110 transition-transform duration-200"
+          >
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center hover:bg-primary/20">
+              <Linkedin className="h-6 w-6 text-primary" />
+            </div>
+            <div className="text-sm text-muted-foreground">LinkedIn</div>
+          </Link>
+
+          <Link
+            href="https://www.youtube.com/@The-Matrix-AI"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center gap-2 hover:scale-110 transition-transform duration-200"
+          >
+            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center hover:bg-primary/20">
+              <Youtube className="h-6 w-6 text-primary" />
+            </div>
+            <div className="text-sm text-muted-foreground">Youtube</div>
+          </Link>
         </div>
       </section>
     </main>
