@@ -271,9 +271,9 @@ export default function LearnPage() {
   }, []);
 
   const handleAllTestsPassed = useCallback(async () => {
-    console.log("🎉 All tests passed! Updating completion...");
-    console.log("Problem ID:", currentProblem.problem_id);
-    console.log("Completion ID:", currProblemCompletion.id);
+    // // console.log("🎉 All tests passed! Updating completion...");
+    // console.log("Problem ID:", currentProblem.problem_id);
+    // console.log("Completion ID:", currProblemCompletion.id);
 
     setShowVictoryModal(true);
 
@@ -285,7 +285,7 @@ export default function LearnPage() {
         testCases.length,
         editorRef.current?.getValue()
       );
-      console.log("✅ Problem marked as complete!");
+      // console.log("✅ Problem marked as complete!");
 
       setProblemCompletionList((prev) => ({
         ...prev,

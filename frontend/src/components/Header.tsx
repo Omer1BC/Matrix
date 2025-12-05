@@ -27,7 +27,7 @@ export default function Header() {
     e.preventDefault();
     setLoading(true);
     try {
-      console.log(await randomSignUp());
+      // console.log(await randomSignUp());
     } catch (err: any) {
       console.error(err);
       alert(err.message || "Signup failed.");

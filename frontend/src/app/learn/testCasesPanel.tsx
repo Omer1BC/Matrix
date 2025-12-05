@@ -43,15 +43,6 @@ export default function TestCasesPanel({
         user_id: user_id,
       };
 
-      console.log("run-learn-tests payload:", {
-        ...payload,
-        code: userCode.slice(0, 80) + (userCode.length > 80 ? "..." : ""),
-      });
-      console.log("url", `${process.env.NEXT_PUBLIC_API_URL}`);
-      console.log(
-        "Raw env value:",
-        JSON.stringify(process.env.NEXT_PUBLIC_API_URL)
-      );
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}api/run-learn-tests`,
         {

@@ -163,32 +163,49 @@ def save_notes(request):
             )
         except AuthenticationError as e:
             # API key is invalid or revoked
-            logger.error(f"Authentication error generating embeddings for notes (pc_id={pc['id']}): {type(e).__name__}")
-            return JsonResponse({
-                "error": "Note-taking is temporarily unavailable due to a service authentication issue. Please try again later.",
-                "ok": False
-            }, status=503)
+            logger.error(
+                f"Authentication error generating embeddings for notes (pc_id={pc['id']}): {type(e).__name__}"
+            )
+            return JsonResponse(
+                {
+                    "error": "Note-taking is temporarily unavailable due to a service authentication issue. Please try again later.",
+                    "ok": False,
+                },
+                status=503,
+            )
         except OpenAIError as e:
             # Other OpenAI API errors (rate limits, etc.)
-            logger.error(f"OpenAI error generating embeddings for notes (pc_id={pc['id']}): {type(e).__name__}")
-            return JsonResponse({
-                "error": "Note-taking is temporarily unavailable. Please try again later.",
-                "ok": False
-            }, status=503)
+            logger.error(
+                f"OpenAI error generating embeddings for notes (pc_id={pc['id']}): {type(e).__name__}"
+            )
+            return JsonResponse(
+                {
+                    "error": "Note-taking is temporarily unavailable. Please try again later.",
+                    "ok": False,
+                },
+                status=503,
+            )
         except ValueError as e:
             # API key not configured
-            logger.error(f"Configuration error for embeddings (pc_id={pc['id']}): API key not configured")
-            return JsonResponse({
-                "error": "Note-taking is temporarily unavailable due to a configuration issue. Please try again later.",
-                "ok": False
-            }, status=503)
+            logger.error(
+                f"Configuration error for embeddings (pc_id={pc['id']}): API key not configured"
+            )
+            return JsonResponse(
+                {
+                    "error": "Note-taking is temporarily unavailable due to a configuration issue. Please try again later.",
+                    "ok": False,
+                },
+                status=503,
+            )
         except Exception as embedding_error:
             # Other unexpected errors
-            logger.error(f"Unexpected error generating embeddings for notes (pc_id={pc['id']}): {type(embedding_error).__name__}")
-            return JsonResponse({
-                "error": "Failed to save notes. Please try again.",
-                "ok": False
-            }, status=500)
+            logger.error(
+                f"Unexpected error generating embeddings for notes (pc_id={pc['id']}): {type(embedding_error).__name__}"
+            )
+            return JsonResponse(
+                {"error": "Failed to save notes. Please try again.", "ok": False},
+                status=500,
+            )
 
         # Only save notes to Supabase if embeddings were successful
         supabase.table("problem_completions").update({"notes": notes}).eq(
@@ -199,7 +216,9 @@ def save_notes(request):
     except Exception as e:
         traceback.print_exc()
         logger.error(f"Error saving notes: {str(e)}")
-        return JsonResponse({"error": "Failed to save notes. Please try again."}, status=500)
+        return JsonResponse(
+            {"error": "Failed to save notes. Please try again."}, status=500
+        )
 
 
 @csrf_exempt
@@ -366,42 +385,54 @@ def agent(request):
     except AuthenticationError as e:
         # OpenAI API key is invalid or revoked
         health_status = get_health_status()
-        health_status.mark_unhealthy("authentication_error", "OpenAI API key is invalid or has been revoked")
+        health_status.mark_unhealthy(
+            "authentication_error", "OpenAI API key is invalid or has been revoked"
+        )
 
         if health_status.should_send_notification():
             from utils.llm_health import send_admin_notification
+
             send_admin_notification(
                 subject="URGENT: Neo LLM Service Down - Authentication Failed",
                 error_type="authentication_error",
-                error_details=str(e)
+                error_details=str(e),
             )
             health_status.notification_sent()
 
         traceback.print_exc()
-        return JsonResponse({
-            "error": "Neo is currently unavailable due to a service authentication issue. A system administrator has been notified.",
-            "error_type": "authentication_error"
-        }, status=503)
+        return JsonResponse(
+            {
+                "error": "Neo is currently unavailable due to a service authentication issue. A system administrator has been notified.",
+                "error_type": "authentication_error",
+            },
+            status=503,
+        )
 
     except RateLimitError as e:
         # Rate limit exceeded
         health_status = get_health_status()
-        health_status.mark_unhealthy("rate_limit_error", "OpenAI API rate limit exceeded")
+        health_status.mark_unhealthy(
+            "rate_limit_error", "OpenAI API rate limit exceeded"
+        )
 
         if health_status.should_send_notification():
             from utils.llm_health import send_admin_notification
+
             send_admin_notification(
                 subject="WARNING: Neo LLM Service - Rate Limit Exceeded",
                 error_type="rate_limit_error",
-                error_details=str(e)
+                error_details=str(e),
             )
             health_status.notification_sent()
 
         traceback.print_exc()
-        return JsonResponse({
-            "error": "Neo is temporarily unavailable due to high demand. Please try again in a few minutes.",
-            "error_type": "rate_limit_error"
-        }, status=429)
+        return JsonResponse(
+            {
+                "error": "Neo is temporarily unavailable due to high demand. Please try again in a few minutes.",
+                "error_type": "rate_limit_error",
+            },
+            status=429,
+        )
 
     except OpenAIError as e:
         # Other OpenAI-specific errors
@@ -410,39 +441,49 @@ def agent(request):
 
         if health_status.should_send_notification():
             from utils.llm_health import send_admin_notification
+
             send_admin_notification(
                 subject="ERROR: Neo LLM Service Issue Detected",
                 error_type="openai_error",
-                error_details=str(e)
+                error_details=str(e),
             )
             health_status.notification_sent()
 
         traceback.print_exc()
-        return JsonResponse({
-            "error": "Neo is currently experiencing issues. Please try again later or contact support.",
-            "error_type": "openai_error"
-        }, status=503)
+        return JsonResponse(
+            {
+                "error": "Neo is currently experiencing issues. Please try again later or contact support.",
+                "error_type": "openai_error",
+            },
+            status=503,
+        )
 
     except ValueError as e:
         # API key not configured or validation errors
         if "API key" in str(e) or "OPENAI_API_KEY" in str(e):
             health_status = get_health_status()
-            health_status.mark_unhealthy("configuration_error", "OpenAI API key is not configured")
+            health_status.mark_unhealthy(
+                "configuration_error", "OpenAI API key is not configured"
+            )
 
             if health_status.should_send_notification():
                 from utils.llm_health import send_admin_notification
+
                 send_admin_notification(
                     subject="URGENT: Neo LLM Service - API Key Not Configured",
                     error_type="configuration_error",
-                    error_details=str(e)
+                    error_details=str(e),
                 )
                 health_status.notification_sent()
 
             traceback.print_exc()
-            return JsonResponse({
-                "error": "Neo is currently unavailable due to a configuration issue. A system administrator has been notified.",
-                "error_type": "configuration_error"
-            }, status=503)
+            return JsonResponse(
+                {
+                    "error": "Neo is currently unavailable due to a configuration issue. A system administrator has been notified.",
+                    "error_type": "configuration_error",
+                },
+                status=503,
+            )
         else:
             # Other ValueError - re-raise to be caught by generic handler
             raise
@@ -450,7 +491,9 @@ def agent(request):
     except Exception as e:
         traceback.print_exc()
         logger.error(f"Unexpected error in agent endpoint: {str(e)}")
-        return JsonResponse({"error": "An unexpected error occurred. Please try again."}, status=500)
+        return JsonResponse(
+            {"error": "An unexpected error occurred. Please try again."}, status=500
+        )
 
 
 @csrf_exempt
@@ -493,33 +536,30 @@ def run_python(request):
                 # Execute with template-aware security
                 executor = SafeExecutor(enable_timeout=True)
                 result = executor.execute_with_template(
-                    full_code=full_code,
-                    user_code=code,
-                    timeout=10
+                    full_code=full_code, user_code=code, timeout=10
                 )
 
-                if not result['success']:
+                if not result["success"]:
                     # Check if it's a security violation
-                    if result.get('violations'):
+                    if result.get("violations"):
                         error_msg = "🔒 Security violation detected:\n\n"
-                        error_msg += "\n".join(result['violations'])
+                        error_msg += "\n".join(result["violations"])
                         error_msg += "\n\nImport statements and file system access are not allowed for security reasons."
                         return JsonResponse({"output": error_msg}, safe=False)
                     # Other execution errors
-                    return JsonResponse({"output": result['error']}, safe=False)
+                    return JsonResponse({"output": result["error"]}, safe=False)
 
-                return JsonResponse({"output": result['output']}, safe=False)
+                return JsonResponse({"output": result["output"]}, safe=False)
 
             except json.JSONDecodeError as e:
                 logger.error(f"JSON decode error in run_python: {str(e)}")
                 return JsonResponse({"error": "Invalid request format."}, status=400)
             except Exception as e:
-                import logging
-                import traceback
-                logger = logging.getLogger(__name__)
                 logger.error(f"Error in run_python: {str(e)}")
                 traceback.print_exc()
-                return JsonResponse({"error": "An error occurred while executing code."}, status=400)
+                return JsonResponse(
+                    {"error": "An error occurred while executing code."}, status=400
+                )
         else:
             error_msg = (
                 f"Expected application/json content type, got: '{request.content_type}'"
@@ -580,14 +620,12 @@ def run_learn_tests(request):
         # Execute with template-aware security
         executor = SafeExecutor(enable_timeout=True)
         exec_result = executor.execute_with_template(
-            full_code=full_code,
-            user_code=code,
-            timeout=10
+            full_code=full_code, user_code=code, timeout=10
         )
 
-        if not exec_result['success']:
+        if not exec_result["success"]:
             # Check if it's a security violation
-            if exec_result.get('violations'):
+            if exec_result.get("violations"):
                 return JsonResponse(
                     {
                         "success": False,
@@ -595,15 +633,15 @@ def run_learn_tests(request):
                         "info": {
                             "type": "SecurityViolation",
                             "msg": "Code contains prohibited operations",
-                            "violations": exec_result['violations']
+                            "violations": exec_result["violations"],
                         },
                         "test_results": [],
                     },
                     status=400,
                 )
             # Check if it's a syntax error
-            if exec_result.get('syntax_error'):
-                e = exec_result['syntax_error']
+            if exec_result.get("syntax_error"):
+                e = exec_result["syntax_error"]
                 return JsonResponse(
                     {
                         "success": False,
@@ -615,12 +653,12 @@ def run_learn_tests(request):
                 )
             # Other execution errors
             return JsonResponse(
-                {"success": False, "error": exec_result['error'], "test_results": []},
+                {"success": False, "error": exec_result["error"], "test_results": []},
                 status=500,
             )
 
         try:
-            namespace = exec_result.get('namespace', {})
+            namespace = exec_result.get("namespace", {})
             test_results = namespace.get("results", {})
             formatted_results = []
 
@@ -667,12 +705,15 @@ def run_learn_tests(request):
             )
 
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
             logger.error(f"Error running tests: {str(e)}")
             traceback.print_exc()
             return JsonResponse(
-                {"success": False, "error": "Failed to run tests. Please try again.", "test_results": []}, status=500
+                {
+                    "success": False,
+                    "error": "Failed to run tests. Please try again.",
+                    "test_results": [],
+                },
+                status=500,
             )
 
     except json.JSONDecodeError as e:
@@ -681,7 +722,9 @@ def run_learn_tests(request):
     except Exception as e:
         logger.error(f"Error in run_learn_tests: {str(e)}")
         traceback.print_exc()
-        return JsonResponse({"error": "An error occurred while running tests."}, status=400)
+        return JsonResponse(
+            {"error": "An error occurred while running tests."}, status=400
+        )
 
 
 @csrf_exempt
@@ -710,8 +753,24 @@ def ai_hints(request):
             tests = body.get("tests", "")
             resp = get_ai_hints(code, tests)
             return JsonResponse(resp)
+        except AuthenticationError as e:
+            logger.error(f"AI hints failed - Authentication error: {type(e).__name__}")
+            return JsonResponse(
+                {
+                    "error": "Hints are temporarily unavailable due to a service authentication issue."
+                },
+                status=503,
+            )
+        except OpenAIError as e:
+            logger.error(f"AI hints failed - OpenAI error: {type(e).__name__}")
+            return JsonResponse(
+                {"error": "Hints are temporarily unavailable."}, status=503
+            )
         except Exception as e:
-            return JsonResponse({"Error Occured": str(e)}, status=400)
+            logger.error(f"AI hints failed: {type(e).__name__}")
+            return JsonResponse(
+                {"error": "Failed to generate hints. Please try again."}, status=400
+            )
     print("malformed request")
     return JsonResponse({"error": "Malformed Request"}, status=400)
 
@@ -728,8 +787,26 @@ def ai_tool_hints(request):
             pattern = body.get("pattern", "")
             resp = get_tool_hints(code, pattern)
             return JsonResponse(resp)
+        except AuthenticationError as e:
+            logger.error(
+                f"Tool hints failed - Authentication error: {type(e).__name__}"
+            )
+            return JsonResponse(
+                {
+                    "error": "Hints are temporarily unavailable due to a service authentication issue."
+                },
+                status=503,
+            )
+        except OpenAIError as e:
+            logger.error(f"Tool hints failed - OpenAI error: {type(e).__name__}")
+            return JsonResponse(
+                {"error": "Hints are temporarily unavailable."}, status=503
+            )
         except Exception as e:
-            return JsonResponse({"Error Occured": str(e)}, status=400)
+            logger.error(f"Tool hints failed: {type(e).__name__}")
+            return JsonResponse(
+                {"error": "Failed to generate hints. Please try again."}, status=400
+            )
     return JsonResponse({"error": "Malformed Request"}, status=400)
 
 
@@ -744,7 +821,10 @@ def get_animation(request):
 
             return JsonResponse(get_anim(data))
         except Exception as e:
-            return JsonResponse({"Error Occured": str(e)}, status=400)
+            logger.error(f"Animation generation failed: {type(e).__name__}")
+            return JsonResponse(
+                {"error": "Failed to generate animation. Please try again."}, status=400
+            )
     return JsonResponse({"error": "Malformed Request"}, status=400)
 
 
@@ -759,7 +839,10 @@ def get_pattern_media(request):
             name = body.get("name")
             return JsonResponse(pattern_to_video(name, data))
         except Exception as e:
-            return JsonResponse({"Error Occured": str(e)}, status=400)
+            logger.error(f"Pattern video generation failed: {type(e).__name__}")
+            return JsonResponse(
+                {"error": "Failed to generate video. Please try again."}, status=400
+            )
     return JsonResponse({"error": "Malformed Request"}, status=400)
 
 
@@ -775,9 +858,44 @@ def annotate(request):
             tests = body.get("tests", "")
             resp = get_annotated_ai_hints(code, tests)
             return JsonResponse(resp)
+        except AuthenticationError as e:
+            logger.error(
+                f"Annotated hints failed - Authentication error: {type(e).__name__}"
+            )
+            return JsonResponse(
+                {
+                    "error": "Hints are temporarily unavailable due to a service authentication issue."
+                },
+                status=503,
+            )
+        except OpenAIError as e:
+            logger.error(f"Annotated hints failed - OpenAI error: {type(e).__name__}")
+            return JsonResponse(
+                {"error": "Hints are temporarily unavailable."}, status=503
+            )
+        except Exception as e:
+            logger.error(f"Annotated hints failed: {type(e).__name__}")
+            return JsonResponse(
+                {"error": "Failed to generate hints. Please try again."}, status=400
+            )
+    print("malformed request")
+    return JsonResponse({"error": "Malformed Request"}, status=400)
+
+
+@csrf_exempt
+def annotate_errors(request):
+    if request.method == "POST" and request.content_type == "application/json":
+        import json
+
+        try:
+            body = json.loads(request.body)
+            code = body.get("code", "")
+            error = body.get("error", "")
+            id = body.get("id", "")
+            resp = get_error_details(id, error, code)
+            return JsonResponse(resp, safe=False)
         except Exception as e:
             return JsonResponse({"Error Occured": str(e)}, status=400)
-    print("malformed request")
     return JsonResponse({"error": "Malformed Request"}, status=400)
 
 
@@ -794,8 +912,22 @@ def ask(request):
             resp = ask_ai(question, text)
             print("response is resp", resp)
             return JsonResponse(resp)
+        except AuthenticationError as e:
+            logger.error(f"Ask AI failed - Authentication error: {type(e).__name__}")
+            return JsonResponse(
+                {
+                    "error": "AI is temporarily unavailable due to a service authentication issue."
+                },
+                status=503,
+            )
+        except OpenAIError as e:
+            logger.error(f"Ask AI failed - OpenAI error: {type(e).__name__}")
+            return JsonResponse({"error": "AI is temporarily unavailable."}, status=503)
         except Exception as e:
-            return JsonResponse({"Error Occured": str(e)}, status=400)
+            logger.error(f"Ask AI failed: {type(e).__name__}")
+            return JsonResponse(
+                {"error": "Failed to process question. Please try again."}, status=400
+            )
     return JsonResponse({"error": "Malformed Request"}, status=400)
 
 
@@ -925,24 +1057,10 @@ def grade_solution(request):
 
     except Exception as e:
         traceback.print_exc()
-        return JsonResponse({"error": str(e)}, status=500)
-
-
-@csrf_exempt
-def annotate_errors(request):
-    if request.method == "POST" and request.content_type == "application/json":
-        import json
-
-        try:
-            body = json.loads(request.body)
-            code = body.get("code", "")
-            error = body.get("error", "")
-            id = body.get("id", "")
-            resp = get_error_details(id, error, code)
-            return JsonResponse(resp, safe=False)
-        except Exception as e:
-            return JsonResponse({"Error Occured": str(e)}, status=400)
-    return JsonResponse({"error": "Malformed Request"}, status=400)
+        logger.error(f"Grade solution failed: {type(e).__name__}")
+        return JsonResponse(
+            {"error": "Failed to grade solution. Please try again."}, status=500
+        )
 
 
 # Replace your existing get_all_categories function with this:
@@ -1002,16 +1120,20 @@ def run_test_case(request):
 
             # Execute safely with security restrictions
             executor = SafeExecutor(enable_timeout=True)
-            exec_result = executor.execute(code, test_input, timeout=10, allow_imports=False)
+            exec_result = executor.execute(
+                code, test_input, timeout=10, allow_imports=False
+            )
 
-            if not exec_result['success']:
+            if not exec_result["success"]:
                 # Check if it's a security violation
-                if exec_result.get('violations'):
-                    error_msg = "Security violation: " + "; ".join(exec_result['violations'])
+                if exec_result.get("violations"):
+                    error_msg = "Security violation: " + "; ".join(
+                        exec_result["violations"]
+                    )
                     return JsonResponse(
                         {
                             "passed": False,
-                            "actual_output": exec_result.get('output', ''),
+                            "actual_output": exec_result.get("output", ""),
                             "expected_output": expected_output,
                             "error": error_msg,
                         }
@@ -1020,14 +1142,14 @@ def run_test_case(request):
                 return JsonResponse(
                     {
                         "passed": False,
-                        "actual_output": exec_result.get('output', ''),
+                        "actual_output": exec_result.get("output", ""),
                         "expected_output": expected_output,
-                        "error": exec_result['error'],
+                        "error": exec_result["error"],
                     }
                 )
 
             # Get the actual output
-            actual_output = exec_result['output'].strip()
+            actual_output = exec_result["output"].strip()
 
             # Compare outputs (normalize whitespace)
             expected_normalized = expected_output.strip()

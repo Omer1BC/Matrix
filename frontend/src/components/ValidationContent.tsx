@@ -126,7 +126,7 @@ export default function ValidationContent({
                 " at line \n\t" +
                 `(${r.lineno || ""}) ${r.line || ""}`
             );
-            console.log("r.no", r.lineno);
+            // console.log("r.no", r.lineno);
           } else {
             setHasError(r.msg);
           }
@@ -183,15 +183,18 @@ export default function ValidationContent({
       if (verdict) {
         try {
           timer.reset();
-          console.log("Reset called successfully");
+          // console.log("Reset called successfully");
         } catch (err) {
           console.error("Reset failed:", err);
         }
-        console.log(problemId);
+        // console.log(problemId);
       }
     } catch (error) {
       // Display error message from Neo service
-      const errorMessage = error instanceof Error ? error.message : "Error encountered while running test";
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Error encountered while running test";
       setHasError(errorMessage);
       console.error("Test execution failed:", error);
     } finally {

@@ -13,7 +13,7 @@ class Node:
 
 
 
-def remove(root:Node, target:int):
+def remove(root, target):
     if not root:
         return None
     if root.val > target:

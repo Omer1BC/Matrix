@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
+from openai import AuthenticationError, OpenAIError
 
 # --- Prompts ---
 
@@ -658,13 +659,52 @@ def generate_animation(
             "media_dir": os.path.join(tmp_dir, "media"),
             "cmd": " ".join(cmd),
         }
-    except Exception as e:
+    except AuthenticationError as e:
+        # API key is invalid or revoked - log details server-side only
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Animation generation failed - Authentication error: {type(e).__name__}")
         return {
             "ok": False,
             "file_path": "",
             "scene_name": scene_class_name,
             "stdout": "",
-            "stderr": f"animation error: {e}",
+            "stderr": "Animation generation is temporarily unavailable due to a service authentication issue.",
+            "error": "Service authentication issue",
+            "video_path": "",
+            "video_rel": "",
+            "media_dir": "",
+            "cmd": "",
+        }
+    except OpenAIError as e:
+        # Other OpenAI errors - log details server-side only
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Animation generation failed - OpenAI error: {type(e).__name__}")
+        return {
+            "ok": False,
+            "file_path": "",
+            "scene_name": scene_class_name,
+            "stdout": "",
+            "stderr": "Animation generation is temporarily unavailable.",
+            "error": "Service error",
+            "video_path": "",
+            "video_rel": "",
+            "media_dir": "",
+            "cmd": "",
+        }
+    except Exception as e:
+        # Other unexpected errors - log type only, not details
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Animation generation failed: {type(e).__name__}")
+        return {
+            "ok": False,
+            "file_path": "",
+            "scene_name": scene_class_name,
+            "stdout": "",
+            "stderr": "Animation generation failed. Please try again.",
+            "error": "Generation failed",
             "video_path": "",
             "video_rel": "",
             "media_dir": "",

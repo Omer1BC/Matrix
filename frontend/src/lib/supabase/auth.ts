@@ -232,7 +232,7 @@ export async function syncProblemCompletions() {
 
     if (error) throw error;
 
-    console.log("Synced problem completions:", data);
+    // console.log("Synced problem completions:", data);
   } catch (err) {
     console.error("Failed to sync problem completions:", err);
   }

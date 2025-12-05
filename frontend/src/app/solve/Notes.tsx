@@ -1,39 +1,33 @@
 "use client";
 
-import { getAllUserProblems } from '../../lib/supabase/problems';
-import { useState, useEffect } from 'react';
-import { Profile } from '../../lib/types';
-
+import { getAllUserProblems } from "../../lib/supabase/problems";
+import { useState, useEffect } from "react";
+import { Profile } from "../../lib/types";
 
 export default function Notes() {
+  const [userProblems, setUserProblems] = useState<any[]>([]);
 
-    const[userProblems, setUserProblems] = useState<any[]>([]);
-
-    useEffect(() => {
-      async function loadUserProblems() {
-        const response = await getAllUserProblems();
-         setUserProblems(response);
-      }
+  useEffect(() => {
+    async function loadUserProblems() {
+      const response = await getAllUserProblems();
+      setUserProblems(response);
+    }
     loadUserProblems();
-    }, []);
+  }, []);
 
-    useEffect(() => {
-      console.log(userProblems);
-    }, [userProblems]);
+  useEffect(() => {
+    // console.log(userProblems);
+  }, [userProblems]);
 
-    return (
+  return (
     <div className="notes flex h-full max-h-full w-full flex-col p-2">
-          <div className="flex-1 min-h-0 overflow-y-auto custom-scroll pr-2 space-y-2">
-            {userProblems.map((t, i) => (
-              <NotesPill
-                key={i}
-                title={t.title}
-                notes={t.notes}
-              />
-            ))}
-          </div>
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scroll pr-2 space-y-2">
+        {userProblems.map((t, i) => (
+          <NotesPill key={i} title={t.title} notes={t.notes} />
+        ))}
+      </div>
     </div>
-  )
+  );
 }
 
 type NotesPillProps = {
@@ -41,10 +35,7 @@ type NotesPillProps = {
   notes: string;
 };
 
-export function NotesPill({
-  title,
-  notes,
-}: NotesPillProps) {
+export function NotesPill({ title, notes }: NotesPillProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
