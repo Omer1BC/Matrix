@@ -137,6 +137,8 @@ export default function LearnPage() {
     null
   );
 
+  const zoom = 0.9;
+
   const getMainEditorCode = (completion: any, problem: any) => {
     if (!completion && !problem) return "# Write your solution here\n";
 
@@ -693,9 +695,9 @@ export default function LearnPage() {
         <div
           className="Page origin-top-left w-screen h-screen overflow-hidden h-screen overflow-hidden bg-background/80 pl-2"
           style={{
-            transform: `scale(${0.9})`,
-            width: `${100 / 0.9}%`,
-            height: `${100/ 0.9}%`,
+            transform: `scale(${zoom})`,
+            width: `${100 / zoom}%`,
+            height: `${100/ zoom}%`,
           }}
         >
           {/* Main 3-Column Grid with custom column widths */}
