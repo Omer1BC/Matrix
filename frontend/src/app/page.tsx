@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import Shepherd from "shepherd.js";
 import "shepherd.js/dist/css/shepherd.css";
 
 export default function HomePage() {

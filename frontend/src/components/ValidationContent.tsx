@@ -4,6 +4,9 @@ import StarGraph from "./StarGraph";
 import { agentCall, ping } from "@/lib/api";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useAnnotationsContext } from "@/lib/contexts/AnnotationsContext";
+import Link from "next/link";
+import { Button } from "./ui/button";
+import { FileBadge2 } from "lucide-react";
 type ValidationContentProps = {
   problemId: string;
   editorRef: React.RefObject<any>;
@@ -324,12 +327,31 @@ export default function ValidationContent({
                 <p className="mt-2 text-[var(--gr-2)]">{llmComment}</p>
               )}
 
-              <button
-                className="mt-6 rounded-lg bg-[var(--gr-2)] px-4 py-2 text-[var(--dbl-1)] hover:bg-[var(--gr-1)]"
-                onClick={() => setShowVictoryModal(false)}
-              >
-                Close
-              </button>
+              <div className="p-4 flex items-center justify-evenly">
+                <Button
+                  onClick={() => setShowVictoryModal(false)}
+                  variant={"destructive"}
+                  size={undefined}
+                  className={undefined}
+                >
+                  Close
+                </Button>
+                <Link
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSfXUi-LI0xQhkdAd1jadyvRQZ1v7TwrNlDnCDlr3FslI6IcpQ/viewform?usp=header"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button
+                    variant="outline"
+                    className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
+                    style={{ cursor: "pointer" }}
+                    size={undefined}
+                  >
+                    <FileBadge2 className="mr-2 h-4 w-4" />
+                    Take the Survey
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

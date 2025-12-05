@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { signIn, signOut, signUp } from "@/lib/supabase/auth";
-import { LogOut, LogIn, UserPlus } from "lucide-react";
+import { LogOut, LogIn, UserPlus, FileBadge2 } from "lucide-react";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -90,7 +90,7 @@ export default function Header() {
                   href={"/solve"}
                   className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
                 >
-                  <span className="text-xl font-bold glow-text">Solve</span>{" "}
+                  <span className="text-xl font-bold glow-text">Solve</span>
                 </Link>
               </div>
             ) : (
@@ -98,77 +98,123 @@ export default function Header() {
             )}
           </div>
 
-          {authLoading ? (
-            <div className="flex items-center gap-4">
-              <span className="invisible text-lg">Hello placeholder</span>
-              <div className="invisible">
+          <div className="flex items-center gap-3">
+            {authLoading ? (
+              <div className="flex items-center gap-4">
+                <Link
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSfXUi-LI0xQhkdAd1jadyvRQZ1v7TwrNlDnCDlr3FslI6IcpQ/viewform?usp=header"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button
+                    variant="outline"
+                    className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
+                    style={{ cursor: "pointer" }}
+                    size={undefined}
+                  >
+                    <FileBadge2 className="mr-2 h-4 w-4" />
+                    Survey
+                  </Button>
+                </Link>
+
+                <span className="invisible text-lg">Hello placeholder</span>
+                <div className="invisible">
+                  <Button
+                    variant="outline"
+                    size={undefined}
+                    className="matrix-border bg-transparent hover:bg-primary/10"
+                  >
+                    Log out
+                  </Button>
+                </div>
+                <div className="invisible">
+                  <Image src="/userPhoto.png" alt="" width={50} height={50} />
+                </div>
+              </div>
+            ) : user ? (
+              <div className="flex items-center gap-4">
+                <Link
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSfXUi-LI0xQhkdAd1jadyvRQZ1v7TwrNlDnCDlr3FslI6IcpQ/viewform?usp=header"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button
+                    variant="outline"
+                    className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
+                    style={{ cursor: "pointer" }}
+                    size={undefined}
+                  >
+                    <FileBadge2 className="mr-2 h-4 w-4" />
+                    Survey
+                  </Button>
+                </Link>
                 <Button
                   variant="outline"
+                  className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
+                  onClick={handleLogout}
+                  style={{ cursor: "pointer" }}
                   size={undefined}
-                  className="matrix-border bg-transparent hover:bg-primary/10"
                 >
+                  <LogOut className="mr-2 h-4 w-4" />
                   Log out
                 </Button>
+                <button
+                  onClick={() => (window.location.href = "/settings")}
+                  style={{ cursor: "pointer" }}
+                >
+                  <Image
+                    src="/userPhoto.png"
+                    alt="user photo"
+                    width={50}
+                    height={50}
+                  />
+                </button>
               </div>
-              <div className="invisible">
-                <Image src="/userPhoto.png" alt="" width={50} height={50} />
+            ) : (
+              <div className="signup flex items-center gap-3">
+                <Link
+                  href="https://docs.google.com/forms/d/e/1FAIpQLSfXUi-LI0xQhkdAd1jadyvRQZ1v7TwrNlDnCDlr3FslI6IcpQ/viewform?usp=header"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button
+                    variant="outline"
+                    className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
+                    style={{ cursor: "pointer" }}
+                    size={undefined}
+                  >
+                    <FileBadge2 className="mr-2 h-4 w-4" />
+                    Survey
+                  </Button>
+                </Link>
+
+                <Button
+                  variant="outline"
+                  className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
+                  onClick={() => setShowLogin(true)}
+                  style={{ cursor: "pointer" }}
+                  size={undefined}
+                >
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Log in
+                </Button>
+                <Button
+                  className="glow-text"
+                  onClick={() => setShowSignup(true)}
+                  style={{ cursor: "pointer" }}
+                  variant={undefined}
+                  size={undefined}
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Sign up
+                </Button>
               </div>
-            </div>
-          ) : user ? (
-            <div className="flex items-center gap-4">
-              <span className="text-lg text-primary glow-text">
-                Hello{" "}
-                {user.user_metadata?.first_name || user.user_metadata?.email}!
-              </span>
-              <Button
-                variant="outline"
-                className="matrix-border bg-transparent hover:bg-primary/10"
-                onClick={handleLogout}
-                style={{ cursor: "pointer" }}
-                size={undefined}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
-              </Button>
-              <button
-                onClick={() => (window.location.href = "/settings")}
-                style={{ cursor: "pointer" }}
-              >
-                <Image
-                  src="/userPhoto.png"
-                  alt="user photo"
-                  width={50}
-                  height={50}
-                />
-              </button>
-            </div>
-          ) : (
-            <div className="signup flex items-center gap-3">
-              <Button
-                variant="outline"
-                className="matrix-border bg-transparent hover:bg-primary/10"
-                onClick={() => setShowLogin(true)}
-                style={{ cursor: "pointer" }}
-                size={undefined}
-              >
-                <LogIn className="mr-2 h-4 w-4" />
-                Log in
-              </Button>
-              <Button
-                className="glow-text"
-                onClick={() => setShowSignup(true)}
-                style={{ cursor: "pointer" }}
-                variant={undefined}
-                size={undefined}
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Sign up
-              </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </header>
 
+      {/* modals below unchanged */}
       {showLogin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="bg-card border-2 matrix-border rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl shadow-primary/20">
