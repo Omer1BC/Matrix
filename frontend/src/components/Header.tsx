@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { signIn, signOut, randomSignUp } from "@/lib/supabase/auth";
+import { signIn, signOut, signUp } from "@/lib/supabase/auth";
 import { LogOut, LogIn, UserPlus } from "lucide-react";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
@@ -27,13 +27,14 @@ export default function Header() {
     e.preventDefault();
     setLoading(true);
     try {
-      // console.log(await randomSignUp());
+      await signUp(email, password, username, firstname, lastname);
     } catch (err: any) {
       console.error(err);
       alert(err.message || "Signup failed.");
     } finally {
       setLoading(false);
     }
+    setShowSignup(false);
   };
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
@@ -155,7 +156,7 @@ export default function Header() {
               </Button>
               <Button
                 className="glow-text"
-                onClick={handleSignup}
+                onClick={() => setShowSignup(true)}
                 style={{ cursor: "pointer" }}
                 variant={undefined}
                 size={undefined}

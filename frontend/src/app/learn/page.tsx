@@ -695,7 +695,7 @@ export default function LearnPage() {
     return (
       <>
         {/* Main 3-Column Grid with custom column widths */}
-        <div className="grid grid-cols-[auto_3fr_1fr] gap-2 h-full">
+        <div className="grid grid-cols-[auto_3fr_1fr] gap-2 h-screen overflow-hidden">
           {/* Left: Menu button */}
           <div className="flex justify-start items-center pl-2">
             <button
@@ -707,9 +707,9 @@ export default function LearnPage() {
           </div>
 
           {/* Middle: Video + Editor */}
-          <div className="flex flex-col gap-4 h-full">
+          <div className="flex flex-col gap-4">
             {/* Video */}
-            <div className="flex rounded-lg shadow-lg overflow-hidden matrix-border h-[350px] md:h-[35vh] lg:h-[40vh] justify-center items-center">
+            <div className="flex rounded-lg shadow-lg overflow-hidden matrix-border min-h-0 h-[350px] md:h-[35vh] lg:h-[40vh] justify-center items-center">
               {/* <ReactPlayer
                   muted={false}
                   playing={false}
@@ -741,18 +741,15 @@ export default function LearnPage() {
             {/* Editor */}
             <div className="rounded-lg shadow-lg overflow-hidden matrix-border flex-1">
               <Card
-                className="editor notes exercise/editor flex flex-col h-full overflow-auto"
+                className="editor notes exercise/editor flex flex-col min-h-0 overflow-auto"
                 tabs={codeTabs}
               />
             </div>
           </div>
 
           {/* Right: Test Cases */}
-          <div className="rounded-lg shadow-lg overflow-auto matrix-border">
-            <Card
-              className="flex flex-col h-full overflow-y-auto"
-              tabs={testTabs}
-            />
+          <div className="flex flex-col h-full rounded-lg shadow-lg matrix-border overflow-hidden">
+            <Card className="flex-1 min-h-0 overflow-auto" tabs={testTabs} />
           </div>
         </div>
 
@@ -819,7 +816,7 @@ export default function LearnPage() {
         </div>
 
         {/* Victory Modal */}
-        {showVictoryModal && (
+        {/* {showVictoryModal && (
           <div
             className="victory-modal-overlay"
             onClick={() => setShowVictoryModal(false)}
@@ -842,7 +839,7 @@ export default function LearnPage() {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </>
     );
   }
