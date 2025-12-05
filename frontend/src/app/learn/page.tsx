@@ -690,7 +690,14 @@ export default function LearnPage() {
   } else {
     return (
       <>
-        <div className="Page w-screen h-screen overflow-hidden h-screen overflow-hidden bg-background/80 pl-2">
+        <div
+          className="Page origin-top-left w-screen h-screen overflow-hidden h-screen overflow-hidden bg-background/80 pl-2"
+          style={{
+            transform: `scale(${0.9})`,
+            width: `${100 / 0.9}%`,
+            height: `${100/ 0.9}%`,
+          }}
+        >
           {/* Main 3-Column Grid with custom column widths */}
           <div className="grid grid-cols-[auto_3fr_1fr] gap-4 h-full">
             {/* Left: Menu button */}
@@ -706,7 +713,7 @@ export default function LearnPage() {
             {/* Middle: Video + Editor */}
             <div className="flex flex-col gap-4 h-full">
               {/* Video */}
-              <div className="rounded-lg shadow-lg overflow-hidden matrix-border h-[350px] md:h-[320h] lg:h-[35vh]">
+              <div className="rounded-lg shadow-lg overflow-hidden matrix-border h-[350px] md:h-[35vh] lg:h-[40vh]">
                 <ReactPlayer
                   muted={false}
                   playing={false}
