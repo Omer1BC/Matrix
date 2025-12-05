@@ -170,16 +170,34 @@
 
 .custom-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #6b7280 #374151;
+  scrollbar-color: #6b7280 #0C0C0E;
 }
 
 .custom-scroll::-webkit-scrollbar {
   width: 8px;
 }
 .custom-scroll::-webkit-scrollbar-track {
-  background: #374151;
+  background: #0C0C0E;
 }
 .custom-scroll::-webkit-scrollbar-thumb {
   background: #6b7280;
   border-radius: 8px;
 }
+
+
+.custom-scroll-learn {
+  scrollbar-width: thin;
+  scrollbar-color: #6b7280 #0C0C0E;
+}
+
+.custom-scroll-learn::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-scroll-learn::-webkit-scrollbar-track {
+  background: #0C0C0E;
+}
+.custom-scroll-learn::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 8px;
+}
+

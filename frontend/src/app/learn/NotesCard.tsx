@@ -12,7 +12,7 @@ type Props = {
 
 export function NotesCard({ notes, onChange, onBlur }: Props) {
   return (
-    <Card className="flex flex-col h-full bg-card/40 p-6 overflow-hidden">
+    <Card className="flex flex-col min-h-0 w-full bg-card/40 p-6 overflow-hidden">
       <textarea
         id="notes"
         value={notes}

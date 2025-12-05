@@ -6,6 +6,7 @@ import { Editor } from "@monaco-editor/react";
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import Card from "./Card";
 import TestCasesPanel from "./testCasesPanel";
+import TabPanel from "@/components/TabPanel";
 import ProblemMenu from "./problemMenu";
 import ReferencesPanel from "@/components/ReferencesPanel";
 import { useSolve } from "@/lib/hooks/useSolve";
@@ -141,6 +142,9 @@ export default function LearnPage() {
 
   const [videoError, setVideoError] = useState(false);
 
+  const [activeCodeTab, setActiveCodeTab] = useState("editor");
+  const [activeTestTab, setActiveTestTab] = useState("tests");
+
   const getMainEditorCode = (completion: any, problem: any) => {
     if (!completion && !problem) return "# Write your solution here\n";
 
@@ -194,6 +198,7 @@ export default function LearnPage() {
   );
 
   const handleNextProblem = useCallback(() => {
+    setVideoError(false);
     setCurrentIndex((prevIndex) => {
       const nextIndex = (prevIndex + 1) % problemIds.length;
       navigateToProblem(nextIndex);
@@ -202,6 +207,7 @@ export default function LearnPage() {
   }, [problemIds.length, navigateToProblem]);
 
   const handlePrevProblem = useCallback(() => {
+    setVideoError(false);
     setCurrentIndex((prevIndex) => {
       if (prevIndex <= 0) return 0;
       const prev = prevIndex - 1;
@@ -223,6 +229,42 @@ export default function LearnPage() {
       window.removeEventListener("switchToRegular", setMenu);
     };
   }, [showMenu]);
+
+  useEffect(() => {
+    const switchToNotes = () => {
+      setActiveCodeTab("notes");
+    };
+
+    const switchToEditor = () => {
+      setActiveCodeTab("editor");
+    };
+
+    window.addEventListener("switchToLearnNotes", switchToNotes);
+    window.addEventListener("switchToEditor", switchToEditor);
+
+    return () => {
+      window.removeEventListener("switchToLearnNotes", switchToNotes);
+      window.removeEventListener("switchToEditor", switchToEditor);
+    };
+  }, [activeCodeTab]);
+
+  useEffect(() => {
+    const switchToTests = () => {
+      setActiveTestTab("tests");
+    };
+
+    const switchToNeo = () => {
+      setActiveTestTab("neo");
+    };
+
+    window.addEventListener("switchToTests", switchToTests);
+    window.addEventListener("switchToNeo", switchToNeo);
+
+    return () => {
+      window.removeEventListener("switchToTests", switchToTests);
+      window.removeEventListener("switchToNeo", switchToNeo);
+    };
+  }, [activeTestTab])
 
   useEffect(() => {
     if (solutionEditorRef.current && monacoRef.current) {
@@ -367,6 +409,7 @@ export default function LearnPage() {
   );
 
   const handleProblemSelect = async (problem: ProblemCompletion) => {
+    setVideoError(false);
     setCurrentProblem(problemList[problem.order]);
     setCurrentIndex(problem.order);
     try {
@@ -469,7 +512,7 @@ export default function LearnPage() {
               </div>
             </div>
 
-            <div className="relative flex-1 min-h-0">
+            <div className="relative flex-1 w-full min-h-0">
               {/* Editor fills the container */}
               <Editor
                 height="100%"
@@ -501,7 +544,7 @@ export default function LearnPage() {
                   <Button
                     // disabled={isNextDisabled} UNCOMMENT IF UNLOCKING/LOCKING FEATURE IS REQUIRED
                     onClick={() => {
-                      router.push("/solve");
+                      window.location.href = "/solve";
                     }}
                     className="px-6 py-4 glow-text"
                     variant={undefined}
@@ -641,7 +684,7 @@ export default function LearnPage() {
       tests: {
         label: "Tests",
         content: (
-          <div className="min-h-0 flex">
+          <div className="min-h-0 w-full flex">
             <TestCasesPanel
               key={problemList[currentIndex]?.problem_id ?? "intro-1"}
               problemId={problemList[currentIndex]?.problem_id ?? "intro-1"}
@@ -659,7 +702,7 @@ export default function LearnPage() {
           </div>
         ),
         content: (
-          <div className="flex flex-col h-full min-h-0">
+          <div className="flex flex-col w-full min-h-0">
             <ReferencesPanel
               loading={neoLoading}
               response={neoResponse}
@@ -697,19 +740,21 @@ export default function LearnPage() {
         {/* Main 3-Column Grid with custom column widths */}
         <div className="grid grid-cols-[auto_3fr_1fr] gap-2 h-screen overflow-hidden">
           {/* Left: Menu button */}
-          <div className="flex justify-start items-center pl-2">
-            <button
+          <div className="problemButton flex justify-start items-center pl-2">
+            <Button
               onClick={() => setShowMenu(true)}
-              className="problembutton p-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-lg text-xl font-bold glow-text cursor-pointer"
+              className="p-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-lg text-xl font-bold glow-text cursor-pointer"
+              variant="default"
+              size="default"
             >
               ☰
-            </button>
+            </Button>
           </div>
 
           {/* Middle: Video + Editor */}
           <div className="flex flex-col gap-4">
             {/* Video */}
-            <div className="flex rounded-lg shadow-lg overflow-hidden matrix-border min-h-0 h-[350px] md:h-[35vh] lg:h-[40vh] justify-center items-center">
+            <div className="videos flex rounded-lg shadow-lg overflow-hidden matrix-border min-h-0 h-[350px] md:h-[35vh] lg:h-[40vh] justify-center items-center">
               {/* <ReactPlayer
                   muted={false}
                   playing={false}
@@ -739,18 +784,25 @@ export default function LearnPage() {
             </div>
 
             {/* Editor */}
-            <div className="rounded-lg shadow-lg overflow-hidden matrix-border flex-1">
-              <Card
-                className="editor notes exercise/editor flex flex-col min-h-0 overflow-auto"
-                tabs={codeTabs}
-              />
-            </div>
+            {/* <div className="rounded-lg shadow-lg overflow-hidden matrix-border flex-1"> */}
+            <TabPanel
+              className="editor notes flex flex-col min-h-0 flex-1 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+              tabs={codeTabs}
+              activeKey={activeCodeTab}
+              onTabChange={setActiveCodeTab}
+            />
+            {/* </div> */}
           </div>
 
           {/* Right: Test Cases */}
-          <div className="flex flex-col h-full rounded-lg shadow-lg matrix-border overflow-hidden">
-            <Card className="flex-1 min-h-0 overflow-auto" tabs={testTabs} />
-          </div>
+          {/* <div className="flex flex-col h-full rounded-lg shadow-lg matrix-border overflow-hidden"> */}
+          <TabPanel
+            className=" tests neo flex flex-col min-h-0 flex-1 overflow-auto custom-scroll matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+            tabs={testTabs}
+            activeKey={activeTestTab} 
+            onTabChange={setActiveTestTab}
+          />
+          {/* </div> */}
         </div>
 
         {/* Slide-in Menu Drawer */}

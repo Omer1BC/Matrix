@@ -31,7 +31,7 @@ export const allSteps: Record<string, TourStep[]> = {
     {
       id: "problems",
       text: "Here you will have some exercises to learn concepts step-by-step.",
-      attachTo: { element: ".problembutton", on: "right" },
+      attachTo: { element: ".problemButton", on: "right" },
     },
     {
       id: "problemList",
@@ -44,12 +44,12 @@ export const allSteps: Record<string, TourStep[]> = {
       attachTo: { element: ".videos", on: "bottom" },
     },
     {
-      id: "editor",
+      id: "learn/editor",
       text: "Here is a code editor that you will use to solve exercises.",
       attachTo: { element: ".editor", on: "top" },
     },
     {
-      id: "notes",
+      id: "learn/notes",
       text: "You can also write any notes regarding the exercise/video.",
       attachTo: { element: ".notes", on: "top" },
     },
@@ -58,6 +58,11 @@ export const allSteps: Record<string, TourStep[]> = {
       text: "After writing some code in the editor, you can run some tests against them to ensure you are correct.",
       attachTo: { element: ".tests", on: "left" },
     },
+    {
+      id: "learn/neo",
+      text: "Here you can ask Neo some questions you have regarding the topics for the current exercise or your code.",
+      attachTo: { element: ".neo", on: "left" },
+    }
   ],
   "/solve": [
     {
@@ -120,9 +125,9 @@ export const allSteps: Record<string, TourStep[]> = {
 
 export const createTour = async (pathname: string, seen?: SeenStatus) => {
   const steps = allSteps[pathname];
-
+  
   if (!steps) return null;
-
+  console.log(seen);
   if (pathname === "/" && seen?.homepage) return null;
   if (pathname === "/learn" && seen?.learn) return null;
   if (pathname === "/solve" && seen?.solve) return null;
@@ -151,16 +156,29 @@ export const createTour = async (pathname: string, seen?: SeenStatus) => {
                   "bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/80 transition-all",
                 action: () => {
                   tour.back();
-                  if (step.id === "problems") {
-                    window.dispatchEvent(new CustomEvent("switchToProblems"));
-                  }
                   if (step.id === "problemList") {
                     window.dispatchEvent(new CustomEvent("switchToRegular"));
                   }
-                  if (step.id === "timer") {
+                  if (step.id === "video") {
+                    window.dispatchEvent(new CustomEvent("switchToProblems"))
+                  }
+                  if (step.id === "learn/notes") {
+                    window.dispatchEvent(new CustomEvent("switchToEditor"));
+                  }
+                  if (step.id === "tests") {
+                    window.dispatchEvent(new CustomEvent("switchToLearnNotes"));
+                  }
+                  if (step.id === "tools") {
+                    window.dispatchEvent(new CustomEvent("switchToEditor"));
+                  }
+                  if (step.id === "notes") {
                     window.dispatchEvent(new CustomEvent("switchToTools"));
-                  } else if (step.id === "createanimation") {
+                  }
+                  if (step.id === "tests-solve") {
                     window.dispatchEvent(new CustomEvent("switchToNotes"));
+                  }
+                  if (step.id === "learn/neo") {
+                    window.dispatchEvent(new CustomEvent("switchToTests"))
                   }
                 },
               },
@@ -173,22 +191,38 @@ export const createTour = async (pathname: string, seen?: SeenStatus) => {
                   if (step.id === "problems") {
                     sawHomepage();
                   }
-                  if (step.id === "tests") {
+                  if (step.id === "learn/neo") {
                     sawLearn();
                   }
                   if (step.id === "chatbox") {
                     sawSolve();
                   }
                   if (step.id === "problems") {
+                    console.log("in problems")
                     window.dispatchEvent(new CustomEvent("switchToProblems"));
                   }
                   if (step.id === "problemList") {
                     window.dispatchEvent(new CustomEvent("switchToRegular"));
                   }
+                  if (step.id === "learn/editor") {
+                    window.dispatchEvent(new CustomEvent("switchToLearnNotes"));
+                  }
+                  if (step.id === "learn/notes") {
+                    window.dispatchEvent(new CustomEvent("switchToEditor"));
+                  }
                   if (step.id === "timer") {
                     window.dispatchEvent(new CustomEvent("switchToTools"));
                   } else if (step.id === "createanimation") {
                     window.dispatchEvent(new CustomEvent("switchToNotes"));
+                  }
+                  if (step.id === "notes") {
+                    window.dispatchEvent(new CustomEvent("switchToEditor"));
+                  }
+                  if (step.id == "tests") {
+                    window.dispatchEvent(new CustomEvent("switchToNeo"));
+                  }
+                  if (step.id === "learn/neo") {
+                    window.dispatchEvent(new CustomEvent("switchToTests"))
                   }
                 },
               },

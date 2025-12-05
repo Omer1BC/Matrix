@@ -59,12 +59,18 @@ export default function SolvePage() {
       setActiveCodeTab("Notes");
     };
 
+    const setEditor = () => {
+      setActiveCodeTab("editor");
+    };
+
     window.addEventListener("switchToTools", setTools);
     window.addEventListener("switchToNotes", setNotes);
+    window.addEventListener("switchToEditor", setEditor);
 
     return () => {
       window.removeEventListener("switchToTools", setTools);
       window.removeEventListener("switchToNotes", setNotes);
+      window.removeEventListener("switchToEditor", setEditor);
     };
   }, []);
 

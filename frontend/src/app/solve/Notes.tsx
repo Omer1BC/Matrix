@@ -39,14 +39,17 @@ export function NotesPill({ title, notes }: NotesPillProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="flex flex-col rounded-2xl bg-[var(--dbl-4)] px-5 py-2 font-sans text-[17.6px] transition">
+    <div
+      className="flex flex-col rounded-2xl px-5 py-2 font-sans text-[17.6px] transition"
+      style={{ backgroundColor: "#191818ff" }}
+    >
       <div className="flex items-center justify-between">
         <div
           className="flex cursor-pointer flex-col"
           onClick={() => setIsExpanded((v) => !v)}
         >
           <div className="mr-3 text-[var(--gr-2)] text-[17.6px] font-semibold">
-            <span className="mr-2 text-[var(--dbl-2)] text-sm">
+            <span className="mr-2 text-[var(--gr-2)] text-sm">
               {isExpanded ? "▼" : "▶"}
             </span>
             {title}
