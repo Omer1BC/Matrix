@@ -139,6 +139,8 @@ export default function LearnPage() {
 
   const zoom = 0.9;
 
+  const [videoError, setVideoError] = useState(false);
+
   const getMainEditorCode = (completion: any, problem: any) => {
     if (!completion && !problem) return "# Write your solution here\n";
 
@@ -692,30 +694,37 @@ export default function LearnPage() {
   } else {
     return (
       <>
-        <div
-          className="Page origin-top-left w-screen h-screen overflow-hidden h-screen overflow-hidden bg-background/80 pl-2"
-          style={{
-            transform: `scale(${zoom})`,
-            width: `${100 / zoom}%`,
-            height: `${100/ zoom}%`,
-          }}
-        >
-          {/* Main 3-Column Grid with custom column widths */}
-          <div className="grid grid-cols-[auto_3fr_1fr] gap-4 h-full">
-            {/* Left: Menu button */}
-            <div className="flex justify-start items-center">
-              <button
-                onClick={() => setShowMenu(true)}
-                className="problembutton p-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-lg text-xl font-bold glow-text cursor-pointer"
-              >
-                ☰
-              </button>
-            </div>
+        {/* Main 3-Column Grid with custom column widths */}
+        <div className="grid grid-cols-[auto_3fr_1fr] gap-2 h-full">
+          {/* Left: Menu button */}
+          <div className="flex justify-start items-center pl-2">
+            <button
+              onClick={() => setShowMenu(true)}
+              className="problembutton p-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-lg text-xl font-bold glow-text cursor-pointer"
+            >
+              ☰
+            </button>
+          </div>
 
-            {/* Middle: Video + Editor */}
-            <div className="flex flex-col gap-4 h-full">
-              {/* Video */}
-              <div className="rounded-lg shadow-lg overflow-hidden matrix-border h-[350px] md:h-[35vh] lg:h-[40vh]">
+          {/* Middle: Video + Editor */}
+          <div className="flex flex-col gap-4 h-full">
+            {/* Video */}
+            <div className="flex rounded-lg shadow-lg overflow-hidden matrix-border h-[350px] md:h-[35vh] lg:h-[40vh] justify-center items-center">
+              {/* <ReactPlayer
+                  muted={false}
+                  playing={false}
+                  controls
+                  src={`/${currentProblem?.problem_id}aaa.mp4`}
+                  width="100%"
+                  height="100%"
+                  style={{ objectFit: "contain" }}
+                  onError={() => setVideoError(true)}
+                /> */}
+              {videoError ? (
+                <div className="text-red-500 p-4">
+                  Video unavailable for this problem.
+                </div>
+              ) : (
                 <ReactPlayer
                   muted={false}
                   playing={false}
@@ -724,118 +733,116 @@ export default function LearnPage() {
                   width="100%"
                   height="100%"
                   style={{ objectFit: "contain" }}
+                  onError={() => setVideoError(true)}
                 />
-              </div>
-
-              {/* Editor */}
-              <div className="rounded-lg shadow-lg overflow-hidden matrix-border flex-1">
-                <Card
-                  className="editor notes exercise/editor flex flex-col h-full overflow-auto"
-                  tabs={codeTabs}
-                />
-              </div>
+              )}
             </div>
 
-            {/* Right: Test Cases */}
-            <div className="rounded-lg shadow-lg overflow-auto matrix-border">
+            {/* Editor */}
+            <div className="rounded-lg shadow-lg overflow-hidden matrix-border flex-1">
               <Card
-                className="flex flex-col h-full overflow-y-auto"
-                tabs={testTabs}
+                className="editor notes exercise/editor flex flex-col h-full overflow-auto"
+                tabs={codeTabs}
               />
             </div>
           </div>
 
-          {/* Slide-in Menu Drawer */}
+          {/* Right: Test Cases */}
+          <div className="rounded-lg shadow-lg overflow-auto matrix-border">
+            <Card
+              className="flex flex-col h-full overflow-y-auto"
+              tabs={testTabs}
+            />
+          </div>
+        </div>
+
+        {/* Slide-in Menu Drawer */}
+        <div
+          className={` fixed inset-0 z-[150] transition-opacity ${
+            showMenu
+              ? "opacity-100 pointer-events-auto"
+              : "opacity-0 pointer-events-none"
+          }`}
+          onClick={() => setShowMenu(false)}
+          style={{ background: "rgba(0,0,0,0.4)" }}
+        >
           <div
-            className={` fixed inset-0 z-[150] transition-opacity ${
-              showMenu
-                ? "opacity-100 pointer-events-auto"
-                : "opacity-0 pointer-events-none"
-            }`}
-            onClick={() => setShowMenu(false)}
-            style={{ background: "rgba(0,0,0,0.4)" }}
-          >
-            <div
-              className={`fixed left-0 top-0 bottom-0 w-100 shadow-xl transform transition-transform duration-300
+            className={`fixed left-0 top-0 bottom-0 w-100 shadow-xl transform transition-transform duration-300
               ${showMenu ? "translate-x-0" : "-translate-x-full"}`}
-              style={{ backgroundColor: "var(--background)" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* MENU CONTENT MOVED HERE */}
-              <div className="problemList rounded-lg shadow-lg flex flex-col h-full overflow-hidden matrix-border">
-                {/* Navigation Menu Header */}
-                <div className="p-4" style={{ backgroundColor: "#000000ff" }}>
-                  <h2
-                    className="text-lg font-bold text-center"
-                    style={{ color: "var(--gr-2)" }}
-                  >
-                    Menu
-                  </h2>
-                </div>
-                <hr className="my-4 matrix-border" />
-                {/* Problem Menu with Progress Bar */}
+            style={{ backgroundColor: "var(--background)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* MENU CONTENT MOVED HERE */}
+            <div className="problemList rounded-lg shadow-lg flex flex-col h-full overflow-hidden matrix-border">
+              {/* Navigation Menu Header */}
+              <div className="p-4" style={{ backgroundColor: "#000000ff" }}>
+                <h2
+                  className="text-lg font-bold text-center"
+                  style={{ color: "var(--gr-2)" }}
+                >
+                  Menu
+                </h2>
+              </div>
+              <hr className="my-4 matrix-border" />
+              {/* Problem Menu with Progress Bar */}
+              <div
+                className="relative p-4 flex-1 min-h-0 flex"
+                style={{ backgroundColor: "#000000ff" }}
+              >
+                {/* Progress Bar */}
                 <div
-                  className="relative p-4 flex-1 min-h-0 flex"
+                  className="relative w-2 mr-4 rounded-full"
+                  style={{ backgroundColor: "var(--dbl-4)" }}
+                >
+                  <div
+                    className="rounded-full w-full absolute left-0 transition-all duration-300"
+                    style={{
+                      height: `${completionPercentage}%`,
+                      backgroundColor: "var(--gr-2)",
+                    }}
+                  />
+                </div>
+
+                {/* Actual Problem Menu content */}
+                <div
+                  className="flex-1 min-h-0 overflow-y-auto"
                   style={{ backgroundColor: "#000000ff" }}
                 >
-                  {/* Progress Bar */}
-                  <div
-                    className="relative w-2 mr-4 rounded-full"
-                    style={{ backgroundColor: "var(--dbl-4)" }}
-                  >
-                    <div
-                      className="rounded-full w-full absolute left-0 transition-all duration-300"
-                      style={{
-                        height: `${completionPercentage}%`,
-                        backgroundColor: "var(--gr-2)",
-                      }}
-                    />
-                  </div>
-
-                  {/* Actual Problem Menu content */}
-                  <div
-                    className="flex-1 min-h-0 overflow-y-auto"
-                    style={{ backgroundColor: "#000000ff" }}
-                  >
-                    <ProblemMenu
-                      onProblemSelect={handleProblemSelect}
-                      refreshKey={refreshKey}
-                    />
-                  </div>
+                  <ProblemMenu
+                    onProblemSelect={handleProblemSelect}
+                    refreshKey={refreshKey}
+                  />
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Victory Modal */}
-          {showVictoryModal && (
-            <div
-              className="victory-modal-overlay"
-              onClick={() => setShowVictoryModal(false)}
-            >
-              <div
-                className="victory-modal"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="victory-content">
-                  <h2>Right on! 👍</h2>
-                  <p>All test cases passed successfully!</p>
-                  <p>
-                    You{"'"}ve completed:{" "}
-                    {problemDetails?.title || currentProblem.title}
-                  </p>
+        {/* Victory Modal */}
+        {showVictoryModal && (
+          <div
+            className="victory-modal-overlay"
+            onClick={() => setShowVictoryModal(false)}
+          >
+            <div className="victory-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="victory-content">
+                <h2>Right on! 👍</h2>
+                <p>All test cases passed successfully!</p>
+                <p>
+                  You{"'"}ve completed:{" "}
+                  {problemDetails?.title || currentProblem.title}
+                </p>
 
-                  <button
-                    className="victory-close-btn"
-                    onClick={() => setShowVictoryModal(false)}
-                  >
-                    Close
-                  </button>
-                </div>
+                <button
+                  className="victory-close-btn"
+                  onClick={() => setShowVictoryModal(false)}
+                >
+                  Close
+                </button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </>
     );
   }

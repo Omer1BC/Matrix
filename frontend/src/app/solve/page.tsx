@@ -48,6 +48,8 @@ export default function SolvePage() {
 
   const timer = useTimer();
 
+  const zoom = 0.9;
+
   useEffect(() => {
     const setTools = () => {
       setActiveCodeTab("tools"); // switch to Tools tab
@@ -356,36 +358,34 @@ export default function SolvePage() {
 
   return (
     <AnnotationsProvider>
-      <main className="flex flex-col h-screen w-screen min-h-0 overflow-hidden p-2">
-        <div
-          className="grid gap-2 h-full w-full min-h-0
+      <div
+        className="grid gap-2 h-full w-full min-h-0
                 grid-cols-1 md:grid-cols-[4fr_5fr] 
-                grid-rows-[auto_auto] md:grid-rows-[1fr_1fr]"
-        >
-          <TabPanel
-            className="question flex flex-col min-h-0 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
-            key={`q-${questionPanelKey}`}
-            tabs={questionTabs}
-            defaultActiveKey={questionDefaultKey}
-          />
-          <TabPanel
-            tabs={codeTabs}
-            activeKey={activeCodeTab}
-            onTabChange={setActiveCodeTab}
-            className="flex flex-col min-h-0 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
-          />
-          <TabPanel
-            tabs={referencesTabs}
-            className="chatbox question flex flex-col min-h-0 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
-          />
-          <TabPanel
-            className="tests-solve question flex flex-col min-h-0 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
-            key={`v-${validationPanelKey}`}
-            tabs={validationTabs}
-            defaultActiveKey={validationDefaultKey}
-          />
-        </div>
-      </main>
+                grid-rows-[auto_auto] md:grid-rows-[1fr_1fr] p-2"
+      >
+        <TabPanel
+          className="question flex flex-col min-h-0 flex-1 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+          key={`q-${questionPanelKey}`}
+          tabs={questionTabs}
+          defaultActiveKey={questionDefaultKey}
+        />
+        <TabPanel
+          tabs={codeTabs}
+          activeKey={activeCodeTab}
+          onTabChange={setActiveCodeTab}
+          className="flex flex-col min-h-0 flex-1 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+        />
+        <TabPanel
+          tabs={referencesTabs}
+          className="chatbox question flex flex-col min-h-0 flex-1 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+        />
+        <TabPanel
+          className="tests-solve question flex flex-col min-h-0 flex-1 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+          key={`v-${validationPanelKey}`}
+          tabs={validationTabs}
+          defaultActiveKey={validationDefaultKey}
+        />
+      </div>
     </AnnotationsProvider>
   );
 }
