@@ -35,7 +35,7 @@ export default function Header() {
     } finally {
       setLoading(false);
     }
-    setShowSignup(false);
+    // setShowSignup(false);
   };
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
