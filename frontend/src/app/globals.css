@@ -170,14 +170,14 @@
 
 .custom-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #6b7280 #374151;
+  scrollbar-color: #6b7280 #0c0c0e;
 }
 
 .custom-scroll::-webkit-scrollbar {
   width: 8px;
 }
 .custom-scroll::-webkit-scrollbar-track {
-  background: #374151;
+  background: #0c0c0e;
 }
 .custom-scroll::-webkit-scrollbar-thumb {
   background: #6b7280;

@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useState, useRef } from "react";
 import { AlertCircle, X } from "lucide-react";
-import { checkNeoHealth, type NeoHealthStatus } from "@/lib/api";
+import { agentHealth, type AgentHealthStatus } from "@/lib/agent";
 import { Button } from "./ui/button";
 
 export function NeoStatusBanner() {
-  const [healthStatus, setHealthStatus] = useState<NeoHealthStatus | null>(
+  const [healthStatus, setHealthStatus] = useState<AgentHealthStatus | null>(
     null
   );
   const [isDismissed, setIsDismissed] = useState(false);
@@ -14,7 +14,7 @@ export function NeoStatusBanner() {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchHealth = useCallback(async () => {
-    const data = await checkNeoHealth();
+    const data = await agentHealth();
     setHealthStatus(data);
     setHasChecked(true);
 

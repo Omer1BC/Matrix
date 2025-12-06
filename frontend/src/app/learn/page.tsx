@@ -1,37 +1,33 @@
 "use client";
 
-import "../templates.css";
 import ReactPlayer from "react-player";
 import { Editor } from "@monaco-editor/react";
 import { useRef, useState, useEffect, useMemo, useCallback } from "react";
-import Card from "./Card";
-import TestCasesPanel from "./testCasesPanel";
-import ProblemMenu from "./problemMenu";
-import ReferencesPanel from "@/components/ReferencesPanel";
+import TabPanel from "@/components/solve/TabPanel";
+import ReferencesPanel from "@/components/solve/ReferencesPanel";
 import { useSolve } from "@/lib/hooks/useSolve";
-import { NotesCard } from "./NotesCard";
-import { Problem, ProblemCompletion } from "@/lib/types";
+import { NotesCard } from "../../components/learn/NotesCard";
+import { Problem, ProblemCompletion } from "@/lib/types/types";
 import { editor as MonacoEditor } from "monaco-editor";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import {
-  getProblemById,
-  getUserProblemById,
-  saveNotes,
-  updateUserProblemCompletion,
-  calculateProblemCompletion,
-  getAllUserProblemsAsJson,
-  getAllProblems,
-} from "@/lib/supabase/problems";
+import { getProblemById, getAllProblems } from "@/lib/supabase/models/problems";
 import { syncProblemCompletions } from "@/lib/supabase/auth";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { formatCodeForEditor } from "@/lib/utils";
 import "shepherd.js/dist/css/shepherd.css";
 import NeoIcon from "@/components/NeoIcon";
 import { toast } from "sonner";
+import TestCasesPanel from "@/components/learn/TestCasesPanel";
+import ProblemMenu from "@/components/learn/ProblemMenu";
+import {
+  calculateProblemCompletion,
+  getAllUserProblemsAsJson,
+  getUserProblemById,
+  updateUserProblemCompletion,
+} from "@/lib/supabase/models/problemCompletions";
+import { saveNotes } from "@/lib/api";
 
 export default function LearnPage() {
-  const router = useRouter();
   const { user } = useAuth();
 
   const [currentProblem, setCurrentProblem] = useState<Problem>({
@@ -141,6 +137,9 @@ export default function LearnPage() {
 
   const [videoError, setVideoError] = useState(false);
 
+  const [activeCodeTab, setActiveCodeTab] = useState("editor");
+  const [activeTestTab, setActiveTestTab] = useState("tests");
+
   const getMainEditorCode = (completion: any, problem: any) => {
     if (!completion && !problem) return "# Write your solution here\n";
 
@@ -194,6 +193,7 @@ export default function LearnPage() {
   );
 
   const handleNextProblem = useCallback(() => {
+    setVideoError(false);
     setCurrentIndex((prevIndex) => {
       const nextIndex = (prevIndex + 1) % problemIds.length;
       navigateToProblem(nextIndex);
@@ -202,6 +202,7 @@ export default function LearnPage() {
   }, [problemIds.length, navigateToProblem]);
 
   const handlePrevProblem = useCallback(() => {
+    setVideoError(false);
     setCurrentIndex((prevIndex) => {
       if (prevIndex <= 0) return 0;
       const prev = prevIndex - 1;
@@ -223,6 +224,42 @@ export default function LearnPage() {
       window.removeEventListener("switchToRegular", setMenu);
     };
   }, [showMenu]);
+
+  useEffect(() => {
+    const switchToNotes = () => {
+      setActiveCodeTab("notes");
+    };
+
+    const switchToEditor = () => {
+      setActiveCodeTab("editor");
+    };
+
+    window.addEventListener("switchToLearnNotes", switchToNotes);
+    window.addEventListener("switchToEditor", switchToEditor);
+
+    return () => {
+      window.removeEventListener("switchToLearnNotes", switchToNotes);
+      window.removeEventListener("switchToEditor", switchToEditor);
+    };
+  }, [activeCodeTab]);
+
+  useEffect(() => {
+    const switchToTests = () => {
+      setActiveTestTab("tests");
+    };
+
+    const switchToNeo = () => {
+      setActiveTestTab("neo");
+    };
+
+    window.addEventListener("switchToTests", switchToTests);
+    window.addEventListener("switchToNeo", switchToNeo);
+
+    return () => {
+      window.removeEventListener("switchToTests", switchToTests);
+      window.removeEventListener("switchToNeo", switchToNeo);
+    };
+  }, [activeTestTab]);
 
   useEffect(() => {
     if (solutionEditorRef.current && monacoRef.current) {
@@ -275,10 +312,6 @@ export default function LearnPage() {
   }, []);
 
   const handleAllTestsPassed = useCallback(async () => {
-    // // console.log("🎉 All tests passed! Updating completion...");
-    // console.log("Problem ID:", currentProblem.problem_id);
-    // console.log("Completion ID:", currProblemCompletion.id);
-
     setShowVictoryModal(true);
 
     try {
@@ -289,7 +322,6 @@ export default function LearnPage() {
         testCases.length,
         editorRef.current?.getValue()
       );
-      // console.log("✅ Problem marked as complete!");
 
       setProblemCompletionList((prev) => ({
         ...prev,
@@ -367,6 +399,7 @@ export default function LearnPage() {
   );
 
   const handleProblemSelect = async (problem: ProblemCompletion) => {
+    setVideoError(false);
     setCurrentProblem(problemList[problem.order]);
     setCurrentIndex(problem.order);
     try {
@@ -386,8 +419,6 @@ export default function LearnPage() {
       ) {
         editorRef.current.setValue(formatCodeForEditor(data.method_stub));
       } else {
-        // console.error("Failed to fetch problem details");
-        // Fallback to default starter code
         if (editorRef.current) {
           editorRef.current.setValue(
             formatCodeForEditor(problemList[problem.order].method_stub)
@@ -469,8 +500,7 @@ export default function LearnPage() {
               </div>
             </div>
 
-            <div className="relative flex-1 min-h-0">
-              {/* Editor fills the container */}
+            <div className="relative flex-1 w-full min-h-0">
               <Editor
                 height="100%"
                 width="100%"
@@ -485,7 +515,6 @@ export default function LearnPage() {
                   automaticLayout: true,
                 }}
               />
-
               {/* Button overlay */}
               <div className="absolute top-4 right-5 z-50">
                 <Button
@@ -499,9 +528,8 @@ export default function LearnPage() {
                 </Button>
                 {currentIndex === problemIds.length - 1 ? (
                   <Button
-                    // disabled={isNextDisabled} UNCOMMENT IF UNLOCKING/LOCKING FEATURE IS REQUIRED
                     onClick={() => {
-                      router.push("/solve");
+                      window.location.href = "/solve";
                     }}
                     className="px-6 py-4 glow-text"
                     variant={undefined}
@@ -511,7 +539,6 @@ export default function LearnPage() {
                   </Button>
                 ) : (
                   <Button
-                    // disabled={isNextDisabled} UNCOMMENT IF UNLOCKING/LOCKING FEATURE IS REQUIRED
                     onClick={handleNextProblem}
                     className="px-6 py-4 glow-text"
                     variant={undefined}
@@ -632,7 +659,6 @@ export default function LearnPage() {
       handlePrevProblem,
       isPrevDisabled,
       problemIds.length,
-      router,
     ]
   );
 
@@ -641,7 +667,7 @@ export default function LearnPage() {
       tests: {
         label: "Tests",
         content: (
-          <div className="min-h-0 flex">
+          <div className="min-h-0 w-full flex">
             <TestCasesPanel
               key={problemList[currentIndex]?.problem_id ?? "intro-1"}
               problemId={problemList[currentIndex]?.problem_id ?? "intro-1"}
@@ -659,7 +685,7 @@ export default function LearnPage() {
           </div>
         ),
         content: (
-          <div className="flex flex-col h-full min-h-0">
+          <div className="flex flex-col w-full min-h-0">
             <ReferencesPanel
               loading={neoLoading}
               response={neoResponse}
@@ -694,32 +720,20 @@ export default function LearnPage() {
   } else {
     return (
       <>
-        {/* Main 3-Column Grid with custom column widths */}
         <div className="grid grid-cols-[auto_3fr_1fr] gap-2 h-screen overflow-hidden">
-          {/* Left: Menu button */}
-          <div className="flex justify-start items-center pl-2">
-            <button
+          <div className="problemButton flex justify-start items-center pl-2">
+            <Button
               onClick={() => setShowMenu(true)}
-              className="problembutton p-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-lg text-xl font-bold glow-text cursor-pointer"
+              className="p-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-lg text-xl font-bold glow-text cursor-pointer"
+              variant="default"
+              size="default"
             >
               ☰
-            </button>
+            </Button>
           </div>
 
-          {/* Middle: Video + Editor */}
           <div className="flex flex-col gap-4">
-            {/* Video */}
-            <div className="flex rounded-lg shadow-lg overflow-hidden matrix-border min-h-0 h-[350px] md:h-[35vh] lg:h-[40vh] justify-center items-center">
-              {/* <ReactPlayer
-                  muted={false}
-                  playing={false}
-                  controls
-                  src={`/${currentProblem?.problem_id}aaa.mp4`}
-                  width="100%"
-                  height="100%"
-                  style={{ objectFit: "contain" }}
-                  onError={() => setVideoError(true)}
-                /> */}
+            <div className="videos flex rounded-lg shadow-lg overflow-hidden matrix-border min-h-0 h-[350px] md:h-[35vh] lg:h-[40vh] justify-center items-center">
               {videoError ? (
                 <div className="text-red-500 p-4">
                   Video unavailable for this problem.
@@ -737,23 +751,20 @@ export default function LearnPage() {
                 />
               )}
             </div>
-
-            {/* Editor */}
-            <div className="rounded-lg shadow-lg overflow-hidden matrix-border flex-1">
-              <Card
-                className="editor notes exercise/editor flex flex-col min-h-0 overflow-auto"
-                tabs={codeTabs}
-              />
-            </div>
+            <TabPanel
+              className="editor notes flex flex-col min-h-0 flex-1 overflow-hidden matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+              tabs={codeTabs}
+              activeKey={activeCodeTab}
+              onTabChange={setActiveCodeTab}
+            />
           </div>
-
-          {/* Right: Test Cases */}
-          <div className="flex flex-col h-full rounded-lg shadow-lg matrix-border overflow-hidden">
-            <Card className="flex-1 min-h-0 overflow-auto" tabs={testTabs} />
-          </div>
+          <TabPanel
+            className=" tests neo flex flex-col min-h-0 flex-1 overflow-auto custom-scroll matrix-border hover:shadow-lg hover:shadow-primary/20 transition-all duration-300"
+            tabs={testTabs}
+            activeKey={activeTestTab}
+            onTabChange={setActiveTestTab}
+          />
         </div>
-
-        {/* Slide-in Menu Drawer */}
         <div
           className={` fixed inset-0 z-[150] transition-opacity ${
             showMenu
@@ -814,32 +825,6 @@ export default function LearnPage() {
             </div>
           </div>
         </div>
-
-        {/* Victory Modal */}
-        {/* {showVictoryModal && (
-          <div
-            className="victory-modal-overlay"
-            onClick={() => setShowVictoryModal(false)}
-          >
-            <div className="victory-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="victory-content">
-                <h2>Right on! 👍</h2>
-                <p>All test cases passed successfully!</p>
-                <p>
-                  You{"'"}ve completed:{" "}
-                  {problemDetails?.title || currentProblem.title}
-                </p>
-
-                <button
-                  className="victory-close-btn"
-                  onClick={() => setShowVictoryModal(false)}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )} */}
       </>
     );
   }

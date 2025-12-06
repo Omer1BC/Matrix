@@ -1,12 +1,13 @@
 "use client";
-import React, { Fragment, useEffect, useState } from "react";
-import StarGraph from "./StarGraph";
-import { agentCall, ping } from "@/lib/api";
+import React, { Fragment, useState } from "react";
+import StarGraph from "@/components/solve/StarGraph";
+import { ping } from "@/lib/api";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useAnnotationsContext } from "@/lib/contexts/AnnotationsContext";
 import Link from "next/link";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import { FileBadge2 } from "lucide-react";
+import { agentCall } from "@/lib/agent";
 type ValidationContentProps = {
   problemId: string;
   editorRef: React.RefObject<any>;

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { createTour } from "../lib/tour";
+import { createTour } from "./tour";
 import { getSeenStatus } from "@/lib/supabase/auth";
 
 export const useGlobalTour = () => {
@@ -17,8 +17,6 @@ export const useGlobalTour = () => {
 
     runTour();
 
-    return () => {
-      // optional: cancel tour if createTour hasn’t finished
-    };
+    return () => {};
   }, [pathname]);
 };

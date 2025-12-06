@@ -1,4 +1,4 @@
-import { Profile, ProfileUpdate, SeenStatus } from "../types";
+import { Profile, ProfileUpdate, SeenStatus } from "../types/types";
 import { createClient } from "./client";
 
 const supabase = createClient();

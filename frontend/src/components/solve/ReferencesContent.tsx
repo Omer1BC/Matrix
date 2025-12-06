@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Input } from "./ui/input";
+import { Input } from "@/components/ui/input";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";

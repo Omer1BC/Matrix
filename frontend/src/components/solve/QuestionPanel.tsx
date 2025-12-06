@@ -1,6 +1,6 @@
 "use client";
 
-import { Difficulty } from "@/lib/types";
+import { Difficulty } from "@/lib/types/types";
 import { QuestionContent } from "./QuestionContent";
 
 type QuestionPanelProps = {

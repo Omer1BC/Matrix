@@ -7,6 +7,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function Header() {
   const [showLogin, setShowLogin] = useState(false);
@@ -30,7 +31,7 @@ export default function Header() {
       await signUp(email, password, username, firstname, lastname);
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "Signup failed.");
+      toast.error(err.message || "Signup failed.");
     } finally {
       setLoading(false);
     }
@@ -45,7 +46,7 @@ export default function Header() {
       setShowLogin(false);
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "Login failed.");
+      toast.error(err.message || "Login failed.");
     } finally {
       setLoading(false);
     }

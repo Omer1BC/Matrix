@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, User as UserIcon } from "lucide-react";
-import { ProfileState } from "@/lib/types";
+import { ProfileState } from "@/lib/types/types";
 import React from "react";
 
 type Props = {

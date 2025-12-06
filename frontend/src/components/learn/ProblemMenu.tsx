@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ProblemCategory, ProblemCompletion } from "@/lib/types";
-import { getAllCategories, getAllUserProblems } from "@/lib/supabase/problems";
+import { ProblemCategory, ProblemCompletion } from "@/lib/types/types";
+import { getAllUserProblems } from "@/lib/supabase/models/problemCompletions";
+import { getAllCategories } from "@/lib/supabase/models/problemCategories";
 
 export default function ProblemMenu({
   onProblemSelect,

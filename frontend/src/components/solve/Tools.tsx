@@ -1,8 +1,8 @@
 "use client";
 
-import { requestAnimationFromAgent } from "@/lib/api";
+import { requestAnimationFromAgent } from "@/lib/agent";
 import { useState } from "react";
-import { Input } from "./ui/input";
+import { Input } from "../ui/input";
 
 type ToolsProps = {
   tools: { name: string; description?: string; code?: string }[];

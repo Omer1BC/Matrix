@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { agentCall } from "@/lib/api";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { getUserProfile, updateTokensUsed } from "../supabase/auth";
 import { getProblemBySlug } from "../supabase/models/problems";
-import { Intent } from "../agents";
-import { Problem } from "../types";
+import { agentCall, Intent } from "../agent";
+import { Problem } from "../types/types";
 
 type ToolInfo = { name: string; description?: string; code?: string };
 
@@ -71,7 +70,8 @@ export function useSolve(problemId: string = "intro-1") {
         setResponse(res?.data?.text ?? res?.data?.response ?? "");
       } catch (error) {
         // Display error in chat instead of throwing
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         setResponse(`❌ ${errorMessage}`);
         console.error("Agent call failed:", error);
       } finally {

@@ -8,13 +8,14 @@ import {
   updatePassword,
   getUserProfile,
 } from "@/lib/supabase/auth";
-import { PasswordState, ProfileState, ProfileUpdate } from "@/lib/types";
+import { PasswordState, ProfileState, ProfileUpdate } from "@/lib/types/types";
 import { redirect } from "next/navigation";
-import { SettingsHeader } from "./SettingsHeader";
-import { ProfileDetailsCard } from "./PersonalDetailsCard";
-import { SecuritySettingsCard } from "./SecuritySettingsCard";
-import { LearningPreferencesCard } from "./LearningPreferencesCard";
-import { SaveBar } from "./SaveBar";
+import { SettingsHeader } from "../../components/settings/SettingsHeader";
+import { ProfileDetailsCard } from "../../components/settings/PersonalDetailsCard";
+import { SecuritySettingsCard } from "../../components/settings/SecuritySettingsCard";
+import { LearningPreferencesCard } from "../../components/settings/LearningPreferencesCard";
+import { SaveBar } from "../../components/settings/SaveBar";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
@@ -77,17 +78,17 @@ export default function SettingsPage() {
 
       if (password.new || password.confirm) {
         if (password.new !== password.confirm) {
-          alert("New password and confirmation must match.");
+          toast.error("New password and confirmation must match.");
         } else {
           await updatePassword(password.new);
           setPassword({ current: "", new: "", confirm: "" });
         }
       }
 
-      alert("Changes to profile saved.");
+      toast.success("Changes to profile saved.");
     } catch (e: any) {
       console.error(e);
-      alert(e?.message ?? "Failed to save settings.");
+      toast.error(e?.message ?? "Failed to save settings.");
     } finally {
       setSaving(false);
     }

@@ -3,7 +3,7 @@ import type {
   CategoryPrerequisite,
   CategoryPrerequisiteCreate,
   CategoryPrerequisiteUpdate,
-} from "@/lib/types";
+} from "@/lib/types/types";
 
 export async function createCategoryPrerequisite(
   input: CategoryPrerequisiteCreate

@@ -1,11 +1,11 @@
 "use client";
-import QuestionPanel from "@/components/QuestionPanel";
-import EditorPanel from "@/components/EditorPanel";
+import QuestionPanel from "@/components/solve/QuestionPanel";
+import EditorPanel from "@/components/solve/EditorPanel";
 import NeoIcon from "@/components/NeoIcon";
-import ReferencesPanel from "@/components/ReferencesPanel";
-import TabPanel from "@/components/TabPanel";
-import Tools from "@/components/Tools";
-import ValidationPanel from "@/components/ValidationPanel";
+import ReferencesPanel from "@/components/solve/ReferencesPanel";
+import TabPanel from "@/components/solve/TabPanel";
+import Tools from "@/components/solve/Tools";
+import ValidationPanel from "@/components/solve/ValidationPanel";
 import { useSolve } from "@/lib/hooks/useSolve";
 import { useTimer } from "@/lib/hooks/useTimer";
 import { useCallback, useMemo, useState, useEffect } from "react";
@@ -13,7 +13,7 @@ import { AnnotationsProvider } from "@/lib/contexts/AnnotationsContext";
 import { getAnimationUrl } from "@/lib/api";
 import AnimationPlayer from "@/components/AnimationPlayer";
 import AnimationInput from "@/components/AnimationInput";
-import Notes from "./Notes";
+import Notes from "@/components/solve/Notes";
 import { formatCodeForEditor } from "@/lib/utils";
 import "shepherd.js/dist/css/shepherd.css";
 
@@ -59,12 +59,18 @@ export default function SolvePage() {
       setActiveCodeTab("Notes");
     };
 
+    const setEditor = () => {
+      setActiveCodeTab("editor");
+    };
+
     window.addEventListener("switchToTools", setTools);
     window.addEventListener("switchToNotes", setNotes);
+    window.addEventListener("switchToEditor", setEditor);
 
     return () => {
       window.removeEventListener("switchToTools", setTools);
       window.removeEventListener("switchToNotes", setNotes);
+      window.removeEventListener("switchToEditor", setEditor);
     };
   }, []);
 

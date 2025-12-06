@@ -3,7 +3,7 @@ import type {
   UserProgress,
   UserProgressCreate,
   UserProgressUpdate,
-} from "@/lib/types";
+} from "@/lib/types/types";
 
 export async function createUserProgress(input: UserProgressCreate) {
   const supabase = createClient();

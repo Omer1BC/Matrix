@@ -1,11 +1,10 @@
-
 import "./globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "../lib/contexts/AuthContext";
 import React from "react";
 import Header from "@/components/Header";
 import type { Metadata } from "next";
-import GlobalTourWrapper from "../components/GlobalTourWrapper";
+import GlobalTourWrapper from "../components/tour/GlobalTourWrapper";
 import { NeoStatusBanner } from "@/components/NeoStatusBanner";
 import { Toaster } from "@/components/ui/sonner";
 

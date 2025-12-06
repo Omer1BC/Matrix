@@ -3,7 +3,7 @@ import type {
   ProblemCategory,
   ProblemCategoryCreate,
   ProblemCategoryUpdate,
-} from "@/lib/types";
+} from "@/lib/types/types";
 
 export async function createProblemCategory(input: ProblemCategoryCreate) {
   const supabase = createClient();
@@ -40,6 +40,20 @@ export async function getProblemCategories(opts?: { key?: string }) {
   const { data, error } = await q;
   if (error) throw error;
   return (data ?? []) as ProblemCategory[];
+}
+
+/**
+ * Gets all categories from problem_categories table in supabase
+ * @returns Array of json objects
+ */
+export async function getAllCategories() {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.from("problem_categories").select("*");
+
+  if (error) throw error;
+
+  return data;
 }
 
 export async function getProblemCategoryByKey(key: string) {

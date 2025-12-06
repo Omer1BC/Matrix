@@ -4,7 +4,7 @@ import type {
   ProblemCreate,
   ProblemUpdate,
   Difficulty,
-} from "@/lib/types";
+} from "@/lib/types/types";
 
 export async function createProblem(input: ProblemCreate) {
   const supabase = createClient();
@@ -126,4 +126,39 @@ export async function deleteProblem(id: number) {
   const supabase = createClient();
   const { error } = await supabase.from("problems").delete().eq("id", id);
   if (error) throw error;
+}
+
+/**
+ * Provides all of the rows in problems table in supabase
+ * @returns Array of json objects
+ */
+export async function getAllProblems() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("problems")
+    .select("*")
+    .eq("type", "Learn")
+    .order("order", { ascending: true });
+  if (error) throw error;
+
+  return data || [];
+}
+
+/**
+ * Provides problem using a specified id
+ * @param problem_id Problem id
+ * @returns Json Object
+ */
+export async function getProblemById(problem_id: string) {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("problems")
+    .select("*")
+    .eq("problem_id", problem_id)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return data;
 }

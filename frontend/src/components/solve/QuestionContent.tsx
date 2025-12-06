@@ -1,5 +1,5 @@
 "use client";
-import { Difficulty } from "@/lib/types";
+import { Difficulty } from "@/lib/types/types";
 import Image from "next/image";
 
 type QuestionContentProps = {
