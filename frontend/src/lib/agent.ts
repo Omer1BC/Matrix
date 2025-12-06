@@ -181,6 +181,19 @@ export async function agentCall<I extends Intent | "chat" = "chat">(
   }
 }
 
+export interface AnimationOperation {
+  name: string;
+  args: any[];
+  run_time?: number;
+  pause?: number;
+}
+
+export interface AnimationPlan {
+  data_structure: string;
+  initial_state: any[];
+  operations: AnimationOperation[];
+}
+
 export async function requestAnimationFromAgent(
   prompt: string,
   animationSpeed: number = 1.0,
@@ -197,4 +210,35 @@ export async function requestAnimationFromAgent(
   const rel = resp?.data?.video_rel as string | undefined;
   if (!rel) return null;
   return `${API_BASE_URL}${rel}?v=${Date.now()}`;
+}
+
+export async function requestAnimationFromPlan(
+  plan: AnimationPlan,
+  animationSpeed: number = 1.0,
+  user_id: string = "anon"
+): Promise<{ url: string | null; plan: AnimationPlan; error?: string }> {
+  try {
+    const resp = await agentCall({
+      user_id: user_id,
+      problem_id: "global",
+      intent: "generate_animation",
+      message: "",
+      extras: { plan, animation_speed: animationSpeed },
+    });
+
+    const rel = resp?.data?.video_rel as string | undefined;
+    const url = rel ? `${API_BASE_URL}${rel}?v=${Date.now()}` : null;
+
+    return {
+      url,
+      plan: resp?.data?.plan || plan,
+      error: resp?.data?.error,
+    };
+  } catch (error) {
+    return {
+      url: null,
+      plan,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }

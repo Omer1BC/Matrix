@@ -3,6 +3,7 @@
 import { requestAnimationFromAgent } from "@/lib/agent";
 import { useState } from "react";
 import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 
 type ToolsProps = {
   tools: { name: string; description?: string; code?: string }[];
@@ -103,23 +104,20 @@ export default function Tools({
                        focus:bg-[var(--dbl-3)]"
             disabled={animLoading}
           />
-          <button
+          <Button
             onClick={submit}
             disabled={animLoading || !animPrompt.trim()}
             className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-[var(--gr-2)] px-3 py-2 text-sm font-medium text-black hover:bg-[var(--gr-1)] disabled:opacity-60"
             title="Generate animation"
+            variant={undefined}
+            size={undefined}
           >
             {animLoading ? "Generating…" : "Generate"}
-          </button>
+          </Button>
         </div>
 
         {animError && (
           <div className="mt-2 text-xs text-red-300">{animError}</div>
-        )}
-        {!animError && animLoading && (
-          <div className="mt-2 text-xs text-slate-300 opacity-80">
-            Rendering with Manim… (low-quality preview)
-          </div>
         )}
       </div>
     </div>

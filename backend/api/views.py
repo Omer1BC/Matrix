@@ -315,24 +315,47 @@ def agent(request):
                 AgentResponse(kind="explain", data=res).model_dump(), safe=False
             )
         if task == "generate_animation":
-            prompt = (
-                params.get("request", "")
-                or req.extras.get("request", "")
-                or req.message
-            )
             animation_speed = float(req.extras.get("animation_speed", 1.0))
-            if not prompt:
-                payload = {"ok": False, "error": "prompt required"}
-                return JsonResponse(
-                    AgentResponse(kind="generate_animation", data=payload).model_dump(),
-                    status=400,
-                )
-            # Call generate_animation_from_prompt directly with user_id
-            from utils.agent.utils import generate_animation_from_prompt
 
-            result = generate_animation_from_prompt(
-                prompt, animation_speed=animation_speed, user_id=user_id
-            )
+            # Check if a structured plan is provided
+            structured_plan = req.extras.get("plan", None)
+
+            if structured_plan:
+                # Use structured plan directly, bypassing LLM prompt parsing
+                from utils.agent.utils import generate_animation
+
+                data_structure = structured_plan.get("data_structure", "stack")
+                initial_state = structured_plan.get("initial_state", [])
+                operations = structured_plan.get("operations", [])
+
+                result = generate_animation(
+                    data_structure=data_structure,
+                    initial_state=initial_state,
+                    operations=operations,
+                    animation_speed=animation_speed,
+                    user_id=user_id
+                )
+                # Include plan in result for consistency
+                result["plan"] = structured_plan
+            else:
+                # Fall back to prompt-based generation
+                prompt = (
+                    params.get("request", "")
+                    or req.extras.get("request", "")
+                    or req.message
+                )
+                if not prompt:
+                    payload = {"ok": False, "error": "prompt or plan required"}
+                    return JsonResponse(
+                        AgentResponse(kind="generate_animation", data=payload).model_dump(),
+                        status=400,
+                    )
+                # Call generate_animation_from_prompt directly with user_id
+                from utils.agent.utils import generate_animation_from_prompt
+
+                result = generate_animation_from_prompt(
+                    prompt, animation_speed=animation_speed, user_id=user_id
+                )
 
             error_msg = None
             if not result.get("ok"):

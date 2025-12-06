@@ -13,6 +13,7 @@ import { AnnotationsProvider } from "@/lib/contexts/AnnotationsContext";
 import { getAnimationUrl } from "@/lib/api";
 import AnimationPlayer from "@/components/AnimationPlayer";
 import AnimationInput from "@/components/AnimationInput";
+import AnimationBuilder from "@/components/AnimationBuilder";
 import Notes from "@/components/solve/Notes";
 import { formatCodeForEditor } from "@/lib/utils";
 import "shepherd.js/dist/css/shepherd.css";
@@ -63,14 +64,20 @@ export default function SolvePage() {
       setActiveCodeTab("editor");
     };
 
+    const setBuilder = () => {
+      setActiveCodeTab("Builder");
+    };
+
     window.addEventListener("switchToTools", setTools);
     window.addEventListener("switchToNotes", setNotes);
     window.addEventListener("switchToEditor", setEditor);
+    window.addEventListener("switchToBuilder", setBuilder);
 
     return () => {
       window.removeEventListener("switchToTools", setTools);
       window.removeEventListener("switchToNotes", setNotes);
       window.removeEventListener("switchToEditor", setEditor);
+      window.removeEventListener("switchToBuilder", setBuilder);
     };
   }, []);
 
@@ -252,6 +259,10 @@ export default function SolvePage() {
           />
         ),
       },
+      Notes: {
+        label: "Notes",
+        content: <Notes />,
+      },
       tools: {
         label: "Tools",
         content: (
@@ -266,9 +277,21 @@ export default function SolvePage() {
           />
         ),
       },
-      Notes: {
-        label: "Notes",
-        content: <Notes />,
+      Builder: {
+        label: "Builder",
+        content: (
+          <div className="h-full w-full p-4">
+            <AnimationBuilder
+              onAnimationGenerated={handleCustomAnimate}
+              userId={
+                typeof user === "string"
+                  ? user
+                  : user?.id ?? user?.user?.id ?? "anon"
+              }
+              animationSpeed={1.0}
+            />
+          </div>
+        ),
       },
     }),
     [
