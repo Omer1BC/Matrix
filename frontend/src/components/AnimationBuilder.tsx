@@ -172,7 +172,6 @@ export default function AnimationBuilder({
   return (
     <div className="flex h-full flex-col gap-3 p-4">
       <div className="flex flex-1 flex-col gap-3 min-h-0">
-        {/* Speed Control */}
         <div className="flex items-center gap-3">
           <label className="text-xs text-slate-400 whitespace-nowrap">
             Speed: {animSpeed.toFixed(1)}x
@@ -184,7 +183,7 @@ export default function AnimationBuilder({
             step="0.1"
             value={animSpeed}
             onChange={(e: any) => setAnimSpeed(parseFloat(e.target.value))}
-            className="flex-1 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[var(--gr-2)]"
+            className="flex-1 h-1.5 px-0 bg-slate-700 rounded-lg cursor-pointer accent-[var(--gr-2)]"
             disabled={loading}
           />
           <div className="flex gap-1 text-[10px] text-slate-500">
@@ -193,8 +192,6 @@ export default function AnimationBuilder({
             <span>Fast</span>
           </div>
         </div>
-
-        {/* Data Structure & Initial State */}
         <div className="flex gap-2">
           <Select
             value={dataStructure}
@@ -230,8 +227,6 @@ export default function AnimationBuilder({
                      focus:bg-[var(--dbl-3)]"
           />
         </div>
-
-        {/* Add Operations */}
         <div className="flex flex-wrap gap-1">
           {currentDsOps.map((op) => (
             <Button
@@ -245,8 +240,6 @@ export default function AnimationBuilder({
             </Button>
           ))}
         </div>
-
-        {/* Operations Queue */}
         <div className="rounded-lg bg-[var(--dbl-3)] p-2">
           <div className="mb-1 flex items-center justify-between gap-2">
             <span className="text-xs text-slate-400">
@@ -335,8 +328,6 @@ export default function AnimationBuilder({
             </div>
           )}
         </div>
-
-        {/* Error */}
         {error && (
           <div className="mt-2 rounded-lg bg-red-900/20 border border-red-500/50 p-2 text-xs text-red-400">
             <strong>Error:</strong> {error}
