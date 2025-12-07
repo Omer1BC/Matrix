@@ -91,7 +91,6 @@ export default function AnimationBuilder({
     setOperations(
       operations.map((op) => {
         if (op.id === id) {
-          // Allow empty string during editing
           if (value === "") {
             return { ...op, args: [""] };
           }

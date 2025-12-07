@@ -75,14 +75,14 @@ export default function Tools({
           <label className="text-xs text-slate-400 whitespace-nowrap">
             Speed: {animSpeed}x
           </label>
-          <input
+          <Input
             type="range"
             min="0.5"
             max="2.0"
             step="0.1"
             value={animSpeed}
-            onChange={(e) => setAnimSpeed(parseFloat(e.target.value))}
-            className="flex-1 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[var(--gr-2)]"
+            onChange={(e: any) => setAnimSpeed(parseFloat(e.target.value))}
+            className="flex-1 h-1.5 px-0 bg-slate-700 rounded-lg cursor-pointer accent-[var(--gr-2)]"
             disabled={animLoading}
           />
           <div className="flex gap-1 text-[10px] text-slate-500">
