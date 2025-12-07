@@ -6,7 +6,13 @@ import {
   AnimationOperation,
 } from "@/lib/agent";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Button } from "./ui/button";
 
 type DataStructureType = "bst" | "stack";
@@ -192,20 +198,26 @@ export default function AnimationBuilder({
         <div className="flex gap-2">
           <Select
             value={dataStructure}
-            onChange={(e: any) => {
-              setDataStructure(e.target.value as DataStructureType);
+            onValueChange={(value: DataStructureType) => {
+              setDataStructure(value);
               setOperations([]);
             }}
-            className="flex-1 rounded-lg border border-[var(--gr-2)] bg-[var(--dbl-4)] p-2.5 text-sm text-[var(--gr-2)] outline-none transition
-                     focus:scale-[1.02] focus:border-[var(--gr-2)]
-                     focus:shadow-[0_0_8px_rgba(125,255,125,0.6),0_0_16px_rgba(125,255,125,0.3)]
-                     focus:bg-[var(--dbl-3)]"
           >
-            {Object.entries(DATA_STRUCTURES).map(([key, { label }]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
+            <SelectTrigger
+              className="flex-1 rounded-lg border border-[var(--gr-2)] bg-[var(--dbl-4)] p-2.5 text-sm text-[var(--gr-2)] outline-none transition
+               focus:scale-[1.02] focus:border-[var(--gr-2)]
+               focus:shadow-[0_0_8px_rgba(125,255,125,0.6),0_0_16px_rgba(125,255,125,0.3)]
+               focus:bg-[var(--dbl-3)]"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(DATA_STRUCTURES).map(([key, { label }]) => (
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
           <Input
             type="text"
