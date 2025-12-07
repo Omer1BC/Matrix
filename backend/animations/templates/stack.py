@@ -248,6 +248,35 @@ class StackVisualizer(VGroup):
             run_time=run_time,
         )
 
+    def clear(self, run_time=1):
+        if len(self.stack_data) == 0:
+            return Wait(0.2)
+
+        self._update_command_label("clear()")
+
+        boxes_to_clear = list(self.boxes)
+        labels_to_clear = list(self.labels)
+
+        element_animations = []
+        for box, label in zip(reversed(boxes_to_clear), reversed(labels_to_clear)):
+            element_animations.append(
+                AnimationGroup(
+                    box.animate.shift(UP * (0.5 * self.scale_factor)).set_opacity(0),
+                    label.animate.shift(UP * (0.5 * self.scale_factor)).set_opacity(0),
+                    lag_ratio=0.1,
+                )
+            )
+
+        return Succession(
+            FadeIn(self.command_label),
+            LaggedStart(*element_animations, lag_ratio=0.1),
+            Wait(0.3),
+            FadeOut(self.command_label),
+            run_time=run_time,
+            rate_func=smooth,
+            remover=True,
+        )
+
 
 class StackExample(Scene):
     def construct(self):
