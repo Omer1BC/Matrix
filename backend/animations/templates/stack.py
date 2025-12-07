@@ -1,5 +1,9 @@
 from manim import *
 
+PALE_GREEN = "#5BEB5B"
+DARK_GRAY = "#1E1E1E"
+
+
 class StackVisualizer(VGroup):
     def __init__(
         self,
@@ -23,7 +27,6 @@ class StackVisualizer(VGroup):
         self.labels = VGroup()
 
         def _scale_at_center(mobj):
-            """Scale around center to preserve positioning."""
             return mobj.scale(self.scale_factor, about_point=mobj.get_center())
 
         self._scale_at_center = _scale_at_center
@@ -31,13 +34,15 @@ class StackVisualizer(VGroup):
         self.base = Rectangle(
             width=box_width,
             height=box_height * max_size,
-            stroke_color=BLUE,
+            stroke_color=PALE_GREEN,
             stroke_width=3,
             fill_opacity=0,
         )
         self._scale_at_center(self.base)
 
-        self.title = Text("Stack", font_size=36).next_to(self.base, UP, buff=0.3)
+        self.title = Text("Stack", font_size=36, color=PALE_GREEN).next_to(
+            self.base, UP, buff=0.3
+        )
         self._scale_at_center(self.title)
 
         self.command_label = None
@@ -59,10 +64,8 @@ class StackVisualizer(VGroup):
     def _update_command_label(self, text):
         if self.command_label is not None:
             self.remove(self.command_label)
-        self.command_label = Text(text, font_size=28, color=YELLOW)
-       
+        self.command_label = Text(text, font_size=28, color=PALE_GREEN)
         self.command_label.next_to(self.base, RIGHT, buff=0.8)
-        
         self._scale_at_center(self.command_label)
         self.add(self.command_label)
 
@@ -76,20 +79,21 @@ class StackVisualizer(VGroup):
         box = Rectangle(
             width=self.box_width - 0.1,
             height=self.box_height - 0.1,
-            fill_color=GREEN,
-            fill_opacity=0.6,
-            stroke_color=WHITE,
+            fill_color=PALE_GREEN,
+            fill_opacity=0.25,
+            stroke_color=PALE_GREEN,
             stroke_width=2,
         )
 
         y_offset = (
-            self.base.get_bottom()[1] + (self.box_height / 2) * self.scale_factor
+            self.base.get_bottom()[1]
+            + (self.box_height / 2) * self.scale_factor
             + index * self.box_height * self.scale_factor
         )
         box.move_to([self.base.get_center()[0], y_offset, 0])
         self._scale_at_center(box)
 
-        label = Text(str(value), font_size=30, color=WHITE)
+        label = Text(str(value), font_size=30, color=PALE_GREEN)
         label.move_to(box.get_center())
         self._scale_at_center(label)
 
@@ -119,20 +123,21 @@ class StackVisualizer(VGroup):
         box = Rectangle(
             width=self.box_width - 0.1,
             height=self.box_height - 0.1,
-            fill_color=GREEN,
-            fill_opacity=0.6,
-            stroke_color=WHITE,
+            fill_color=PALE_GREEN,
+            fill_opacity=0.25,
+            stroke_color=PALE_GREEN,
             stroke_width=2,
         )
 
         y_offset = (
-            self.base.get_bottom()[1] + (self.box_height / 2) * self.scale_factor
+            self.base.get_bottom()[1]
+            + (self.box_height / 2) * self.scale_factor
             + index * self.box_height * self.scale_factor
         )
         box.move_to([self.base.get_center()[0], y_offset, 0])
         self._scale_at_center(box)
 
-        label = Text(str(value), font_size=30, color=WHITE)
+        label = Text(str(value), font_size=30, color=PALE_GREEN)
         label.move_to(box.get_center())
         self._scale_at_center(label)
 
@@ -180,7 +185,7 @@ class StackVisualizer(VGroup):
 
         highlight_anim = AnimationGroup(
             FadeIn(self.command_label),
-            top_box.animate.set_fill(RED, opacity=0.8),
+            top_box.animate.set_fill(PALE_GREEN, opacity=0.7),
         )
 
         exit_animations = [
@@ -222,7 +227,7 @@ class StackVisualizer(VGroup):
         highlight_rect = Rectangle(
             width=self.box_width - 0.05,
             height=self.box_height - 0.05,
-            stroke_color=YELLOW,
+            stroke_color=PALE_GREEN,
             stroke_width=6,
             fill_opacity=0,
         ).move_to(top_box.get_center())
@@ -232,49 +237,22 @@ class StackVisualizer(VGroup):
             FadeIn(self.command_label, run_time=0.2),
             AnimationGroup(
                 Create(highlight_rect),
-                top_box.animate(run_time=0.3).set_fill(ORANGE, opacity=0.8),
+                top_box.animate(run_time=0.3).set_fill(PALE_GREEN, opacity=0.7),
             ),
             Wait(0.3),
             AnimationGroup(
-                top_box.animate(run_time=0.3).set_fill(GREEN, opacity=0.6),
+                top_box.animate(run_time=0.3).set_fill(PALE_GREEN, opacity=0.25),
                 FadeOut(highlight_rect, run_time=0.3),
             ),
             FadeOut(self.command_label, run_time=0.2),
             run_time=run_time,
         )
 
-    def clear(self, run_time=1):
-        if len(self.stack_data) == 0:
-            return Wait(0.2)
-
-        self._update_command_label("clear()")
-
-        boxes_to_clear = list(self.boxes)
-        labels_to_clear = list(self.labels)
-
-        element_animations = []
-        for box, label in zip(reversed(boxes_to_clear), reversed(labels_to_clear)):
-            element_animations.append(
-                AnimationGroup(
-                    box.animate.shift(UP * (0.5 * self.scale_factor)).set_opacity(0),
-                    label.animate.shift(UP * (0.5 * self.scale_factor)).set_opacity(0),
-                    lag_ratio=0.1,
-                )
-            )
-
-        return Succession(
-            FadeIn(self.command_label),
-            LaggedStart(*element_animations, lag_ratio=0.1),
-            Wait(0.3),
-            FadeOut(self.command_label),
-            run_time=run_time,
-            rate_func=smooth,
-            remover=True,
-        )
-
 
 class StackExample(Scene):
     def construct(self):
+        self.camera.background_color = DARK_GRAY
+
         stack = StackVisualizer(
             max_size=6,
             initial_values=[5, 10, 15],

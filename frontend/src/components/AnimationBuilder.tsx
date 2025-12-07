@@ -41,7 +41,6 @@ const DATA_STRUCTURES: Record<
       { name: "push", label: "Push", takesValue: true },
       { name: "pop", label: "Pop", takesValue: false },
       { name: "peek", label: "Peek", takesValue: false },
-      { name: "clear", label: "Clear", takesValue: false },
     ],
   },
 };
