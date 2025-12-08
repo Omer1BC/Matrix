@@ -106,7 +106,7 @@ export function NeoStatusBanner() {
           className="ml-4 p-1 rounded hover:bg-white/20 transition-colors"
           aria-label="Dismiss notification"
           variant={"destructive"}
-          size={"undefined"}
+          size={"icon"}
         >
           <X className="h-5 w-5" />
         </Button>

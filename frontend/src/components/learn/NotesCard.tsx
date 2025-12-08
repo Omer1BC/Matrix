@@ -1,7 +1,6 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import React from "react";
 
 type Props = {
   notes: string;
