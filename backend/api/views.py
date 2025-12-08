@@ -316,6 +316,7 @@ def agent(request):
             )
         if task == "generate_animation":
             animation_speed = float(req.extras.get("animation_speed", 1.0))
+            animation_size = float(req.extras.get("animation_size", 1.0))
 
             # Check if a structured plan is provided
             structured_plan = req.extras.get("plan", None)
@@ -333,7 +334,8 @@ def agent(request):
                     initial_state=initial_state,
                     operations=operations,
                     animation_speed=animation_speed,
-                    user_id=user_id
+                    animation_size=animation_size,
+                    user_id=user_id,
                 )
                 # Include plan in result for consistency
                 result["plan"] = structured_plan
@@ -347,14 +349,16 @@ def agent(request):
                 if not prompt:
                     payload = {"ok": False, "error": "prompt or plan required"}
                     return JsonResponse(
-                        AgentResponse(kind="generate_animation", data=payload).model_dump(),
+                        AgentResponse(
+                            kind="generate_animation", data=payload
+                        ).model_dump(),
                         status=400,
                     )
                 # Call generate_animation_from_prompt directly with user_id
                 from utils.agent.utils import generate_animation_from_prompt
 
                 result = generate_animation_from_prompt(
-                    prompt, animation_speed=animation_speed, user_id=user_id
+                    prompt, animation_speed=animation_speed, animation_size=animation_size, user_id=user_id
                 )
 
             error_msg = None

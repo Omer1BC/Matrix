@@ -27,7 +27,7 @@ class BstVisualizer(VGroup):
         node_radius=0.35,
         level_height=1.2,
         horizontal_spacing=1.5,
-        scale_factor=0.7,
+        scale_factor=1.0,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -741,7 +741,7 @@ class BstVisualizer(VGroup):
 class BstExample(Scene):
     def construct(self):
         self.camera.background_color = DARK_GRAY
-        bst = BstVisualizer(initial_values=[10, 5, 15], scale_factor=0.7)
+        bst = BstVisualizer(initial_values=[10, 5, 15], scale_factor=1.0)
 
         self.play(bst.create())
         self.wait(0.75)

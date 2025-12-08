@@ -31,6 +31,7 @@ export default function Tools({
   const [animLoading, setAnimLoading] = useState(false);
   const [animError, setAnimError] = useState<string | null>(null);
   const [animSpeed, setAnimSpeed] = useState(1.0);
+  const [animSize, setAnimSize] = useState(1.0);
 
   async function submit() {
     const prompt = animPrompt.trim();
@@ -43,7 +44,12 @@ export default function Tools({
       // Extract user_id from user object
       const user_id =
         typeof user === "string" ? user : user?.id ?? user?.user?.id ?? "anon";
-      const url = await requestAnimationFromAgent(prompt, animSpeed, user_id);
+      const url = await requestAnimationFromAgent(
+        prompt,
+        animSpeed,
+        animSize,
+        user_id
+      );
       if (!url) throw new Error("No video returned");
       onCustomAnimate?.(url, "done");
     } catch (e: any) {
@@ -71,24 +77,47 @@ export default function Tools({
         ))}
       </div>
       <div className="createanimation mt-3 rounded-xl border border-slate-700 bg-[var(--dbl-4)] p-2">
-        <div className="mb-3 flex items-center gap-3">
-          <label className="text-xs text-slate-400 whitespace-nowrap">
-            Speed: {animSpeed}x
-          </label>
-          <Input
-            type="range"
-            min="0.5"
-            max="2.0"
-            step="0.1"
-            value={animSpeed}
-            onChange={(e: any) => setAnimSpeed(parseFloat(e.target.value))}
-            className="flex-1 h-1.5 px-0 bg-slate-700 rounded-lg cursor-pointer accent-[var(--gr-2)]"
-            disabled={animLoading}
-          />
-          <div className="flex gap-1 text-[10px] text-slate-500">
-            <span>Slow</span>
-            <span className="mx-1">|</span>
-            <span>Fast</span>
+        <div className="mb-3 flex flex-col items-center gap-3">
+          <div className="flex w-full gap-3">
+            <label className="flex justify-center text-xs text-slate-400 whitespace-nowrap w-24">
+              Size: {animSize.toFixed(2)}x
+            </label>
+            <Input
+              type="range"
+              min="0.5"
+              max="2.0"
+              step="0.25"
+              value={animSize}
+              onChange={(e: any) => setAnimSize(parseFloat(e.target.value))}
+              className="flex-1 h-1.5 px-0 bg-slate-700 rounded-lg cursor-pointer accent-[var(--gr-2)]"
+              disabled={animLoading}
+            />
+            <div className="flex justify-center text-xs text-slate-400 whitespace-nowrap w-24">
+              <span>Small</span>
+              <span className="mx-1">|</span>
+              <span>Large</span>
+            </div>
+          </div>
+
+          <div className="flex w-full gap-3 align-center justify-between">
+            <label className="flex justify-center text-xs text-slate-400 whitespace-nowrap w-24">
+              Speed: {animSpeed}x
+            </label>
+            <Input
+              type="range"
+              min="0.5"
+              max="2.0"
+              step="0.1"
+              value={animSpeed}
+              onChange={(e: any) => setAnimSpeed(parseFloat(e.target.value))}
+              className="flex-1 h-1.5 px-0 bg-slate-700 rounded-lg cursor-pointer accent-[var(--gr-2)]"
+              disabled={animLoading}
+            />
+            <div className="flex justify-center text-xs text-slate-400 whitespace-nowrap w-24">
+              <span>Slow</span>
+              <span className="mx-1">|</span>
+              <span>Fast</span>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -101,7 +130,7 @@ export default function Tools({
             className="w-[90%] rounded-lg border border-[var(--gr-2)] bg-[var(--dbl-4)] p-2.5 text-sm text-[var(--gr-2)] outline-none transition
                        focus:scale-[1.02] focus:border-[var(--gr-2)]
                        focus:shadow-[0_0_8px_rgba(125,255,125,0.6),0_0_16px_rgba(125,255,125,0.3)]
-                       focus:bg-[var(--dbl-3)]"
+                       focus:bg-[var(--dbl-3)] placeholder:text-[var(--dbl-4)]"
             disabled={animLoading}
           />
           <Button
