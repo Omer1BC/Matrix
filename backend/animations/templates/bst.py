@@ -1,9 +1,8 @@
 from manim import *
 import numpy as np
 
-# Custom colors matching module4_1.py
-PALE_GREEN = "#5BEB5B"  # Paler green for text/outlines
-DARK_GRAY = "#1E1E1E"  # Dark gray background
+PALE_GREEN = "#5BEB5B"
+DARK_GRAY = "#1E1E1E"
 
 
 class BSTNode:
@@ -27,7 +26,7 @@ class BstVisualizer(VGroup):
         node_radius=0.35,
         level_height=1.2,
         horizontal_spacing=1.5,
-        scale_factor=0.7,
+        scale_factor=1.0,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -40,8 +39,10 @@ class BstVisualizer(VGroup):
         self.root_y = 1.2
 
         self.root = None
+        # value -> (circle, label), "best effort" (duplicates will just overwrite)
         self.node_mobjects = {}
-        self.edge_mobjects = {}
+        # node object -> (circle, label), always correct even for duplicates
+        self.node_visuals = {}
 
         self.nodes_group = VGroup()
         self.edges_group = VGroup()
@@ -73,10 +74,8 @@ class BstVisualizer(VGroup):
         if self.command_label is not None:
             self.remove(self.command_label)
 
-        # Create main command text
         main_text = Text(text, font_size=28, color=PALE_GREEN)
 
-        # Create complexity texts if provided
         texts = [main_text]
         if time_complexity:
             time_text = Text(f"Time: {time_complexity}", font_size=20, color=PALE_GREEN)
@@ -87,7 +86,6 @@ class BstVisualizer(VGroup):
             )
             texts.append(space_text)
 
-        # Arrange texts vertically
         self.command_label = VGroup(*texts)
         self.command_label.arrange(DOWN, aligned_edge=LEFT, buff=0.15)
         self.command_label.move_to(RIGHT * 4 + UP * 0.5)
@@ -129,12 +127,10 @@ class BstVisualizer(VGroup):
         if node.value == value:
             return node
         if value < node.value:
-            # Don't recurse if child is None - just return None
             if node.left is None:
                 return None
             return self._find_node(value, node.left)
         else:
-            # Don't recurse if child is None - just return None
             if node.right is None:
                 return None
             return self._find_node(value, node.right)
@@ -148,36 +144,62 @@ class BstVisualizer(VGroup):
         if node.value == value:
             return parent
         if value < node.value:
-            # Don't recurse if child is None
             if node.left is None:
                 return None
             return self._find_parent(value, node.left, node)
         else:
-            # Don't recurse if child is None
             if node.right is None:
                 return None
             return self._find_parent(value, node.right, node)
 
+    def _find_parent_of_node(self, target_node):
+        if target_node is None or self.root is None or target_node is self.root:
+            return None
+
+        visited = set()
+        stack = [(self.root, None)]
+
+        while stack:
+            node, parent = stack.pop()
+            if node is None:
+                continue
+            if id(node) in visited:
+                continue
+            visited.add(id(node))
+
+            if node is target_node:
+                return parent
+
+            if node.left is not None:
+                stack.append((node.left, node))
+            if node.right is not None:
+                stack.append((node.right, node))
+
+        return None
+
     def _insert_node_static(self, value):
         if self.root is None:
             self.root = BSTNode(value)
+            node = self.root
+            parent = None
         else:
-            self._insert_helper(self.root, value)
+            node, parent = self._insert_helper(self.root, value)
         self._calculate_positions(self.root)
-        node = self._find_node(value)
-        self._create_node_visuals(node)
+        self._create_node_visuals(node, parent_override=parent)
 
-    def _insert_helper(self, node, value):
-        if value < node.value:
+    def _insert_helper(self, node, value, parent=None):
+        if value <= node.value:
             if node.left is None:
                 node.left = BSTNode(value)
+                return node.left, node
             else:
-                self._insert_helper(node.left, value)
+                return self._insert_helper(node.left, value, node)
         else:
             if node.right is None:
                 node.right = BSTNode(value)
+                return node.right, node
             else:
-                self._insert_helper(node.right, value)
+                return self._insert_helper(node.right, value, node)
 
     def _edge_endpoints(self, parent, child):
         parent_pos = np.array([parent.x, parent.y, 0.0])
@@ -194,7 +216,7 @@ class BstVisualizer(VGroup):
             end = child_pos
         return start, end
 
-    def _create_node_visuals(self, node):
+    def _create_node_visuals(self, node, parent_override=None):
         circle = Circle(
             radius=self.node_radius,
             color=PALE_GREEN,
@@ -213,8 +235,9 @@ class BstVisualizer(VGroup):
 
         self.nodes_group.add(circle, label)
         self.node_mobjects[node.value] = (circle, label)
+        self.node_visuals[node] = (circle, label)
 
-        parent = self._find_parent(node.value)
+        parent = parent_override if parent_override is not None else self._find_parent_of_node(node)
         if parent and parent.circle:
             self._create_edge(parent, node)
 
@@ -222,17 +245,30 @@ class BstVisualizer(VGroup):
         start, end = self._edge_endpoints(parent, child)
         edge = Line(start, end, color=PALE_GREEN, stroke_width=3)
 
-        if child.value < parent.value:
+        if child is parent.left:
             parent.left_edge = edge
-        else:
+        elif child is parent.right:
             parent.right_edge = edge
 
         self.edges_group.add(edge)
-        self.edge_mobjects[(parent.value, child.value)] = edge
         return edge
 
+    def _get_traversal_path_for_insertion(self, value):
+        path = []
+        current = self.root
+        while current is not None:
+            path.append(current)
+            if value <= current.value:
+                if current.left is None:
+                    break
+                current = current.left
+            else:
+                if current.right is None:
+                    break
+                current = current.right
+        return path
+
     def _get_traversal_path(self, value):
-        """Returns list of nodes traversed to find insertion/deletion point."""
         path = []
         current = self.root
         while current is not None:
@@ -250,18 +286,18 @@ class BstVisualizer(VGroup):
             f"insert({value})", time_complexity="O(log n)", space_complexity="O(log n)"
         )
 
-        traversal_path = self._get_traversal_path(value) if self.root else []
+        traversal_path = self._get_traversal_path_for_insertion(value) if self.root else []
 
         if self.root is None:
             self.root = BSTNode(value)
+            new_node = self.root
+            parent = None
         else:
-            self._insert_helper(self.root, value)
+            new_node, parent = self._insert_helper(self.root, value)
 
         old_positions = {}
         self._store_positions(self.root, old_positions)
         self._calculate_positions(self.root)
-
-        new_node = self._find_node(value)
 
         reposition_anims = self._get_reposition_animations(old_positions)
 
@@ -282,6 +318,7 @@ class BstVisualizer(VGroup):
         new_node.label = label
 
         self.node_mobjects[value] = (circle, label)
+        self.node_visuals[new_node] = (circle, label)
 
         highlight_circles = []
         for node in traversal_path:
@@ -297,9 +334,9 @@ class BstVisualizer(VGroup):
             self.add(highlight)
             highlight_circles.append(highlight)
 
-        traversal_anims = []
-        for highlight in highlight_circles:
-            traversal_anims.append(highlight.animate.set_stroke(opacity=1))
+        traversal_anims = [
+            highlight.animate.set_stroke(opacity=1) for highlight in highlight_circles
+        ]
 
         if traversal_anims:
             traversal_sequence = Succession(
@@ -311,12 +348,11 @@ class BstVisualizer(VGroup):
         initial_anims = [FadeIn(self.command_label)]
         initial_anims.extend(reposition_anims)
 
-        circle.set_stroke(PALE_GREEN, opacity=0)  # start invisible
+        circle.set_stroke(PALE_GREEN, opacity=0)
         label.set_opacity(0)
         self.nodes_group.add(circle, label)
 
         edge_anims = []
-        parent = self._find_parent(value)
         if parent and parent.circle:
             edge = self._create_edge(parent, new_node)
             edge.set_opacity(0)
@@ -346,14 +382,13 @@ class BstVisualizer(VGroup):
     def _store_positions(self, node, positions_dict):
         if node is None:
             return
-        positions_dict[node.value] = (node.x, node.y)
+        positions_dict[node] = (node.x, node.y)
         self._store_positions(node.left, positions_dict)
         self._store_positions(node.right, positions_dict)
 
     def _get_reposition_animations(self, old_positions):
         animations = []
-        for value, (old_x, old_y) in old_positions.items():
-            node = self._find_node(value)
+        for node, (old_x, old_y) in old_positions.items():
             if node is None or node.circle is None:
                 continue
 
@@ -362,11 +397,12 @@ class BstVisualizer(VGroup):
                 animations.append(node.circle.animate.move_to(new_pos))
                 animations.append(node.label.animate.move_to(new_pos))
 
-            parent = self._find_parent(value)
+            parent = self._find_parent_of_node(node)
             if parent and parent.circle:
-                if value < parent.value:
+                edge = None
+                if parent.left is node:
                     edge = parent.left_edge
-                else:
+                elif parent.right is node:
                     edge = parent.right_edge
                 if edge:
                     start, end = self._edge_endpoints(parent, node)
@@ -374,31 +410,13 @@ class BstVisualizer(VGroup):
         return animations
 
     def search(self, value, run_time=5):
-        """Search for a value in the BST and highlight the traversal path."""
         self._update_command_label(
             f"search({value})", time_complexity="O(log n)", space_complexity="O(log n)"
         )
 
-        # Get traversal path
         traversal_path = self._get_traversal_path(value)
-
         node = self._find_node(value)
-        if node is None:
-            # Value not found
-            self._update_command_label(f"search({value}) - NOT FOUND")
-            error_text = Text("Node Not Found!", color=RED, font_size=24)
-            error_text.move_to(RIGHT * 4 + DOWN * 0.5)
-            self._scale_at_center(error_text)
-            return Succession(
-                FadeIn(self.command_label),
-                FadeIn(error_text),
-                Wait(1.2),
-                FadeOut(error_text),
-                FadeOut(self.command_label),
-                run_time=run_time,
-            )
 
-        # Create traversal highlight circles
         highlight_circles = []
         for trav_node in traversal_path:
             highlight = Circle(
@@ -413,11 +431,9 @@ class BstVisualizer(VGroup):
             self.add(highlight)
             highlight_circles.append(highlight)
 
-        # Create animations to fade in each highlight one at a time
-        traversal_anims = []
-        for highlight in highlight_circles:
-            traversal_anims.append(highlight.animate.set_stroke(opacity=1))
-
+        traversal_anims = [
+            highlight.animate.set_stroke(opacity=1) for highlight in highlight_circles
+        ]
         if traversal_anims:
             traversal_sequence = Succession(
                 *[AnimationGroup(anim, run_time=3) for anim in traversal_anims]
@@ -425,21 +441,40 @@ class BstVisualizer(VGroup):
         else:
             traversal_sequence = Wait(0.1)
 
-        # Get the target circle and highlight it in orange
-        target_circle, target_label = self.node_mobjects[value]
+        if node is None:
+            error_text = Text("Node Not Found!", color=RED, font_size=24)
+            error_text.move_to(RIGHT * 4 + DOWN * 0.5)
+            self._scale_at_center(error_text)
+            self.add(error_text)
+
+            fade_highlights = (
+                AnimationGroup(*[FadeOut(h) for h in highlight_circles], run_time=1.0)
+                if highlight_circles
+                else Wait(0.1)
+            )
+
+            return Succession(
+                FadeIn(self.command_label),
+                traversal_sequence,
+                Wait(1.0),
+                Wait(1.2),
+                fade_highlights,
+                AnimationGroup(FadeOut(self.command_label), FadeOut(error_text)),
+                run_time=run_time,
+            )
+
+        target_circle, target_label = self.node_visuals[node]
 
         show_command_and_traversal = Succession(
             FadeIn(self.command_label),
             traversal_sequence,
         )
 
-        # Highlight found node in orange
         highlight_found = AnimationGroup(
             target_circle.animate.set_fill(ORANGE, opacity=0.8),
             run_time=1.2,
         )
 
-        # Revert both orange fill and yellow highlights
         revert_animations = [target_circle.animate.set_fill(opacity=0)]
         revert_animations.extend([FadeOut(h) for h in highlight_circles])
         revert_all = AnimationGroup(*revert_animations, run_time=1.0)
@@ -456,52 +491,30 @@ class BstVisualizer(VGroup):
         )
 
     def delete(self, value, run_time=5):
-        # Get traversal path before deletion
         traversal_path = self._get_traversal_path(value)
-
         node = self._find_node(value)
-        if node is None:
-            self._update_command_label(
-                f"delete({value}) - NOT FOUND",
-                time_complexity="O(log n)",
-                space_complexity="O(log n)",
-            )
-            error_text = Text("Node Not Found!", color=RED, font_size=24)
-            error_text.move_to(RIGHT * 4 + DOWN * 0.5)
-            self._scale_at_center(error_text)
-            return Succession(
-                FadeIn(self.command_label),
-                FadeIn(error_text),
-                Wait(1.2),
-                FadeOut(error_text),
-                FadeOut(self.command_label),
-                run_time=run_time,
-            )
 
         self._update_command_label(
             f"delete({value})", time_complexity="O(log n)", space_complexity="O(log n)"
         )
 
-        # Create traversal highlight circles and add them to scene invisibly
         highlight_circles = []
         for trav_node in traversal_path:
             highlight = Circle(
                 radius=self.node_radius,
                 color=YELLOW,
                 stroke_width=4,
-                fill_opacity=0,  # No fill, just border
+                fill_opacity=0,
             )
             highlight.move_to([trav_node.x, trav_node.y, 0])
             self._scale_at_center(highlight)
-            highlight.set_stroke(opacity=0)  # Start invisible (stroke only)
-            self.add(highlight)  # Add to scene but invisible
+            highlight.set_stroke(opacity=0)
+            self.add(highlight)
             highlight_circles.append(highlight)
 
-        # Create animations to fade in each highlight one at a time
-        traversal_anims = []
-        for highlight in highlight_circles:
-            traversal_anims.append(highlight.animate.set_stroke(opacity=1))
-
+        traversal_anims = [
+            highlight.animate.set_stroke(opacity=1) for highlight in highlight_circles
+        ]
         if traversal_anims:
             traversal_sequence = Succession(
                 *[AnimationGroup(anim, run_time=3) for anim in traversal_anims]
@@ -509,17 +522,39 @@ class BstVisualizer(VGroup):
         else:
             traversal_sequence = Wait(0.1)
 
-        target_circle, target_label = self.node_mobjects[value]
+        if node is None:
+            error_text = Text("Node Not Found!", color=RED, font_size=24)
+            error_text.move_to(RIGHT * 4 + DOWN * 0.5)
+            self._scale_at_center(error_text)
+            self.add(error_text)
+
+            fade_highlights = (
+                AnimationGroup(*[FadeOut(h) for h in highlight_circles], run_time=1.0)
+                if highlight_circles
+                else Wait(0.1)
+            )
+
+            return Succession(
+                FadeIn(self.command_label),
+                traversal_sequence,
+                Wait(1.0),
+                Wait(1.2),
+                fade_highlights,
+                AnimationGroup(FadeOut(self.command_label), FadeOut(error_text)),
+                run_time=run_time,
+            )
+
+        target_circle, target_label = self.node_visuals[node]
         has_two_children = node.left is not None and node.right is not None
+
+        show_command_and_traversal = Succession(
+            FadeIn(self.command_label),
+            traversal_sequence,
+        )
 
         if has_two_children:
             predecessor = self._find_max(node.left)
-            pred_circle, pred_label = self.node_mobjects[predecessor.value]
-
-            show_command_and_traversal = Succession(
-                FadeIn(self.command_label),
-                traversal_sequence,
-            )
+            pred_circle, pred_label = self.node_visuals[predecessor]
 
             highlight_pred = AnimationGroup(
                 pred_circle.animate.set_fill(ORANGE, opacity=0.8),
@@ -540,6 +575,26 @@ class BstVisualizer(VGroup):
                 RED, opacity=0.8
             ).set_run_time(1.2)
 
+            edges_to_remove = []
+
+            pred_parent = self._find_parent_of_node(predecessor)
+            if pred_parent:
+                if pred_parent.left is predecessor and pred_parent.left_edge:
+                    edges_to_remove.append(pred_parent.left_edge)
+                    pred_parent.left_edge = None
+                elif pred_parent.right is predecessor and pred_parent.right_edge:
+                    edges_to_remove.append(pred_parent.right_edge)
+                    pred_parent.right_edge = None
+
+            if predecessor.left_edge is not None:
+                edges_to_remove.append(predecessor.left_edge)
+                predecessor.left_edge = None
+            if predecessor.right_edge is not None:
+                edges_to_remove.append(predecessor.right_edge)
+                predecessor.right_edge = None
+
+            pred_replacement_child = predecessor.left
+
             self.root = self._delete_node(self.root, value, depth=0)
 
             old_positions = {}
@@ -548,34 +603,43 @@ class BstVisualizer(VGroup):
                 self._calculate_positions(self.root)
 
             fade_list = [FadeOut(pred_circle), FadeOut(pred_label)]
-            edges_to_remove = []
-            for (parent_val, child_val), edge in list(self.edge_mobjects.items()):
-                if parent_val == predecessor.value or child_val == predecessor.value:
+            for edge in edges_to_remove:
+                if edge is not None:
                     fade_list.append(FadeOut(edge))
-                    edges_to_remove.append((parent_val, child_val))
-                    self.edges_group.remove(edge)
-            for edge_key in edges_to_remove:
-                if edge_key in self.edge_mobjects:
-                    del self.edge_mobjects[edge_key]
-            fade_group = AnimationGroup(*fade_list, run_time=1.0)
+                    if edge in self.edges_group:
+                        self.edges_group.remove(edge)
+
+            new_edge_anims = []
+            if pred_parent and pred_replacement_child:
+                new_edge = self._create_edge(pred_parent, pred_replacement_child)
+                new_edge.set_opacity(0)
+                new_edge_anims.append(new_edge.animate.set_opacity(1))
+
+            reposition_anims = self._get_reposition_animations(old_positions)
+            combined_anims = fade_list + reposition_anims + new_edge_anims
+            fade_and_reposition = (
+                AnimationGroup(*combined_anims, run_time=1.5)
+                if combined_anims
+                else Wait(0.1)
+            )
 
             revert_color = target_circle.animate.set_fill(opacity=0).set_run_time(1.0)
 
             self.nodes_group.remove(pred_circle, pred_label)
+
+            if predecessor in self.node_visuals:
+                del self.node_visuals[predecessor]
             if predecessor.value in self.node_mobjects:
                 del self.node_mobjects[predecessor.value]
 
+            if node in self.node_visuals:
+                del self.node_visuals[node]
             if value in self.node_mobjects:
                 del self.node_mobjects[value]
+
             self.node_mobjects[predecessor.value] = (target_circle, target_label)
+            self.node_visuals[node] = (target_circle, target_label)
 
-            reposition_anims = self._get_reposition_animations(old_positions)
-            if reposition_anims:
-                reposition_group = AnimationGroup(*reposition_anims, run_time=1.0)
-            else:
-                reposition_group = Wait(1.0)
-
-            # Fade out highlight circles
             fade_highlights = AnimationGroup(
                 *[FadeOut(h) for h in highlight_circles], run_time=1.0
             )
@@ -588,8 +652,8 @@ class BstVisualizer(VGroup):
                 swap_anim,
                 Wait(1.0),
                 mark_for_deletion,
-                fade_group,
-                reposition_group,
+                Wait(1.0),
+                fade_and_reposition,
                 revert_color,
                 Wait(1.0),
                 fade_highlights,
@@ -599,15 +663,30 @@ class BstVisualizer(VGroup):
             )
 
         else:
-            show_command_and_traversal = Succession(
-                FadeIn(self.command_label),
-                traversal_sequence,
-            )
-
             highlight_anim = AnimationGroup(
                 target_circle.animate.set_fill(RED, opacity=0.8),
                 run_time=1.2,
             )
+
+            edges_to_remove = []
+
+            target_parent = self._find_parent_of_node(node)
+            if target_parent:
+                if target_parent.left is node and target_parent.left_edge:
+                    edges_to_remove.append(target_parent.left_edge)
+                    target_parent.left_edge = None
+                elif target_parent.right is node and target_parent.right_edge:
+                    edges_to_remove.append(target_parent.right_edge)
+                    target_parent.right_edge = None
+
+            if node.left_edge is not None:
+                edges_to_remove.append(node.left_edge)
+                node.left_edge = None
+            if node.right_edge is not None:
+                edges_to_remove.append(node.right_edge)
+                node.right_edge = None
+
+            replacement_child = node.left if node.left else node.right
 
             self.root = self._delete_node(self.root, value, depth=0)
 
@@ -617,28 +696,33 @@ class BstVisualizer(VGroup):
                 self._calculate_positions(self.root)
 
             fade_list = [FadeOut(target_circle), FadeOut(target_label)]
-            edges_to_remove = []
-            for (parent_val, child_val), edge in list(self.edge_mobjects.items()):
-                if parent_val == value or child_val == value:
+            for edge in edges_to_remove:
+                if edge is not None:
                     fade_list.append(FadeOut(edge))
-                    edges_to_remove.append((parent_val, child_val))
-                    self.edges_group.remove(edge)
-            for edge_key in edges_to_remove:
-                if edge_key in self.edge_mobjects:
-                    del self.edge_mobjects[edge_key]
-            fade_group = AnimationGroup(*fade_list, run_time=1.0)
+                    if edge in self.edges_group:
+                        self.edges_group.remove(edge)
+
+            new_edge_anims = []
+            if target_parent and replacement_child:
+                new_edge = self._create_edge(target_parent, replacement_child)
+                new_edge.set_opacity(0)
+                new_edge_anims.append(new_edge.animate.set_opacity(1))
+
+            reposition_anims = self._get_reposition_animations(old_positions)
+            combined_anims = fade_list + reposition_anims + new_edge_anims
+            fade_and_reposition = (
+                AnimationGroup(*combined_anims, run_time=1.5)
+                if combined_anims
+                else Wait(0.1)
+            )
 
             self.nodes_group.remove(target_circle, target_label)
+
+            if node in self.node_visuals:
+                del self.node_visuals[node]
             if value in self.node_mobjects:
                 del self.node_mobjects[value]
 
-            reposition_anims = self._get_reposition_animations(old_positions)
-            if reposition_anims:
-                reposition_group = AnimationGroup(*reposition_anims, run_time=1.0)
-            else:
-                reposition_group = Wait(1.0)
-
-            # Fade out highlight circles
             fade_highlights = AnimationGroup(
                 *[FadeOut(h) for h in highlight_circles], run_time=1.0
             )
@@ -647,8 +731,8 @@ class BstVisualizer(VGroup):
                 show_command_and_traversal,
                 Wait(1.0),
                 highlight_anim,
-                fade_group,
-                reposition_group,
+                Wait(1.0),
+                fade_and_reposition,
                 Wait(1.0),
                 fade_highlights,
                 Wait(0.5),
@@ -657,7 +741,6 @@ class BstVisualizer(VGroup):
             )
 
     def _delete_node(self, node, value, depth=0):
-        # Protection against infinite recursion with detailed error
         if depth > 100:
             print(
                 f"RECURSION ERROR: depth={depth}, value={value}, node.value={node.value if node else 'None'}"
@@ -670,57 +753,25 @@ class BstVisualizer(VGroup):
         if value < node.value:
             result = self._delete_node(node.left, value, depth + 1)
             node.left = result
-            # Sanity check: prevent self-reference
             if node.left is node:
-                print(
-                    f"ERROR: Circular reference detected! node.left = node (value={node.value})"
-                )
                 node.left = None
         elif value > node.value:
             result = self._delete_node(node.right, value, depth + 1)
             node.right = result
-            # Sanity check: prevent self-reference
             if node.right is node:
-                print(
-                    f"ERROR: Circular reference detected! node.right = node (value={node.value})"
-                )
                 node.right = None
         else:
-            # Found the node to delete
             if node.left is None:
                 return node.right
             elif node.right is None:
                 return node.left
 
-            # Node has two children - use predecessor
             max_node = self._find_max(node.left)
-            original_value = node.value
             node.value = max_node.value
-
-            if node.label:
-                new_label = Text(str(node.value), font_size=24, color=WHITE)
-                new_label.move_to(node.circle.get_center())
-                self._scale_at_center(new_label)
-                self.nodes_group.remove(node.label)
-                node.label = new_label
-                self.nodes_group.add(new_label)
-                # Update node_mobjects: remove old mapping and add new one
-                if original_value in self.node_mobjects:
-                    del self.node_mobjects[original_value]
-                if (
-                    max_node.value in self.node_mobjects
-                    and max_node.value != node.value
-                ):
-                    del self.node_mobjects[max_node.value]
-                self.node_mobjects[node.value] = (node.circle, node.label)
 
             result = self._delete_node(node.left, max_node.value, depth + 1)
             node.left = result
-            # Sanity check
             if node.left is node:
-                print(
-                    f"ERROR: Circular reference after two-child delete! (value={node.value})"
-                )
                 node.left = None
 
         return node
@@ -741,37 +792,25 @@ class BstVisualizer(VGroup):
 class BstExample(Scene):
     def construct(self):
         self.camera.background_color = DARK_GRAY
-        bst = BstVisualizer(initial_values=[10, 5, 15], scale_factor=0.7)
+        bst = BstVisualizer(initial_values=[10, 5, 3, 4, 2, 7, 8], scale_factor=1.0)
 
         self.play(bst.create())
         self.wait(0.75)
 
-        self.play(bst.insert(3))
-        self.wait(0.75)
-
-        self.play(bst.insert(7))
-        self.wait(0.75)
-
-        self.play(bst.insert(12))
-        self.wait(0.75)
-
-        self.play(bst.delete(5))
-        self.wait(1)
-
-        self.play(bst.delete(10))
-        self.wait(1)
-
         self.play(bst.insert(5))
         self.wait(0.75)
 
-        self.play(bst.insert(13))
+        self.play(bst.search(5))
         self.wait(0.75)
 
-        self.play(bst.insert(17))
+        self.play(bst.delete(5))
         self.wait(0.75)
 
-        self.play(bst.insert(16))
+        self.play(bst.delete(5))
         self.wait(0.75)
 
-        self.play(bst.search(13))
+        self.play(bst.search(5))
+        self.wait(0.75)
+
+        self.play(bst.delete(5))
         self.wait(0.75)
