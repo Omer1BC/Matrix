@@ -10,12 +10,11 @@ import {
 } from "@/lib/supabase/auth";
 import { PasswordState, ProfileState, ProfileUpdate } from "@/lib/types/types";
 import { redirect } from "next/navigation";
-import { SettingsHeader } from "../../components/settings/SettingsHeader";
-import { ProfileDetailsCard } from "../../components/settings/PersonalDetailsCard";
-import { SecuritySettingsCard } from "../../components/settings/SecuritySettingsCard";
-import { LearningPreferencesCard } from "../../components/settings/LearningPreferencesCard";
-import { SaveBar } from "../../components/settings/SaveBar";
 import { toast } from "sonner";
+import { ProfileDetailsCard } from "@/components/profile/ProfileDetailsCard";
+import { ProfileCredentialsCard } from "@/components/profile/ProfileCredentialsCard";
+import { ProfilePreferencesCard } from "@/components/profile/ProfilePreferencesCard";
+import { ProfileSaveButton } from "@/components/profile/ProfileSaveButton";
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
@@ -104,27 +103,28 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <SettingsHeader />
-      <main className="container mx-auto max-w-4xl px-4 py-12 space-y-8">
-        <ProfileDetailsCard
-          profileState={profileState}
-          onChange={setProfileState}
-        />
+    <main className="flex flex-col h-full bg-background text-foreground px-12 py-12 space-y-8 overflow-y-auto custom-scroll">
+      <ProfileDetailsCard
+        profileState={profileState}
+        onChange={setProfileState}
+      />
 
-        <SecuritySettingsCard password={password} onChange={setPassword} />
+      <ProfileCredentialsCard password={password} onChange={setPassword} />
 
-        <Separator className="bg-primary/20" />
+      <Separator className="bg-primary/20" />
 
-        <LearningPreferencesCard
-          learningStyle={profileState.learningStyle}
-          onChange={(value) =>
-            setProfileState((s) => ({ ...s, learningStyle: value }))
-          }
-        />
+      <ProfilePreferencesCard
+        learningStyle={profileState.learningStyle}
+        onChange={(value) =>
+          setProfileState((s) => ({ ...s, learningStyle: value }))
+        }
+      />
 
-        <SaveBar saving={saving} disabled={disabledSave} onSave={handleSave} />
-      </main>
-    </div>
+      <ProfileSaveButton
+        saving={saving}
+        disabled={disabledSave}
+        onSave={handleSave}
+      />
+    </main>
   );
 }

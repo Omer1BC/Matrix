@@ -12,7 +12,7 @@ type Props = {
   onChange: (next: PasswordState) => void;
 };
 
-export function SecuritySettingsCard({ password, onChange }: Props) {
+export function ProfileCredentialsCard({ password, onChange }: Props) {
   return (
     <Card className="matrix-border bg-card/40 p-6 backdrop-blur-sm">
       <div className="space-y-6">

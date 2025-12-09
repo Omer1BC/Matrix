@@ -1,55 +1,16 @@
 "use client";
 
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { signIn, signOut, signUp } from "@/lib/supabase/auth";
+import { signOut } from "@/lib/supabase/auth";
 import { LogOut, LogIn, UserPlus, FileBadge2 } from "lucide-react";
-import { FormEvent, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
-  const [showLogin, setShowLogin] = useState(false);
-  const [showSignup, setShowSignup] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstname, setFirstname] = useState("");
-  const [lastname, setLastname] = useState("");
-  const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(false);
-
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  /**
-   * This is the randomized sign up for the class demo
-   * @param e event
-   */
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await signUp(email, password, username, firstname, lastname);
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || "Signup failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await signIn(email, password);
-      setShowLogin(false);
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || "Login failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleLogout = async () => {
     try {
@@ -62,8 +23,8 @@ export default function Header() {
 
   return (
     <>
-      <header className="flex flex-row justify-between w-full relative z-10 border-b border-border/20 backdrop-blur-sm bg-background/80">
-        <div className="px-4 py-4 flex flex-1 items-center justify-between">
+      <header className="flex flex-row justify-between w-full relative z-10 border-b border-border/20 backdrop-blur-sm bg-background/80 h-[80px]">
+        <div className="px-4 flex flex-1 items-center justify-between">
           <div className="flex flex-row gap-4 items-center text-[var(--gr-2)]">
             <Link
               href="/"
@@ -127,8 +88,8 @@ export default function Header() {
                     Log out
                   </Button>
                 </div>
-                <div className="invisible">
-                  <Image src="/userPhoto.png" alt="" width={50} height={50} />
+                <div className="invisible h-10 w-10">
+                  <Image src="/userPhoto.png" alt="" width={40} height={40} />
                 </div>
               </div>
             ) : user ? (
@@ -159,185 +120,68 @@ export default function Header() {
                   Log out
                 </Button>
                 <button
-                  onClick={() => (window.location.href = "/settings")}
+                  onClick={() => {
+                    router.push("/profile");
+                  }}
+                  className="flex items-center justify-center h-10 w-10"
                   style={{ cursor: "pointer" }}
                 >
                   <Image
                     src="/userPhoto.png"
                     alt="user photo"
-                    width={50}
-                    height={50}
+                    width={40}
+                    height={40}
+                    className="rounded-full"
                   />
                 </button>
               </div>
             ) : (
               <div className="signup flex items-center gap-3">
-                <Link
-                  href="https://docs.google.com/forms/d/e/1FAIpQLSfXUi-LI0xQhkdAd1jadyvRQZ1v7TwrNlDnCDlr3FslI6IcpQ/viewform?usp=header"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Button
+                  variant="outline"
+                  className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
+                  style={{ cursor: "pointer" }}
+                  size={undefined}
                 >
-                  <Button
-                    variant="outline"
-                    className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
-                    style={{ cursor: "pointer" }}
-                    size={undefined}
+                  <Link
+                    href="https://docs.google.com/forms/d/e/1FAIpQLSfXUi-LI0xQhkdAd1jadyvRQZ1v7TwrNlDnCDlr3FslI6IcpQ/viewform?usp=header"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
                   >
-                    <FileBadge2 className="mr-2 h-4 w-4" />
+                    <FileBadge2 className="h-4 w-4" />
                     Survey
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
 
                 <Button
                   variant="outline"
                   className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
-                  onClick={() => setShowLogin(true)}
+                  onClick={() => {}}
                   style={{ cursor: "pointer" }}
                   size={undefined}
                 >
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Log in
+                  <Link href="/login" className="flex items-center gap-2">
+                    <LogIn className="h-4 w-4" />
+                    Log in
+                  </Link>
                 </Button>
                 <Button
-                  className="glow-text"
-                  onClick={() => setShowSignup(true)}
+                  variant="outline"
+                  className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
                   style={{ cursor: "pointer" }}
-                  variant={undefined}
                   size={undefined}
                 >
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Sign up
+                  <Link href="/sign-up" className="flex items-center gap-2">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Sign up
+                  </Link>
                 </Button>
               </div>
             )}
           </div>
         </div>
       </header>
-
-      {/* modals below unchanged */}
-      {showLogin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-card border-2 matrix-border rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl shadow-primary/20">
-            <h2 className="text-2xl font-bold mb-6 glow-text text-center">
-              Log In
-            </h2>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <input
-                type="email"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-input border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              />
-              <input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-input border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              />
-              <div className="flex gap-3 pt-2">
-                <Button
-                  disabled={loading}
-                  type="submit"
-                  className="flex-1 glow-text"
-                  style={{ cursor: "pointer" }}
-                  variant={undefined}
-                  size={undefined}
-                >
-                  {loading ? "Logging in..." : "Log In"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowLogin(false)}
-                  className="flex-1 matrix-border"
-                  style={{ cursor: "pointer" }}
-                  size={undefined}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showSignup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-card border-2 matrix-border rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl shadow-primary/20">
-            <h2 className="text-2xl font-bold mb-6 glow-text text-center">
-              Sign Up
-            </h2>
-            <form onSubmit={handleSignup} className="space-y-4">
-              <input
-                type="text"
-                placeholder="First Name"
-                value={firstname}
-                onChange={(e) => setFirstname(e.target.value)}
-                className="w-full px-4 py-3 bg-input border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Last Name"
-                value={lastname}
-                onChange={(e) => setLastname(e.target.value)}
-                className="w-full px-4 py-3 bg-input border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 bg-input border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              />
-              <input
-                type="email"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-input border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              />
-              <input
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-input border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              />
-              <div className="flex gap-3 pt-2">
-                <Button
-                  disabled={loading}
-                  type="submit"
-                  className="flex-1 glow-text"
-                  style={{ cursor: "pointer" }}
-                  variant={undefined}
-                  size={undefined}
-                >
-                  {loading ? "Signing up..." : "Sign Up"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowSignup(false)}
-                  className="flex-1 matrix-border"
-                  style={{ cursor: "pointer" }}
-                  size={undefined}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </>
   );
 }
