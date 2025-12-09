@@ -16,6 +16,8 @@ type ToolsProps = {
     phase?: "start" | "done" | "error"
   ) => void;
   user?: any;
+  animationSpeed?: number;
+  animationSize?: number;
 };
 
 export default function Tools({
@@ -26,12 +28,14 @@ export default function Tools({
   onOpenAnimation,
   onCustomAnimate,
   user,
+  animationSpeed,
+  animationSize,
 }: ToolsProps) {
   const [animPrompt, setAnimPrompt] = useState("");
   const [animLoading, setAnimLoading] = useState(false);
   const [animError, setAnimError] = useState<string | null>(null);
-  const [animSpeed, setAnimSpeed] = useState(1.0);
-  const [animSize, setAnimSize] = useState(1.0);
+  const [animSpeed, setAnimSpeed] = useState(animationSpeed || 1.0);
+  const [animSize, setAnimSize] = useState(animationSize || 1.0);
 
   async function submit() {
     const prompt = animPrompt.trim();
