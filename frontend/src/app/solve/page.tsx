@@ -297,6 +297,8 @@ function SolvePageContent() {
             onOpenAnimation={openAnimationForTool}
             onCustomAnimate={handleCustomAnimate}
             user={user}
+            animationSpeed={0.5}
+            animationSize={0.75}
           />
         ),
       },
@@ -311,7 +313,8 @@ function SolvePageContent() {
                   ? user
                   : user?.id ?? user?.user?.id ?? "anon"
               }
-              animationSpeed={1.0}
+              animationSpeed={0.5}
+              animationSize={0.75}
             />
           </div>
         ),
