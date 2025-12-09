@@ -33,6 +33,7 @@ const DATA_STRUCTURES: Record<
     operations: [
       { name: "insert", label: "Insert", takesValue: true },
       { name: "delete", label: "Delete", takesValue: true },
+      { name: "search", label: "Search", takesValue: true },
     ],
   },
   stack: {
@@ -53,12 +54,14 @@ type AnimationBuilderProps = {
   ) => void;
   userId: string;
   animationSpeed?: number;
+  animationSize?: number;
 };
 
 export default function AnimationBuilder({
   onAnimationGenerated,
   userId,
   animationSpeed: initialSpeed = 1.0,
+  animationSize: initialSize = 1.0,
 }: AnimationBuilderProps) {
   const [dataStructure, setDataStructure] = useState<DataStructureType>("bst");
   const [initialState, setInitialState] = useState<string>("");
@@ -68,6 +71,7 @@ export default function AnimationBuilder({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [animSpeed, setAnimSpeed] = useState(initialSpeed);
+  const [animSize, setAnimSize] = useState(initialSize);
 
   const addOperation = (opName: string) => {
     const opDef = DATA_STRUCTURES[dataStructure].operations.find(
@@ -149,7 +153,12 @@ export default function AnimationBuilder({
     };
 
     try {
-      const result = await requestAnimationFromPlan(plan, animSpeed, userId);
+      const result = await requestAnimationFromPlan(
+        plan,
+        animSpeed,
+        animSize,
+        userId
+      );
       if (result.error) {
         setError(result.error);
         onAnimationGenerated(null, "error");
@@ -172,20 +181,40 @@ export default function AnimationBuilder({
     <div className="flex h-full flex-col gap-3 p-4">
       <div className="flex flex-1 flex-col gap-3 min-h-0">
         <div className="flex items-center gap-3">
-          <label className="text-xs text-slate-400 whitespace-nowrap">
-            Speed: {animSpeed.toFixed(1)}x
+          <label className="text-xs text-slate-400 whitespace-nowrap w-16">
+            Size: {animSize.toFixed(2)}x
           </label>
           <Input
             type="range"
             min="0.5"
             max="2.0"
-            step="0.1"
+            step="0.25"
+            value={animSize}
+            onChange={(e: any) => setAnimSize(parseFloat(e.target.value))}
+            className="flex-1 h-1.5 px-0 bg-slate-700 rounded-lg cursor-pointer accent-[var(--gr-2)]"
+            disabled={loading}
+          />
+          <div className="flex gap-1 text-[10px] text-slate-500 w-16">
+            <span>Small</span>
+            <span className="mx-1">|</span>
+            <span>Large</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <label className="text-xs text-slate-400 whitespace-nowrap w-16">
+            Speed: {animSpeed.toFixed(2)}x
+          </label>
+          <Input
+            type="range"
+            min="0.5"
+            max="2.0"
+            step="0.25"
             value={animSpeed}
             onChange={(e: any) => setAnimSpeed(parseFloat(e.target.value))}
             className="flex-1 h-1.5 px-0 bg-slate-700 rounded-lg cursor-pointer accent-[var(--gr-2)]"
             disabled={loading}
           />
-          <div className="flex gap-1 text-[10px] text-slate-500">
+          <div className="flex gap-1 text-[10px] text-slate-500 w-16">
             <span>Slow</span>
             <span className="mx-1">|</span>
             <span>Fast</span>
@@ -217,13 +246,13 @@ export default function AnimationBuilder({
           </Select>
           <Input
             type="text"
-            placeholder="Initial State: 5, 3, 7"
+            placeholder="Initial State(optional): 5, 3, 7"
             value={initialState}
             onChange={(e: any) => setInitialState(e.target.value)}
             className="flex-1 rounded-lg border border-[var(--gr-2)] bg-[var(--dbl-4)] p-2.5 text-sm text-[var(--gr-2)] outline-none transition
                      focus:scale-[1.02] focus:border-[var(--gr-2)]
                      focus:shadow-[0_0_8px_rgba(125,255,125,0.6),0_0_16px_rgba(125,255,125,0.3)]
-                     focus:bg-[var(--dbl-3)]"
+                     focus:bg-[var(--dbl-3)] placeholder:text-[var(--dbl-4)]"
           />
         </div>
         <div className="flex flex-wrap gap-1">

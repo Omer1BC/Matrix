@@ -237,7 +237,11 @@ class BstVisualizer(VGroup):
         self.node_mobjects[node.value] = (circle, label)
         self.node_visuals[node] = (circle, label)
 
-        parent = parent_override if parent_override is not None else self._find_parent_of_node(node)
+        parent = (
+            parent_override
+            if parent_override is not None
+            else self._find_parent_of_node(node)
+        )
         if parent and parent.circle:
             self._create_edge(parent, node)
 
@@ -286,7 +290,9 @@ class BstVisualizer(VGroup):
             f"insert({value})", time_complexity="O(log n)", space_complexity="O(log n)"
         )
 
-        traversal_path = self._get_traversal_path_for_insertion(value) if self.root else []
+        traversal_path = (
+            self._get_traversal_path_for_insertion(value) if self.root else []
+        )
 
         if self.root is None:
             self.root = BSTNode(value)

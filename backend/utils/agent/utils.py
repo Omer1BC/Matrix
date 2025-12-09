@@ -59,10 +59,12 @@ Constraints:
 - Import visualizer from templates via:
   sys.path.append(os.path.join(os.path.dirname(__file__), "..", "templates"))
   from {templates_module_name} import {visualizer_class_name}
-- Instantiate the visualizer with initial_values={initial_state}.
+- Instantiate the visualizer with initial_values={initial_state} and scale_factor={visualizer_scale_factor}.
 - If the first operation is not "create", call self.play(v.create()) once at start.
 - For each op in {operations}, if the method exists on the visualizer, call self.play(getattr(v, name)(*args), run_time=op.run_time or {default_run_time}), then self.wait(op.pause or {default_pause}).
 - Add self.wait({start_wait}) at the beginning and self.wait({end_wait}) at the end.
+- CRITICAL: All arguments to self.play() must be Animation objects returned by calling visualizer methods. NEVER pass mobjects (Text, Circle, VGroup, or any visualizer attributes) directly to self.play().
+- Only call the methods specified in the operations list on the visualizer instance. Do NOT access or animate visualizer attributes like v.title, v.nodes_group, or any other internal properties.
 - No prints, no external files, no randomness, no comments.
 
 Environment hints:
@@ -138,6 +140,7 @@ def get_solution_grade(
     except Exception as e:
         # Log the full error server-side for debugging
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"Grading error: {type(e).__name__}: {str(e)}")
 
@@ -170,7 +173,7 @@ DS_SPEC: Dict[str, Dict[str, Any]] = {
         },
     },
     "bst": {
-        "ops": {"create", "insert", "delete"},
+        "ops": {"create", "insert", "delete", "search"},
         "synonyms": {
             "init": "create",
             "start": "create",
@@ -183,6 +186,10 @@ DS_SPEC: Dict[str, Dict[str, Any]] = {
             "del": "delete",
             "erase": "delete",
             "drop": "delete",
+            "find": "search",
+            "locate": "search",
+            "identify": "search",
+            "fetch": "search",
         },
     },
 }
@@ -371,7 +378,9 @@ def plan_animation_from_prompt(
         return _fallback_parse_prompt(user_prompt)
 
 
-def generate_animation_from_prompt(user_prompt: str, animation_speed: float = 1.0, user_id: str = "anon") -> Dict[str, Any]:
+def generate_animation_from_prompt(
+    user_prompt: str, animation_speed: float = 1.0, animation_size: float = 1.0, user_id: str = "anon"
+) -> Dict[str, Any]:
     plan = plan_animation_from_prompt(user_prompt)
 
     ds = (
@@ -413,7 +422,14 @@ def generate_animation_from_prompt(user_prompt: str, animation_speed: float = 1.
             step["pause"] = float(o["pause"])
         ops.append(step)
 
-    result = generate_animation(data_structure=ds, initial_state=init, operations=ops, animation_speed=animation_speed, user_id=user_id)
+    result = generate_animation(
+        data_structure=ds,
+        initial_state=init,
+        operations=ops,
+        animation_speed=animation_speed,
+        animation_size=animation_size,
+        user_id=user_id,
+    )
     # Include plan in result for debugging
     result["plan"] = {"data_structure": ds, "initial_state": init, "operations": ops}
     return result
@@ -534,6 +550,7 @@ def generate_animation(
     initial_state: List[Any],
     operations: List[Dict[str, Any]],
     animation_speed: float = 1.0,
+    animation_size: float = 1.0,
     model: str = "gpt-4o-mini",
     temperature: float = 0.0,
     user_id: str = "anon",
@@ -562,6 +579,12 @@ def generate_animation(
     start_wait = round(0.4 / animation_speed, 2)
     end_wait = round(0.6 / animation_speed, 2)
 
+    # Map animation_size directly to scale_factor
+    min_size, max_size = 0.5, 2.0
+    visualizer_scale_factor = float(animation_size or 1.0)
+    visualizer_scale_factor = max(min_size, min(max_size, visualizer_scale_factor))
+    visualizer_scale_factor = round(visualizer_scale_factor, 3)
+
     prompt = ChatPromptTemplate.from_messages([("system", ANIMATION_PROMPT)]).partial(
         format_instructions=parser.get_format_instructions(),
         data_structure=data_structure,
@@ -574,6 +597,7 @@ def generate_animation(
         default_pause=default_pause,
         start_wait=start_wait,
         end_wait=end_wait,
+        visualizer_scale_factor=visualizer_scale_factor,
     )
 
     try:
@@ -639,13 +663,13 @@ def generate_animation(
         error_detail = None
         if not ok:
             # Parse stderr for meaningful errors
-            stderr_lines = proc.stderr.strip().split('\n')
+            stderr_lines = proc.stderr.strip().split("\n")
             for line in reversed(stderr_lines[-10:]):  # Check last 10 lines
-                if 'Error' in line or 'Exception' in line or 'Traceback' in line:
+                if "Error" in line or "Exception" in line or "Traceback" in line:
                     error_detail = line.strip()
                     break
             if not error_detail and proc.stderr:
-                error_detail = proc.stderr.strip().split('\n')[-1]
+                error_detail = proc.stderr.strip().split("\n")[-1]
 
         return {
             "ok": ok,
@@ -662,8 +686,11 @@ def generate_animation(
     except AuthenticationError as e:
         # API key is invalid or revoked - log details server-side only
         import logging
+
         logger = logging.getLogger(__name__)
-        logger.error(f"Animation generation failed - Authentication error: {type(e).__name__}")
+        logger.error(
+            f"Animation generation failed - Authentication error: {type(e).__name__}"
+        )
         return {
             "ok": False,
             "file_path": "",
@@ -679,6 +706,7 @@ def generate_animation(
     except OpenAIError as e:
         # Other OpenAI errors - log details server-side only
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"Animation generation failed - OpenAI error: {type(e).__name__}")
         return {
@@ -696,6 +724,7 @@ def generate_animation(
     except Exception as e:
         # Other unexpected errors - log type only, not details
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"Animation generation failed: {type(e).__name__}")
         return {

@@ -197,6 +197,7 @@ export interface AnimationPlan {
 export async function requestAnimationFromAgent(
   prompt: string,
   animationSpeed: number = 1.0,
+  animationSize: number = 1.0,
   user_id: string = "anon"
 ): Promise<string | null> {
   const resp = await agentCall({
@@ -204,7 +205,11 @@ export async function requestAnimationFromAgent(
     problem_id: "global",
     intent: "generate_animation",
     message: prompt,
-    extras: { request: prompt, animation_speed: animationSpeed },
+    extras: {
+      request: prompt,
+      animation_speed: animationSpeed,
+      animation_size: animationSize,
+    },
   });
 
   const rel = resp?.data?.video_rel as string | undefined;
@@ -215,6 +220,7 @@ export async function requestAnimationFromAgent(
 export async function requestAnimationFromPlan(
   plan: AnimationPlan,
   animationSpeed: number = 1.0,
+  animationSize: number = 1.0,
   user_id: string = "anon"
 ): Promise<{ url: string | null; plan: AnimationPlan; error?: string }> {
   try {
@@ -223,7 +229,11 @@ export async function requestAnimationFromPlan(
       problem_id: "global",
       intent: "generate_animation",
       message: "",
-      extras: { plan, animation_speed: animationSpeed },
+      extras: {
+        plan,
+        animation_speed: animationSpeed,
+        animation_size: animationSize,
+      },
     });
 
     const rel = resp?.data?.video_rel as string | undefined;
