@@ -26,8 +26,30 @@ import {
   updateUserProblemCompletion,
 } from "@/lib/supabase/models/problemCompletions";
 import { saveNotes } from "@/lib/api";
+import { redirect } from "next/navigation";
 
 export default function LearnPage() {
+  const { user, loading: authLoading } = useAuth();
+
+  // Redirect to login if not authenticated
+  if (!authLoading && !user) {
+    redirect("/login");
+  }
+
+  // Show loading screen while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <p className="text-lg text-primary glow-text">Loading...</p>
+      </div>
+    );
+  }
+
+  // Only render the page if authenticated
+  return <LearnPageContent />;
+}
+
+function LearnPageContent() {
   const { user } = useAuth();
 
   const [currentProblem, setCurrentProblem] = useState<Problem>({
@@ -720,7 +742,7 @@ export default function LearnPage() {
   } else {
     return (
       <>
-        <div className="grid grid-cols-[auto_3fr_1fr] gap-2 h-screen overflow-hidden">
+        <div className="grid grid-cols-[auto_3fr_1fr] gap-2 h-full overflow-hidden">
           <div className="problemButton flex justify-start items-center pl-2">
             <Button
               onClick={() => setShowMenu(true)}

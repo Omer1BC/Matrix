@@ -16,9 +16,32 @@ import AnimationInput from "@/components/AnimationInput";
 import AnimationBuilder from "@/components/AnimationBuilder";
 import Notes from "@/components/solve/Notes";
 import { formatCodeForEditor } from "@/lib/utils";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { redirect } from "next/navigation";
 import "shepherd.js/dist/css/shepherd.css";
 
 export default function SolvePage() {
+  const { user: authUser, loading: authLoading } = useAuth();
+
+  // Redirect to login if not authenticated
+  if (!authLoading && !authUser) {
+    redirect("/login");
+  }
+
+  // Show loading screen while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <p className="text-lg text-primary glow-text">Loading...</p>
+      </div>
+    );
+  }
+
+  // Only render the page if authenticated
+  return <SolvePageContent />;
+}
+
+function SolvePageContent() {
   const problemId = "final-prob-1";
   const {
     editorRef,

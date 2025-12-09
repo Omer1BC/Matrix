@@ -11,7 +11,7 @@ type Props = {
   onChange: (value: string) => void;
 };
 
-export function LearningPreferencesCard({ learningStyle, onChange }: Props) {
+export function ProfilePreferencesCard({ learningStyle, onChange }: Props) {
   return (
     <>
       <div className="space-y-2">

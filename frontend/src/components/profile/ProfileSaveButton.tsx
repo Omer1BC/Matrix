@@ -9,7 +9,7 @@ type Props = {
   onSave: () => void;
 };
 
-export function SaveBar({ saving, disabled, onSave }: Props) {
+export function ProfileSaveButton({ saving, disabled, onSave }: Props) {
   return (
     <div className="flex justify-end">
       <Button

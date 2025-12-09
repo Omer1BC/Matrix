@@ -26,7 +26,7 @@ export default function HomePage() {
   const { user } = useAuth();
 
   return (
-    <main className="flex flex-1 flex-col min-h-0 items-center text-center p-4 justify-evenly gap-4">
+    <main className="flex flex-col h-full items-center text-center justify-evenly gap-4">
       <div className="matrix-rain" />
       <section id="intro" className="container">
         <Badge
@@ -54,15 +54,20 @@ export default function HomePage() {
                 className="learn text-lg px-8 py-6 glow-text"
                 variant={undefined}
               >
-                Start Learning <ArrowRight className="ml-2 h-5 w-5" />
+                Start Learning <ArrowRight className="h-5 w-5" />
               </Button>
             </Link>
           ) : (
-            <div className="flex items-center">
-              <p className="text-lg text-pretty text-primary text-center">
-                Sign up to start learning!
-              </p>
-            </div>
+            <Link href="/sign-up">
+              <Button
+                style={{ cursor: "pointer" }}
+                size="lg"
+                className="learn text-lg px-8 py-6 glow-text"
+                variant={undefined}
+              >
+                Sign Up <ArrowRight className="h-5 w-5" />
+              </Button>
+            </Link>
           )}
         </div>
       </section>
