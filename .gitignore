@@ -4,7 +4,6 @@
 *.venv
 *.env
 Animations/Graphs/1_Intro.py
-*.mp4
 .cache
 backend/media/videos
 backend/media/texts
