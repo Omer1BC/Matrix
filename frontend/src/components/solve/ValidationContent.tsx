@@ -337,11 +337,7 @@ export default function ValidationContent({
                 >
                   Close
                 </Button>
-                <Link
-                  href="https://docs.google.com/forms/d/e/1FAIpQLSfXUi-LI0xQhkdAd1jadyvRQZ1v7TwrNlDnCDlr3FslI6IcpQ/viewform?usp=header"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <Link href={"/survey"} className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"

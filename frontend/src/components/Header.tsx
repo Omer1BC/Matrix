@@ -62,11 +62,7 @@ export default function Header() {
           <div className="flex items-center gap-3">
             {authLoading ? (
               <div className="flex items-center gap-4">
-                <Link
-                  href="https://docs.google.com/forms/d/e/1FAIpQLSfXUi-LI0xQhkdAd1jadyvRQZ1v7TwrNlDnCDlr3FslI6IcpQ/viewform?usp=header"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <Link href="/survey">
                   <Button
                     variant="outline"
                     className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
@@ -94,11 +90,7 @@ export default function Header() {
               </div>
             ) : user ? (
               <div className="flex items-center gap-4">
-                <Link
-                  href="https://docs.google.com/forms/d/e/1FAIpQLSfXUi-LI0xQhkdAd1jadyvRQZ1v7TwrNlDnCDlr3FslI6IcpQ/viewform?usp=header"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <Link href="/survey">
                   <Button
                     variant="outline"
                     className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
@@ -143,12 +135,7 @@ export default function Header() {
                   style={{ cursor: "pointer" }}
                   size={undefined}
                 >
-                  <Link
-                    href="https://docs.google.com/forms/d/e/1FAIpQLSfXUi-LI0xQhkdAd1jadyvRQZ1v7TwrNlDnCDlr3FslI6IcpQ/viewform?usp=header"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2"
-                  >
+                  <Link href={"/survey"} className="flex items-center gap-2">
                     <FileBadge2 className="h-4 w-4" />
                     Survey
                   </Link>

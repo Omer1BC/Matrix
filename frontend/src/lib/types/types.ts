@@ -248,3 +248,72 @@ export type SeenStatus = {
   learn: boolean;
   solve: boolean;
 };
+
+// Survey |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+export type SurveyQuestionType =
+  | 'short_text'
+  | 'long_text'
+  | 'single_choice'
+  | 'multiple_choice'
+  | 'scale'
+  | 'number';
+
+export type SurveyQuestionOption = {
+  value: string;
+  label: string;
+  isOther?: boolean;
+};
+
+export type SurveyQuestionConfig = {
+  type: SurveyQuestionType;
+  options?: SurveyQuestionOption[];
+  min?: number;
+  max?: number;
+  step?: number;
+};
+
+export type SurveyQuestion = {
+  id: string;
+  key: string;
+  question: string;
+  helper_text: string | null;
+  type: SurveyQuestionType;
+  required: boolean;
+  order_index: number;
+  is_active: boolean;
+  config: SurveyQuestionConfig;
+  created_at: string;
+};
+
+export type SurveyResponse = {
+  id: string;
+  user_id: string | null;
+  name: string | null;
+  email: string | null;
+  submitted_at: string;
+  meta: Json;
+};
+
+export type SurveyAnswer = {
+  id: string;
+  response_id: string;
+  question_id: string;
+  value_text: string | null;
+  value_number: number | null;
+  created_at: string;
+};
+
+export type SurveyResponseCreate = {
+  userId?: string | null;
+  name?: string | null;
+  email?: string | null;
+  meta?: Json;
+};
+
+export type SurveyAnswerCreate = {
+  responseId: string;
+  questionId: string;
+  valueText?: string | null;
+  valueNumber?: number | null;
+};
