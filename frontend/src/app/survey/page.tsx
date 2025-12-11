@@ -1,8 +1,26 @@
 "use client";
 
 import SurveyForm from "@/components/survey/SurveyForm";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { redirect } from "next/navigation";
 
 export default function SurveyPage() {
+  const { user: authUser, loading: authLoading } = useAuth();
+
+  // Redirect to login if not authenticated
+  if (!authLoading && !authUser) {
+    redirect("/login");
+  }
+
+  // Show loading screen while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <p className="text-lg text-primary glow-text">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <main className="flex h-full overflow-y-auto justify-center p-6 md:p-12 custom-scroll">
       <div className="w-full max-w-2xl my-auto">

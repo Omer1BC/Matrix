@@ -62,18 +62,6 @@ export default function Header() {
           <div className="flex items-center gap-3">
             {authLoading ? (
               <div className="flex items-center gap-4">
-                <Link href="/survey">
-                  <Button
-                    variant="outline"
-                    className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
-                    style={{ cursor: "pointer" }}
-                    size={undefined}
-                  >
-                    <FileBadge2 className="mr-2 h-4 w-4" />
-                    Survey
-                  </Button>
-                </Link>
-
                 <span className="invisible text-lg">Hello placeholder</span>
                 <div className="invisible">
                   <Button
@@ -129,18 +117,6 @@ export default function Header() {
               </div>
             ) : (
               <div className="signup flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
-                  style={{ cursor: "pointer" }}
-                  size={undefined}
-                >
-                  <Link href={"/survey"} className="flex items-center gap-2">
-                    <FileBadge2 className="h-4 w-4" />
-                    Survey
-                  </Link>
-                </Button>
-
                 <Button
                   variant="outline"
                   className="matrix-border bg-transparent hover:bg-primary/10 text-muted-foreground"
