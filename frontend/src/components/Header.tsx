@@ -73,7 +73,7 @@ export default function Header() {
                   </Button>
                 </div>
                 <div className="invisible h-10 w-10">
-                  <Image src="/userPhoto.png" alt="" width={40} height={40} />
+                  <Image src="/user_photo.png" alt="" width={40} height={40} />
                 </div>
               </div>
             ) : user ? (
@@ -107,7 +107,7 @@ export default function Header() {
                   style={{ cursor: "pointer" }}
                 >
                   <Image
-                    src="/userPhoto.png"
+                    src="/user_photo.png"
                     alt="user photo"
                     width={40}
                     height={40}
