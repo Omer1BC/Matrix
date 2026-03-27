@@ -4,7 +4,7 @@ Be sure to check out the YouTube video walkthrough using this [link](https://www
 
 Try out the deployed project yourself using this [link](https://matrix-six-tau.vercel.app/), and gives us your feedback on the survey!
 
-User-centric development is a cornerstone of this project. Following instructor-endorsed demoes in 5 class sections (all DSA-related), I collected student feedback using a Google Form [link](https://docs.google.com/forms/d/e/1FAIpQLSfXUi-LI0xQhkdAd1jadyvRQZ1v7TwrNlDnCDlr3FslI6IcpQ/viewform?usp=header). In general, they viewed the animated lectures and AI-based learning as a unique and effective approach. 
+User-centric development is a cornerstone of this project. Following instructor-endorsed demoes in 5 class sections (all DSA-related), I collected student feedback using a Google Form [link](https://docs.google.com/forms/d/1oWuW4URdb3V6kAOx81bEbSHaRhHnVelnHsVn6P2JfrU/edit#responses). In general, they viewed the animated lectures and AI-based learning as a unique and effective approach. 
 
 # Tech Stack
 ## Languages & Frameworks
