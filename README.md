@@ -1,3 +1,23 @@
+# Viewing
+## Deployment & Walkthrough
+Be sure to check out the YouTube video walkthrough using this [link](https://www.youtube.com/watch?v=SHEgsV0QAmU&) for an exploration of all the features.
+
+Try out the deployed project yourself using this [link](https://matrix-six-tau.vercel.app/), and gives us your feedback on the survey!
+
+User-centric development is a cornerstone of this project. Following instructor-endorsed demoes in 5 class sections (all DSA-related), I collected student feedback using a Google Form [link](https://docs.google.com/forms/d/e/1FAIpQLSfXUi-LI0xQhkdAd1jadyvRQZ1v7TwrNlDnCDlr3FslI6IcpQ/viewform?usp=header). In general, they viewed the animated lectures and AI-based learning as a unique and effective approach. 
+
+# Tech Stack
+## Languages & Frameworks
+Matrix uses the following tech stack: 
+- **TypeScript** (**React**) to ensure type safety and support hot module replacement (HMR)
+- **Next.js** for simple database logic
+- **Docker** to standardize the development and deployment environment
+- **Supabase** (managed PostgreSQL service) for out of the box graphical interface and authentication support
+- **LangChain**/**LangGraph** for agent construction
+- **Python** (**FastAPI**) for richest AI ecosystem and support for LLM response streaming (soon!)
+
+## Deployment
+Matrix is deployed on **Vercel** for its native **Next.js** support. The **FastAPI** server is deployed on **AWS EC2** as a container (and Railway for performance and price benchmarking).
 # Git Practices
 ## Creating a feature branch
 Click the story, and in the development section, click the link to create the branch.
